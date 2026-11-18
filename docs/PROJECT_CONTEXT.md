@@ -46,11 +46,20 @@ Una app para el celular del dueño (Android) que registra los pedidos, el stock,
    - Ranking de alfajores más vendidos, en unidades y en soles. Ventas y ranking cuentan los pedidos entregados, por fecha de entrega (D11).
    - Ventas por canal.
    - Ganancia por alfajor, si el dueño carga un costo aproximado por alfajor.
+   - Clientes que más compran, en soles y en número de pedidos.
    - Exportar a Excel para el contador.
 7. **Productos:** precios y disponibilidad se manejan aquí y se copian solos a la web; fotos y descripciones siguen en el panel de la web (D13). Puede tener productos que todavía no salen en la web.
 8. **Usuario:** uno solo, el dueño, como administrador. Entra con correo y contraseña la primera vez y después con su huella. Si pierde el celular, al cambiar su contraseña se cierra la sesión en todos lados.
 9. **Ajustes:** productos y precios, tipos de gasto, medios de pago, stock mínimo, costo del delivery y un botón de soporte con el WhatsApp de la agencia.
 10. **Sin señal:** lo ya cargado se sigue viendo, con un aviso claro de que no hay conexión, y nada a medio llenar se pierde. Trabajar del todo sin internet sigue para después (§4).
+11. **Clientes**
+    - Se registran solos al anotar un pedido, por su teléfono: nombre, direcciones y una nota.
+    - Ficha de cada cliente: cuántos pedidos hizo, cuánto gastó, cuándo fue el último y su historial.
+    - Clientes que no vuelven: los que no piden hace más de 30 días (se cambia en Ajustes), para escribirles.
+    - La venta en el mostrador puede ir sin nombre, como «cliente de mostrador», para no frenar la venta.
+12. **Fidelidad**
+    - Tarjeta de sellos digital: cada compra suma. Al llegar a la meta, la app avisa y el premio se aplica como descuento con el motivo «fidelidad».
+    - La meta y el premio los decide el dueño en Ajustes. Queda apagada hasta que los defina.
 
 ## 4. Fuera de la primera versión
 
@@ -80,6 +89,8 @@ Una app para el celular del dueño (Android) que registra los pedidos, el stock,
 | D11 | **Ingresos** son los pagos recibidos, por fecha de pago. **Ventas y ranking** son los pedidos entregados, por fecha de entrega. | Reportes sin dudas sobre qué se cuenta. |
 | D12 | **Stock: avisar, no bloquear.** | El registro puede no estar al día, y bloquear frustra. |
 | D13 | **Una sola fuente por dato:** precios y disponibilidad de Don Pipos en la app, copiados a la web; fotos y descripciones en el panel de la web. | Nunca un precio distinto en la app y en la web. |
+| D14 | **Clientes registrados por su teléfono,** uno por negocio. El mostrador puede vender sin nombre. | Saber quién compra más sin frenar la venta rápida. |
+| D15 | **Fidelidad con tarjeta de sellos,** apagada hasta que el dueño defina la meta y el premio. | No inventar reglas de su negocio; el premio usa los descuentos que ya existen. |
 
 Todas tomadas el 2026-11-18.
 
@@ -90,6 +101,7 @@ Todas tomadas el 2026-11-18.
 - **Pagos como movimientos** (D10) y **precio congelado** en cada línea del pedido (D9).
 - **Descuentos:** el cliente los hace (confirmado el 2026-11-18). Van por pedido, con su motivo.
 - **Número de pedido** corto y correlativo, por negocio.
+- **Clientes:** uno por teléfono en cada negocio (D14). El premio de fidelidad se aplica como descuento con el motivo «fidelidad» (D15).
 - **Qué cuenta cada reporte:** ingresos por fecha de pago; ventas y ranking por fecha de entrega (D11).
 - **Montos en céntimos** (enteros), en soles (PEN), con el formato «S/ 12.00».
 - **Días y cierres en hora de Lima** (`America/Lima`).
@@ -106,7 +118,8 @@ Todas tomadas el 2026-11-18.
   - el stock de cada alfajor el día que empiece;
   - los tipos de gasto que maneja;
   - un costo aproximado por alfajor, si quiere ver la ganancia de cada uno;
-  - si cobra el delivery, cuánto, y su zona de reparto.
+  - si cobra el delivery, cuánto, y su zona de reparto;
+  - si quiere la fidelidad, con qué meta y qué premio. Pregunta lista para enviar: «¿Quieres premiar a tus clientes frecuentes? Por ejemplo, por cada 10 alfajores, 1 gratis. ¿Qué premio darías y cada cuánto?».
 
 ## 8. Conexión con la web
 
@@ -228,6 +241,7 @@ Precios consultados el 2026-11-18.
 - **Reglas de acceso (RLS) en todas las tablas:** solo el dueño, con su sesión, lee y escribe. La llave pública de Supabase va dentro de la APK; la llave de servicio, nunca.
 - **Cuentas a nombre de la agencia** (Supabase, Expo, GitHub), con verificación en dos pasos y las contraseñas en un gestor.
 - **De los clientes, solo lo necesario** para el pedido (nombre, teléfono, dirección), cuidado como pide la ley de datos personales (Ley 29733).
+- **Promociones solo con permiso:** si el dueño va a escribirles con promociones, la app guarda si cada cliente aceptó recibirlas.
 - **Los datos son del cliente:** puede exportarlos cuando quiera.
 
 ## 13. Calidad
@@ -286,7 +300,7 @@ Versiones vigentes en npm ese día.
 3. Decidir el stack completo.
 4. **Maqueta de las pantallas y aprobación del cliente.** ← aquí estamos
 5. Especificación y plan de trabajo.
-6. Primera versión: unas 3 a 4 semanas con pruebas y ajustes (cálculo inicial).
+6. Primera versión: unas 4 a 5 semanas con pruebas y ajustes (cálculo inicial; eran 3 a 4 antes de sumar clientes y fidelidad).
 7. Una o dos semanas de uso real, y ajustes.
 8. Fase 2: pedidos de la web. Después, VarMar.
 
