@@ -29,6 +29,7 @@ Una app para el celular del dueño (Android) que registra los pedidos, el stock,
    - **Descuento o precio especial,** con su motivo, para que lo registrado sea igual a lo cobrado.
    - **Pagos:** cada pago con su monto, medio y fecha. Admite adelanto y saldo (pedidos para eventos) y pagos mixtos (mitad Yape, mitad efectivo). El pedido queda **pagado** cuando los pagos cubren el total; si no, queda **por cobrar**, con lo que falta.
    - **Borrador que no se pierde:** si se corta la señal o se cierra la app, el pedido a medio llenar queda guardado.
+   - **Mensajes de WhatsApp con un toque** (D17): confirmación con el número y el total, «tu pedido va en camino» y recordatorio de cobro con lo que falta. Se abre el WhatsApp del dueño en el chat del cliente con el texto listo, y él lo envía. Los textos se editan en Ajustes.
    - Estados: nuevo → preparando → en camino (delivery) o listo para recoger (local) → entregado. O anulado, con su motivo.
    - **Venta en el mostrador:** se registra de una vez como entregada y pagada, sin pasar por los demás estados.
    - **Pedido con anticipación** (por ejemplo, para un evento): lleva fecha de entrega y aparece en «Próximos».
@@ -38,6 +39,7 @@ Una app para el celular del dueño (Android) que registra los pedidos, el stock,
    - Las mermas (rotos, vencidos, regalos) se anotan con su motivo.
    - Aviso cuando queda poco, y para cuántos días alcanza según lo que se vende.
    - **Avisar, no bloquear:** si se vende sin stock registrado, la app avisa pero deja vender, y el número negativo pide un ajuste.
+   - **Sugerencia de producción** (D16): cuánto hacer de cada alfajor para los próximos días (por defecto, una semana), con el porqué a la vista. Un toque la convierte en «registrar producción», con las cantidades ya puestas.
    - Cuando un alfajor llega a cero, la web lo muestra «Agotado»; al reponerlo, se quita solo (ver §8).
 4. **Gastos (egresos):** monto, fecha y tipo (insumos, empaques, delivery…), con foto de la boleta si quiere.
 5. **Ingresos:** salen solos de los pagos recibidos, por fecha de pago. Los demás (una venta a un café, un evento) se anotan a mano.
@@ -50,7 +52,7 @@ Una app para el celular del dueño (Android) que registra los pedidos, el stock,
    - Exportar a Excel para el contador.
 7. **Productos:** precios y disponibilidad se manejan aquí y se copian solos a la web; fotos y descripciones siguen en el panel de la web (D13). Puede tener productos que todavía no salen en la web.
 8. **Usuario:** uno solo, el dueño, como administrador. Entra con correo y contraseña la primera vez y después con su huella. Si pierde el celular, al cambiar su contraseña se cierra la sesión en todos lados.
-9. **Ajustes:** productos y precios, tipos de gasto, medios de pago, stock mínimo, costo del delivery y un botón de soporte con el WhatsApp de la agencia.
+9. **Ajustes:** productos y precios, tipos de gasto, medios de pago, stock mínimo, costo del delivery, cada cuántos días produce, cuántos días dura cada alfajor, los textos de los mensajes de WhatsApp y un botón de soporte con el WhatsApp de la agencia.
 10. **Sin señal:** lo ya cargado se sigue viendo, con un aviso claro de que no hay conexión, y nada a medio llenar se pierde. Trabajar del todo sin internet sigue para después (§4).
 11. **Clientes**
     - Se registran solos al anotar un pedido, por su teléfono: nombre, direcciones y una nota.
@@ -71,6 +73,11 @@ Una app para el celular del dueño (Android) que registra los pedidos, el stock,
 - Más usuarios con permisos distintos.
 - VarMar (mesas, cocina).
 - **Fase 2:** que los pedidos hechos en la web entren solos a la app.
+- **Para una versión siguiente:**
+  - cierre de caja diario (contar el efectivo y ver la diferencia con lo registrado);
+  - gastos que se repiten cada mes (alquiler, luz), anotados solos;
+  - proveedores: a quién le compra y cuánto le gasta;
+  - un resumen semanal escrito con IA, solo si el cliente lo quiere. Con un plan de pago, porque en los planes gratis (como el de Gemini) Google puede usar los datos y leerlos personas de su equipo.
 
 ## 5. Decisiones tomadas
 
@@ -91,6 +98,8 @@ Una app para el celular del dueño (Android) que registra los pedidos, el stock,
 | D13 | **Una sola fuente por dato:** precios y disponibilidad de Don Pipos en la app, copiados a la web; fotos y descripciones en el panel de la web. | Nunca un precio distinto en la app y en la web. |
 | D14 | **Clientes registrados por su teléfono,** uno por negocio. El mostrador puede vender sin nombre. | Saber quién compra más sin frenar la venta rápida. |
 | D15 | **Fidelidad con tarjeta de sellos,** apagada hasta que el dueño defina la meta y el premio. | No inventar reglas de su negocio; el premio usa los descuentos que ya existen. |
+| D16 | **Sugerencia de producción con una fórmula,** no con IA (§6). | Es aritmética: exacta, gratis, explicable y sin enviar datos del negocio a terceros. |
+| D17 | **Mensajes de WhatsApp por enlace** (`wa.me`), enviados por el dueño desde su WhatsApp. | Sin API, sin costo y sin envíos automáticos. |
 
 Todas tomadas el 2026-11-18.
 
@@ -103,6 +112,11 @@ Todas tomadas el 2026-11-18.
 - **Número de pedido** corto y correlativo, por negocio.
 - **Clientes:** uno por teléfono en cada negocio (D14). El premio de fidelidad se aplica como descuento con el motivo «fidelidad» (D15).
 - **Qué cuenta cada reporte:** ingresos por fecha de pago; ventas y ranking por fecha de entrega (D11).
+- **Sugerencia de producción** (D16), por alfajor:
+  - venta esperada de los próximos días: el promedio de cada día de la semana en las últimas 4 semanas (el sábado se compara con los sábados);
+  - más el stock mínimo, menos el stock actual, redondeado hacia arriba;
+  - nunca más de lo que se puede vender antes de que el alfajor deje de estar bueno (los días que dura, en Ajustes);
+  - sin historial de ventas, todavía no sugiere.
 - **Montos en céntimos** (enteros), en soles (PEN), con el formato «S/ 12.00».
 - **Días y cierres en hora de Lima** (`America/Lima`).
 - **Cada dato lleva su negocio** (`business_id`).
@@ -119,6 +133,7 @@ Todas tomadas el 2026-11-18.
   - los tipos de gasto que maneja;
   - un costo aproximado por alfajor, si quiere ver la ganancia de cada uno;
   - si cobra el delivery, cuánto, y su zona de reparto;
+  - cada cuántos días produce y cuántos días dura cada alfajor;
   - si quiere la fidelidad, con qué meta y qué premio. Pregunta lista para enviar: «¿Quieres premiar a tus clientes frecuentes? Por ejemplo, por cada 10 alfajores, 1 gratis. ¿Qué premio darías y cada cuánto?».
 
 ## 8. Conexión con la web
