@@ -29,7 +29,13 @@ Una app para el celular del dueño (Android) que registra los pedidos, el stock,
    - **Descuento o precio especial,** con su motivo, para que lo registrado sea igual a lo cobrado.
    - **Pagos:** cada pago con su monto, medio y fecha. Admite adelanto y saldo (pedidos para eventos) y pagos mixtos (mitad Yape, mitad efectivo). El pedido queda **pagado** cuando los pagos cubren el total; si no, queda **por cobrar**, con lo que falta.
    - **Borrador que no se pierde:** si se corta la señal o se cierra la app, el pedido a medio llenar queda guardado.
-   - **Mensajes de WhatsApp con un toque** (D17): confirmación con el número y el total, «tu pedido va en camino» y recordatorio de cobro con lo que falta. Se abre el WhatsApp del dueño en el chat del cliente con el texto listo, y él lo envía. Los textos se editan en Ajustes.
+   - **Mensajes de WhatsApp con un toque** (D17). Al cambiar el estado, la app ofrece avisar al cliente: se abre el WhatsApp del dueño en el chat del cliente con el texto listo, y él decide si lo envía. Los textos se editan en Ajustes.
+     - **Nuevo → confirmación:** número, detalle y total. Si ya pagó todo o una parte, lo dice.
+     - **En camino:** el aviso y el monto a pagar al recibir, con los medios de pago. Si ya está pagado, lo dice.
+     - **Listo para recoger:** el aviso y el monto a pagar, igual que «en camino».
+     - **Entregado:** el agradecimiento y, si la fidelidad está activa, cuántos sellos lleva.
+     - **Recordatorio de saldo:** no va en el recorrido normal. Solo aparece en «por cobrar», cuando quedó debiendo después de recibir o falta el saldo de un pedido con adelanto.
+     - En la venta en el mostrador no hay mensajes: el cliente está ahí.
    - Estados: nuevo → preparando → en camino (delivery) o listo para recoger (local) → entregado. O anulado, con su motivo.
    - **Venta en el mostrador:** se registra de una vez como entregada y pagada, sin pasar por los demás estados.
    - **Pedido con anticipación** (por ejemplo, para un evento): lleva fecha de entrega y aparece en «Próximos».
