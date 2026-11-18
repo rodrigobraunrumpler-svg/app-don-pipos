@@ -1,7 +1,7 @@
 # APP DE GESTIÓN (DON PIPOS, LUEGO VARMAR) — CONTEXTO DEL PROYECTO
 
 > **Estado:** borrador para acordar. Todavía no hay nada construido.
-> **Versión:** 0.1 · **Fecha:** 2026-11-18 · **Idioma de la app:** español (Perú).
+> **Versión:** 0.2 · **Fecha:** 2026-11-18 · **Idioma de la app:** español (Perú).
 > **Relacionado:** la web está en `/home/javier/var-mar/product`. Su `CLAUDE.md` (§2) y su `docs/PROJECT_CONTEXT.md` (§6) son la fuente del catálogo confirmado de Don Pipos.
 
 ---
@@ -24,8 +24,11 @@ Una app para el celular del dueño (Android) que registra los pedidos, el stock,
 
 1. **Inicio:** lo vendido hoy, cuántos pedidos van, qué alfajor se está acabando y cuánto entró por cada medio de pago.
 2. **Pedidos**
-   - Se anotan en segundos: alfajores y cantidades, cliente, canal (WhatsApp, local, web), retiro en el local o delivery con dirección, y medio de pago.
-   - Cada pedido queda **pagado** o **por cobrar**.
+   - Se anotan en segundos: botones + y − por alfajor, el cliente se completa solo al escribir su teléfono, canal (WhatsApp, local, web), retiro en el local o delivery con dirección, y un medio de pago marcado por defecto.
+   - Cada pedido lleva un **número corto y correlativo** (#0001), para hablar con el cliente por WhatsApp.
+   - **Descuento o precio especial,** con su motivo, para que lo registrado sea igual a lo cobrado.
+   - **Pagos:** cada pago con su monto, medio y fecha. Admite adelanto y saldo (pedidos para eventos) y pagos mixtos (mitad Yape, mitad efectivo). El pedido queda **pagado** cuando los pagos cubren el total; si no, queda **por cobrar**, con lo que falta.
+   - **Borrador que no se pierde:** si se corta la señal o se cierra la app, el pedido a medio llenar queda guardado.
    - Estados: nuevo → preparando → en camino (delivery) o listo para recoger (local) → entregado. O anulado, con su motivo.
    - **Venta en el mostrador:** se registra de una vez como entregada y pagada, sin pasar por los demás estados.
    - **Pedido con anticipación** (por ejemplo, para un evento): lleva fecha de entrega y aparece en «Próximos».
@@ -34,17 +37,20 @@ Una app para el celular del dueño (Android) que registra los pedidos, el stock,
    - Lo que se produce suma («+50 Coqueta») y lo que se vende resta solo.
    - Las mermas (rotos, vencidos, regalos) se anotan con su motivo.
    - Aviso cuando queda poco, y para cuántos días alcanza según lo que se vende.
+   - **Avisar, no bloquear:** si se vende sin stock registrado, la app avisa pero deja vender, y el número negativo pide un ajuste.
    - Cuando un alfajor llega a cero, la web lo muestra «Agotado»; al reponerlo, se quita solo (ver §8).
 4. **Gastos (egresos):** monto, fecha y tipo (insumos, empaques, delivery…), con foto de la boleta si quiere.
-5. **Ingresos:** salen solos de los pedidos pagados. Los demás (una venta a un café, un evento) se anotan a mano.
+5. **Ingresos:** salen solos de los pagos recibidos, por fecha de pago. Los demás (una venta a un café, un evento) se anotan a mano.
 6. **Reportes**
    - Ingresos, gastos y ganancia, por semana y por mes.
-   - Ranking de alfajores más vendidos, en unidades y en soles.
+   - Ranking de alfajores más vendidos, en unidades y en soles. Ventas y ranking cuentan los pedidos entregados, por fecha de entrega (D11).
    - Ventas por canal.
    - Ganancia por alfajor, si el dueño carga un costo aproximado por alfajor.
    - Exportar a Excel para el contador.
-7. **Productos:** un solo catálogo con la web. Puede tener productos que todavía no salen en la web.
-8. **Usuario:** uno solo, el dueño, como administrador. Propuesta: entra con correo y contraseña la primera vez y después con su huella.
+7. **Productos:** precios y disponibilidad se manejan aquí y se copian solos a la web; fotos y descripciones siguen en el panel de la web (D13). Puede tener productos que todavía no salen en la web.
+8. **Usuario:** uno solo, el dueño, como administrador. Entra con correo y contraseña la primera vez y después con su huella. Si pierde el celular, al cambiar su contraseña se cierra la sesión en todos lados.
+9. **Ajustes:** productos y precios, tipos de gasto, medios de pago, stock mínimo, costo del delivery y un botón de soporte con el WhatsApp de la agencia.
+10. **Sin señal:** lo ya cargado se sigue viendo, con un aviso claro de que no hay conexión, y nada a medio llenar se pierde. Trabajar del todo sin internet sigue para después (§4).
 
 ## 4. Fuera de la primera versión
 
@@ -69,6 +75,11 @@ Una app para el celular del dueño (Android) que registra los pedidos, el stock,
 | D6 | Carpeta `/home/javier/var-mar/app`. Identificador de Android **`pe.varmar.app`** (no se puede cambiar después). Nombre en el celular: «Don Pipos» (sí se puede cambiar). | Coincide con el dominio del cliente y sirve cuando entre VarMar. |
 | D7 | El **código en inglés**, como la web. Todo lo que ve el dueño, en **español (es-PE)**. | Consistencia con la web. |
 | D8 | **Estados del pedido:** nuevo, preparando, en camino o listo para recoger, entregado y anulado (§3). | Cubren el delivery, el retiro en el local y la venta en el mostrador. |
+| D9 | **Precio congelado:** cada línea del pedido guarda el precio y el costo con que se vendió. | Cambiar un precio no altera lo ya vendido ni los reportes. |
+| D10 | **Pagos como movimientos:** monto, medio y fecha de cada pago. | Admite adelantos, pagos mixtos y la lista de lo que se debe. |
+| D11 | **Ingresos** son los pagos recibidos, por fecha de pago. **Ventas y ranking** son los pedidos entregados, por fecha de entrega. | Reportes sin dudas sobre qué se cuenta. |
+| D12 | **Stock: avisar, no bloquear.** | El registro puede no estar al día, y bloquear frustra. |
+| D13 | **Una sola fuente por dato:** precios y disponibilidad de Don Pipos en la app, copiados a la web; fotos y descripciones en el panel de la web. | Nunca un precio distinto en la app y en la web. |
 
 Todas tomadas el 2026-11-18.
 
@@ -76,6 +87,10 @@ Todas tomadas el 2026-11-18.
 
 - **Stock como movimientos:** producción (+), venta (−), merma (−, con motivo) y ajuste. El stock es la suma de los movimientos, nunca un número que se sobrescribe. Así siempre se sabe por qué hay lo que hay y se corrige sin perder historia.
 - **Nada se borra:** un pedido anulado queda anulado, con su fecha, y devuelve su stock.
+- **Pagos como movimientos** (D10) y **precio congelado** en cada línea del pedido (D9).
+- **Descuentos:** el cliente los hace (confirmado el 2026-11-18). Van por pedido, con su motivo.
+- **Número de pedido** corto y correlativo, por negocio.
+- **Qué cuenta cada reporte:** ingresos por fecha de pago; ventas y ranking por fecha de entrega (D11).
 - **Montos en céntimos** (enteros), en soles (PEN), con el formato «S/ 12.00».
 - **Días y cierres en hora de Lima** (`America/Lima`).
 - **Cada dato lleva su negocio** (`business_id`).
@@ -95,7 +110,9 @@ Todas tomadas el 2026-11-18.
 
 ## 8. Conexión con la web
 
-- **«Agotado» automático:** cuando un alfajor llega a cero, una función de Supabase marca `isAvailable: false` en Sanity, y la web se refresca con el webhook firmado que ya existe. Al reponer stock, vuelve a `true`. El token de Sanity se guarda como secreto en Supabase, nunca dentro de la app.
+- **Precios y disponibilidad salen de la app (D13):** una función de Supabase copia a Sanity el precio (`priceMinor`) y la disponibilidad (`isAvailable`), y la web se refresca con el webhook firmado que ya existe. Fotos y descripciones siguen en el panel de la web.
+- **«Agotado» automático:** cuando un alfajor llega a cero, esa función marca `isAvailable: false`; al reponer stock, vuelve a `true`.
+- **El token de Sanity** se guarda como secreto en Supabase, nunca dentro de la app.
 - **Fase 2:** los pedidos hechos en la web entran solos a la app.
 
 ## 9. Estructura de carpetas (acordada)
@@ -199,11 +216,12 @@ Precios consultados el 2026-11-18.
   - Se pausa tras 7 días sin uso; se reactiva desde su panel sin perder datos.
   - Máximo 2 proyectos gratis activos por cuenta.
   - Plan Pro: US$ 25 al mes, con copias diarias (7 días) y sin pausas.
-- **Desarrollo con Supabase en la PC** (Docker); en la nube, solo el proyecto de producción.
+- **Desarrollo y producción en dos proyectos de Supabase en la nube** (ver §14.1).
 - **Copia diaria de la base de datos** desde el VPS (Vultr, Santiago, plan de US$ 24 al mes, el mismo de la web) a un almacenamiento externo, por ejemplo Cloudflare R2 (gratis hasta 10 GB). Restaurarla de verdad al menos una vez.
 - **La APK** se arma con Expo (EAS Build). Las actualizaciones llegan por internet con EAS Update (gratis hasta 1,000 usuarios al mes), en dos canales: prueba y producción. La llave de firma la guarda Expo; tener un respaldo.
 - **Google:** desde 2027 exige un desarrollador verificado también para las APK instaladas fuera de Play Store. Hay que registrarse antes.
-- **Avisos de errores:** Sentry, plan gratis (propuesta).
+- **Avisos de errores:** Sentry, plan gratis.
+- **Monitor gratis (UptimeRobot):** avisa al equipo si Supabase se pausa o se cae. La app muestra un mensaje claro en vez de una pantalla en blanco.
 
 ## 12. Seguridad y datos personales
 
@@ -218,12 +236,41 @@ Precios consultados el 2026-11-18.
 - **Antes de cada commit y en GitHub:** lint, tipos y pruebas.
 - **Pruebas de las reglas de acceso** en `supabase/tests/`, y recorridos completos en Android en `e2e/`.
 - **Revisión contra §10 al cerrar cada módulo.**
+- **Probar en un Android económico,** además del celular del equipo: el del cliente puede ser más lento.
 
-## 14. Stack
+## 14. Stack (acordado el 2026-11-18)
 
-- **Decidido:** React Native, Supabase, TanStack Query y TypeScript estricto.
-- **Propuesto:** Expo (EAS Build y EAS Update) y Expo Router.
-- **Por decidir (siguiente paso):** estilos y tokens de marca, formularios y validación, gráficos, herramientas de prueba (unitarias y recorridos en Android), avisos de errores, gestor de paquetes, versión de Node y versión de Expo.
+Versiones vigentes en npm ese día.
+
+| Parte | Elección | Notas |
+|---|---|---|
+| App | Expo SDK 58 (React Native 0.88) y TypeScript estricto | Se prueba con Expo Go y se entrega como APK |
+| Pantallas | Expo Router | Pantallas por archivos (§9) |
+| Datos en la app | TanStack Query 5 | Guarda lo último cargado y reintenta si falla la señal |
+| Estilos | NativeWind 4 (Tailwind v3) | Colores y tamaños solo en `theme/`; el lint prohíbe `bg-[#…]`. Oficialmente llega a SDK 57: se comprueba en SDK 58 al crear el proyecto |
+| Formularios | React Hook Form y Zod 4 | Zod también valida lo que llega de la base de datos |
+| Gráficos | react-native-gifted-charts | Barras, líneas y tortas. Usa react-native-svg, que Expo Go ya trae |
+| Montos | Dinero.js 2 | Céntimos enteros; el sol (PEN) viene incluido |
+| Fechas | date-fns 4 y @date-fns/tz | Siempre en `America/Lima` (Perú, UTC−5 todo el año) y en español |
+| Sesión y huella | Supabase Auth, expo-local-authentication y expo-secure-store | Correo y contraseña la primera vez, después la huella |
+| Fotos de boletas | expo-image-picker y compresión antes de subir | Se guardan en Supabase Storage, privado |
+| Exportar | CSV con expo-file-system y expo-sharing | Excel lo abre directamente |
+| Errores | Sentry, plan gratis | En Expo Go solo registra errores de JavaScript; completo en la APK |
+| Base de datos | Supabase: PostgreSQL con RLS, funciones (todo o nada), vistas para reportes y Edge Functions | Reportes calculados en la base, no en el celular |
+| Pruebas | Jest (jest-expo) y Testing Library; pgTAP para la base; Playwright sobre la versión web | En esta PC no hay emulador de Android |
+| Calidad | ESLint con las reglas de §10, Prettier, lefthook y GitHub Actions | |
+| Entrega | EAS Build (APK) y EAS Update (canales de prueba y producción) | |
+| Herramientas | Node 24 y pnpm 10 | Como la web |
+
+### 14.1 Entornos
+
+- **Desarrollo:** un proyecto de Supabase en la nube, que da el equipo, solo con datos inventados. Los cambios van por migraciones del repositorio, así que se puede reiniciar de cero con un comando.
+- **Producción:** un proyecto nuevo y limpio, creado con las mismas migraciones. El de desarrollo sigue para los cambios futuros sin tocar los datos reales del cliente. Esto ocupa los 2 proyectos gratis de la cuenta.
+- **Probar en el celular:** Expo Go de la Play Store, en modo túnel desde WSL.
+  - Expo Go solo abre proyectos de la versión más reciente de Expo. Cuando salga la 59, hay que actualizar o pasar a una versión de desarrollo de la app.
+  - Solo se usan librerías que Expo Go ya trae (todas las de la tabla lo cumplen).
+- **Credenciales:** la URL del proyecto y la llave pública van en `.env.local`. La llave de servicio y la contraseña de la base de datos nunca van en el chat ni en el repositorio: el equipo hace `supabase login` y `supabase link` en su terminal una vez.
+- **Pruebas de la base en GitHub Actions:** usan Supabase en Docker allá; en la PC no hace falta Docker.
 
 ## 15. Modelo de cobro (por definir)
 
@@ -235,9 +282,9 @@ Precios consultados el 2026-11-18.
 ## 16. Plan
 
 1. Publicar la web (VPS y dominio).
-2. **Acordar este documento.** ← aquí estamos
+2. Acordar este documento.
 3. Decidir el stack completo.
-4. Maqueta de las pantallas y aprobación del cliente.
+4. **Maqueta de las pantallas y aprobación del cliente.** ← aquí estamos
 5. Especificación y plan de trabajo.
 6. Primera versión: unas 3 a 4 semanas con pruebas y ajustes (cálculo inicial).
 7. Una o dos semanas de uso real, y ajustes.
@@ -249,4 +296,6 @@ Precios consultados el 2026-11-18.
 - **Del equipo:**
   - definir el modelo de cobro;
   - crear las cuentas de la agencia (Supabase, Expo, GitHub);
-  - subir los dos repositorios a GitHub en privado (hoy la web solo existe en la PC).
+  - subir los dos repositorios a GitHub en privado (hoy la web solo existe en la PC);
+  - preparar la guía de uso para el dueño, con qué hacer si pierde el celular.
+- **En la web,** cuando la app maneje precios y disponibilidad de Don Pipos (D13): esos campos del panel pasan a ser de solo lectura, y se actualizan sus documentos (su `CLAUDE.md` §2 dice hoy que se editan en el panel).
