@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { focusManager, MutationObserver, onlineManager, QueryObserver } from "@tanstack/react-query";
 import * as Network from "expo-network";
 import { AppState } from "react-native";
@@ -57,6 +58,19 @@ test("un error de una consulta llega convertido en AppError", async () => {
   });
   await observer.refetch();
   expect(onError).toHaveBeenCalledWith(expect.objectContaining({ kind: "conflict" }));
+  expect(onError.mock.calls[0]![0]).toBeInstanceOf(AppError);
+});
+
+test("un error al guardar también llega al aviso general, convertido en AppError", async () => {
+  const onError = jest.fn();
+  const client = newClient({ onError });
+  const observer = new MutationObserver(client, {
+    mutationFn: () => Promise.reject({ code: "23505", message: "duplicate key value" }),
+  });
+  await expect(observer.mutate()).rejects.toEqual({ code: "23505", message: "duplicate key value" });
+  expect(onError).toHaveBeenCalledTimes(1);
+  expect(onError.mock.calls[0]![0]).toBeInstanceOf(AppError);
+  expect(onError.mock.calls[0]![0]).toMatchObject({ kind: "conflict" });
 });
 
 test("una mutación refresca las claves que declara", async () => {
@@ -98,6 +112,42 @@ test("si la app arranca sin señal, queda sin conexión aunque no llegue ningún
   await Promise.resolve();
   expect(onlineManager.isOnline()).toBe(false);
   onlineManager.setOnline(true);
+});
+
+test("si el aviso de la señal llega antes que la respuesta del arranque, manda el aviso, que es más nuevo", async () => {
+  let answerStartup: (state: Network.NetworkState) => void = () => undefined;
+  jest.mocked(Network.getNetworkStateAsync).mockReturnValueOnce(
+    new Promise((resolve) => {
+      answerStartup = resolve;
+    }),
+  );
+  onlineManager.setOnline(true);
+  setupOnlineManager();
+  const listener = jest.mocked(Network.addNetworkStateListener).mock.lastCall![0];
+  listener({ isConnected: false } as Network.NetworkState);
+  answerStartup({ isConnected: true } as Network.NetworkState);
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(onlineManager.isOnline()).toBe(false);
+  onlineManager.setOnline(true);
+});
+
+test("al registrar otra vez la señal, el aviso anterior se da de baja", () => {
+  setupOnlineManager();
+  const first = jest.mocked(Network.addNetworkStateListener).mock.results.at(-1)!.value;
+  expect(first.remove).not.toHaveBeenCalled();
+  setupOnlineManager();
+  expect(first.remove).toHaveBeenCalledTimes(1);
+});
+
+test("la caché guardada se escribe en el almacenamiento del celular y de ahí se vuelve a leer", async () => {
+  const { persister } = createPersistOptions("0.1.0");
+  const saved = { buster: "0.1.0", timestamp: 1_795_000_000_000, clientState: { mutations: [], queries: [] } };
+  await persister.persistClient(saved);
+  expect(await AsyncStorage.getAllKeys()).toHaveLength(1);
+  await expect(persister.restoreClient()).resolves.toEqual(saved);
+  await persister.removeClient();
+  expect(await AsyncStorage.getAllKeys()).toHaveLength(0);
 });
 
 test("la caché guardada dura un día y se descarta al cambiar la versión de la app", () => {

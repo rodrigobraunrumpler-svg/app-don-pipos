@@ -8,6 +8,7 @@ test("un AppError pasa igual", () => {
 test.each([
   [new TypeError("Network request failed"), "offline"],
   [new TypeError("Failed to fetch"), "offline"],
+  [new TypeError("Cannot read properties of undefined (reading 'id')"), "unexpected"],
   [{ code: "P0001", message: "invalid" }, "invalid"],
   [{ code: "P0001", message: "not_found" }, "notFound"],
   [{ code: "P0001", message: "forbidden" }, "forbidden"],

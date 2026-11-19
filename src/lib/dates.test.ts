@@ -46,6 +46,12 @@ test("las fechas se escriben en español de Perú", () => {
   expect(formatTime(instant)).toBe("11:40");
 });
 
+test("la hora va de 00:00 a 23:59, sin a. m. ni p. m.", () => {
+  expect(formatTime(new Date("2026-11-18T20:05:00Z"))).toBe("15:05");
+  expect(formatTime(new Date("2026-11-19T04:59:00Z"))).toBe("23:59");
+  expect(formatTime(new Date("2026-11-18T05:00:00Z"))).toBe("00:00");
+});
+
 test("el desfase fijo que usa el celular da el mismo día y la misma hora que America/Lima", () => {
   // Node sí conoce la zona: si Perú volviera a cambiar la hora, esta prueba lo avisa
   const lima = new Intl.DateTimeFormat("en-CA", {
