@@ -25,3 +25,23 @@ export const stockItemSchema = z.object({
 export type StockItem = z.infer<typeof stockItemSchema>;
 
 export const stockOverviewSchema = z.array(stockItemSchema);
+
+const levelSchema = z.object({ productId: z.string(), onHand: z.number().int() });
+const webProductSchema = z.object({ productId: z.string(), name: z.string() });
+
+export const wasteResultSchema = z.object({ productId: z.string(), onHand: z.number().int(), outOnWeb: z.boolean() });
+export type WasteResult = z.infer<typeof wasteResultSchema>;
+
+export const countResultSchema = z.object({
+  adjustments: z.number().int(),
+  items: z.array(levelSchema),
+  backOnWeb: z.array(webProductSchema),
+  outOnWeb: z.array(webProductSchema),
+});
+export type CountResult = z.infer<typeof countResultSchema>;
+
+export const revertResultSchema = z.object({ reverted: z.number().int(), items: z.array(levelSchema) });
+export type RevertResult = z.infer<typeof revertResultSchema>;
+
+export type WasteInput = { requestId: string; productId: string; quantity: number; reason: WasteReason };
+export type CountInput = { requestId: string; counts: { productId: string; counted: number }[] };
