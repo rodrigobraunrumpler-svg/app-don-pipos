@@ -81,3 +81,30 @@ test("solo se reintenta sin conexión o ante algo inesperado", () => {
     ["notFound", "forbidden", "invalid", "conflict"].map((k) => isRetryable(new AppError(k as "invalid"))),
   ).toEqual([false, false, false, false]);
 });
+
+// Los errores de red como los entrega supabase-js (pendiente I13 de la revisión de la fase 0)
+test.each([
+  [
+    Object.assign(new Error("Failed to send a request to the Edge Function"), { name: "FunctionsFetchError" }),
+    "offline",
+  ],
+  [Object.assign(new Error("fetch failed"), { name: "AuthRetryableFetchError" }), "offline"],
+  [{ message: "TypeError: Network request failed", code: "" }, "offline"],
+  [new TypeError("Network request timed out"), "offline"],
+  [
+    Object.assign(new Error("Edge Function returned a non-2xx status code"), {
+      name: "FunctionsHttpError",
+      context: { status: 401 },
+    }),
+    "forbidden",
+  ],
+  [
+    Object.assign(new Error("Edge Function returned a non-2xx status code"), {
+      name: "FunctionsHttpError",
+      context: { status: 500 },
+    }),
+    "unexpected",
+  ],
+])("%p de supabase-js se convierte en %s", (input, kind) => {
+  expect(toAppError(input).kind).toBe(kind);
+});

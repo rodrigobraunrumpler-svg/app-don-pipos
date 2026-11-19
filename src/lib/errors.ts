@@ -35,8 +35,27 @@ const MESSAGES: Record<AppErrorKind, string> = {
   unexpected: "Algo salió mal de nuestro lado. Vuelve a intentar en un momento.",
 };
 
-const isOffline = (error: unknown): boolean =>
-  error instanceof TypeError && /Network request failed|Failed to fetch/.test(error.message);
+const NETWORK_MESSAGE = /Network request failed|Network request timed out|Failed to fetch/;
+// Los nombres que usa supabase-js cuando la petición ni siquiera llegó al servidor
+const NETWORK_ERROR_NAMES = new Set(["FunctionsFetchError", "AuthRetryableFetchError"]);
+
+function isOffline(error: unknown): boolean {
+  if (error instanceof TypeError) return NETWORK_MESSAGE.test(error.message);
+  if (typeof error !== "object" || error === null) return false;
+  const { name, message } = error as { name?: unknown; message?: unknown };
+  // PostgREST devuelve la falla de red como un objeto: { message: "TypeError: Network request failed", code: "" }
+  return (
+    (typeof name === "string" && NETWORK_ERROR_NAMES.has(name)) ||
+    (typeof message === "string" && NETWORK_MESSAGE.test(message))
+  );
+}
+
+// Una Edge Function que respondió 401 o 403: la sesión ya no vale
+function isRejectedSession(error: unknown): boolean {
+  if (typeof error !== "object" || error === null) return false;
+  const { name, context } = error as { name?: unknown; context?: { status?: unknown } };
+  return name === "FunctionsHttpError" && (context?.status === 401 || context?.status === 403);
+}
 
 function kindFromServer(error: unknown): AppErrorKind | undefined {
   if (typeof error !== "object" || error === null) return undefined;
@@ -49,6 +68,7 @@ function kindFromServer(error: unknown): AppErrorKind | undefined {
 export function toAppError(error: unknown): AppError {
   if (error instanceof AppError) return error;
   if (isOffline(error)) return new AppError("offline", { cause: error });
+  if (isRejectedSession(error)) return new AppError("forbidden", { cause: error });
   return new AppError(kindFromServer(error) ?? "unexpected", { cause: error });
 }
 
