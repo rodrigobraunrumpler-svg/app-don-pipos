@@ -1298,7 +1298,7 @@ Con esto, la fase 0 está terminada. Sigue escribir el plan de la fase 1.
 
 ## Resultado (2026-11-19)
 
-La fase 0 quedó construida en la rama `fase-0`, con un commit por tarea.
+La fase 0 quedó construida en la rama `fase-0`, con un commit por tarea. Esta tabla es la del cierre de la fase; después hubo una revisión final con correcciones, y cómo quedó todo está al final, en «Después de la revisión final».
 
 | Comprobación | Resultado |
 |---|---|
@@ -1315,7 +1315,7 @@ La fase 0 quedó construida en la rama `fase-0`, con un commit por tarea.
 
 Son dos pasos del dueño del proyecto. Ninguno cambia código.
 
-**1. Instalar gitleaks y activar los hooks.** El sistema de permisos no dejó que el asistente descargara el programa, así que los hooks están escritos y probados uno por uno, pero todavía no revisan los commits.
+**1. Instalar gitleaks y activar los hooks.** **Postergado por el dueño del proyecto el 2026-11-19; se retoma antes de la fase 2,** que es cuando aparece la primera llave secreta. El sistema de permisos no dejó que el asistente descargara el programa, así que los hooks están escritos y probados uno por uno, pero todavía no revisan los commits. Mientras tanto, en esta máquina las llaves las cuida `.gitignore`, que deja fuera todo archivo `.env` salvo la plantilla `.env.example`.
 
 ```bash
 mkdir -p ~/.local/bin && cd /tmp
@@ -1343,8 +1343,11 @@ Escanea el código y comprueba:
 2. La letra es Manrope, no la del sistema.
 3. Con el celular en modo oscuro, la portada cambia a oscuro sin recargar.
 4. Con la letra del celular en grande, los textos crecen y nada se corta.
+5. Debajo de «Fase 0 lista» sale la fecha de hoy escrita en español, por ejemplo «Jueves 19 de noviembre».
 
-Si las cuatro pasan, en `PROJECT_CONTEXT.md` §14 la fila «Estilos» queda «comprobado en SDK 58». Si la 1 o la 3 fallan, se aplica el plan B de la tarea 3 (`StyleSheet` con el mismo tema); las pruebas no cambian.
+Si las cuatro primeras pasan, en `PROJECT_CONTEXT.md` §14 la fila «Estilos» queda «comprobado en SDK 58». Si la 1 o la 3 fallan, se aplica el plan B de la tarea 3 (`StyleSheet` con el mismo tema); las pruebas no cambian.
+
+La quinta comprueba las fechas en el motor de JavaScript del celular, que no es el de las pruebas: ahí solo se pudo simular. Si la fecha no sale, sale otro día o la app se cierra, hay que avisar antes de construir una pantalla con fechas.
 
 ### Lo que cambió respecto de este plan
 
@@ -1391,3 +1394,53 @@ Si las cuatro pasan, en `PROJECT_CONTEXT.md` §14 la fila «Estilos» queda «co
 **Tarea 8**
 - `@expo/ngrok` quedó instalado. El servidor de desarrollo se probó solo en local; la prueba en el celular sigue pendiente.
 - `PROJECT_CONTEXT.md`: el árbol de carpetas (§9) refleja lo construido, y en §14 los montos van con `lib/money.ts`, sin Dinero.js, que se agrega si un reparto o un porcentaje lo pide.
+
+## Después de la revisión final (2026-11-19)
+
+Alguien que no había participado revisó la rama completa. No encontró nada que pierda datos ni que exponga una llave, pero sí puertas abiertas en lo que esta fase promete: que el orden lo cuide el lint y no la disciplina. Todo esto se corrigió, cada cosa con su prueba escrita primero.
+
+**Las reglas de estructura**
+- Valen para todo el código de `src`, también los archivos `.js`, `.jsx`, `.mjs` y `.cjs`.
+- `assets` es solo la carpeta de la raíz, y de ella cuentan las imágenes y las letras; una carpeta `assets` dentro de `src` ya no tiene trato especial.
+- Dentro de un módulo solo existen `index.ts`, `constants.ts` y las seis carpetas. Otro archivo u otra carpeta falla, igual que un `.test.ts` fuera de las carpetas conocidas.
+- `index.ts` y `constants.ts` tienen cada uno sus permisos, los de la tabla de §9.1: `constants.ts` solo importa Zod, e `index.ts` publica components, hooks, queries, rules y schema de su módulo (ni `api` ni `constants.ts`, que la tabla no nombra).
+- Cada lugar se reconoce desde la raíz del repositorio: una ruta repetida más adentro (`src/components/ui/src/features/x/api`) ya no recibe los permisos de la verdadera.
+- `lib/supabase.ts` solo lo importan `api/` y su propia prueba. Otro archivo de `lib` ya no puede envolverlo ni volver a exportarlo.
+- Paquetes: `rules/` no importa ninguno; `schema/` y `constants.ts`, solo Zod; `@supabase/*`, solo en `lib/supabase.ts` y en `api/`.
+- Colores: Tailwind ya no trae su paleta (`bg-red-500`, `text-white`), solo los colores del tema, `transparent` y `current`. El lint atrapa además `#rgba`, `border-[color:…]` y un texto como `"red"` en una propiedad de color, y en el `index.ts` de un módulo valen las reglas de colores junto con la de `export *`.
+- Un comentario ya no puede sacar código de la cobertura (`istanbul ignore`, `c8 ignore`, `v8 ignore`).
+
+**La prueba de las reglas (`pnpm lint:rules`)**
+- Compara, archivo por archivo, qué reglas saltan y cuántas veces. Cada archivo de prueba tiene una sola falta: antes, uno con dos faltas seguía pasando aunque se apagara una de sus reglas.
+- Comprueba la tabla de `PROJECT_CONTEXT.md` §9.1 celda por celda (`scripts/lint-matrix.mjs`): cada fila importa todas las columnas, y el lint debe prohibir exactamente las que la tabla prohíbe.
+- Se comprobó rompiendo la configuración a propósito: las nueve formas que el revisor encontró sin que nada avisara, las puertas de arriba vueltas a abrir, y cada política y cada regla quitada de una en una. En todos los casos `pnpm lint:rules` falla.
+
+**Lo común de `lib`**
+- Fechas: en el celular se calculan con el desfase fijo de Lima (UTC−5), sin depender de lo que su motor de JavaScript sepa de zonas horarias. Una prueba lo comprueba con un motor que falla al pedirle una zona, y otra avisa si ese desfase dejara de coincidir con `America/Lima`.
+- `businessDayRange` solo acepta un día que existe, escrito `AAAA-MM-DD`. Antes, «2026-02-30» o «18-11-2026» daban el rango de otro día sin avisar.
+- `errorMessage` e `isRetryable` reciben cualquier cosa y siempre responden. Antes, un error sin convertir dejaba el mensaje vacío.
+- Sin señal, guardar falla al momento y avisa «Sin conexión». Antes quedaba en «Guardando…» y salía solo al volver la señal.
+- Lo que se estaba guardando nunca se escribe en la caché del celular.
+- La caché guardada lleva un número de esquema (`CACHE_SCHEMA`), guarda solo las consultas que cargaron bien y con menos de un día, y una consulta puede quedar fuera con `meta: { persist: false }`.
+- `renderWithProviders` usa el cliente de la app: solo cambia los reintentos y el temporizador de la caché.
+- Pruebas nuevas para lo que ninguna miraba: la hora de la tarde, el modo oscuro del celular, las variables de color de cada modo, la caché de verdad en el almacenamiento, el aviso de un error al guardar y la señal del celular.
+
+**El repositorio**
+- `.gitignore` deja fuera todo archivo `.env`, salvo `.env.example`, y la app apaga la copia de seguridad de Android (`allowBackup: false`).
+- `pnpm typecheck` genera los tipos de las rutas antes de compilar (`expo customize tsconfig.json`): un enlace a una pantalla que no existe ahora falla también en una copia recién clonada y en GitHub. Antes, sin haber abierto `expo start`, compilaba.
+- GitHub revisa además el formato de todos los archivos y el mensaje de cada commit que llega.
+- La portada muestra la fecha de hoy, para que la prueba en el celular ejercite las fechas.
+
+**Cómo quedan las comprobaciones**
+
+| Comprobación | Resultado |
+|---|---|
+| `pnpm lint` | Sin errores ni avisos |
+| `pnpm lint:rules` | 117 archivos de prueba y 717 celdas de la tabla: 20 filas por 36 columnas, sin las 3 en que un archivo se importaría a sí mismo |
+| `pnpm typecheck` | Sin errores, con los tipos de las rutas generados |
+| `pnpm test:coverage` | 139 pruebas; 100 % en `lib/{money,dates,errors}` y `theme/tokens` |
+| `pnpm test:scripts` | 7 pruebas: el generador de módulos y `.gitignore` |
+| Android | El paquete compila con la paleta nueva (2,539 módulos) |
+| Estilos | En la versión web, los colores de la maqueta en claro y en oscuro, con Manrope y la fecha del día |
+
+**Sobre NativeWind.** Su comprobación se apoya en tres cosas: el paquete de Android compila, la versión web se ve igual a la maqueta en claro y en oscuro, y la prueba en el celular, que sigue pendiente. Las pruebas de Jest no cuentan: ahí una clase no produce ningún estilo, así que ninguna puede mirar un color.

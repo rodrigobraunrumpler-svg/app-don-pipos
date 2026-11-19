@@ -30,8 +30,10 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
-.env*.local
+# local env files: ninguno entra al repositorio, salvo la plantilla sin llaves
+.env
+.env.*
+!.env.example
 
 # typescript
 *.tsbuildinfo

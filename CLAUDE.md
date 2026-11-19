@@ -37,7 +37,16 @@ Las 18 reglas del código (`PROJECT_CONTEXT.md` §10.1):
 17. **Base rápida desde el principio:** un índice compuesto por consulta (empieza por `business_id`), cursor en vez de OFFSET y lo muy leído ya calculado.
 18. **Que nada se duplique:** cada creación lleva un `request_id`; si se reintenta, la base devuelve lo ya creado.
 
-El lint las hace cumplir (`eslint.config.mjs`, `eslint/structure.mjs`). Un comentario `eslint-disable` no tiene efecto: se corrige el código, no la regla.
+El lint (`eslint.config.mjs`, `eslint/structure.mjs` y `eslint/colors.mjs`) hace cumplir las que se pueden leer en el código:
+
+- **La 2, la 3, la 4 y la 5,** por lo que cada archivo importa: la tabla de `PROJECT_CONTEXT.md` §9.1, sin importaciones en círculo.
+- **La 7,** con el máximo de 250 líneas y un componente por archivo.
+- **En parte:** de la 1, que una pantalla no entre a un módulo por dentro ni hable con Supabase; de la 6, que `rules/` no importe ningún paquete (y las pruebas exigen ahí el 100 % de cobertura); de la 14, que dentro de un módulo no haya otro archivo ni otra carpeta.
+- **Y fuera de las 18:** nombres en kebab-case, colores solo en `theme/`, nada de `any`, `@ts-ignore` ni `console`, que cada botón declare su rol o su nombre para el lector de pantalla, y ningún comentario que saque código de la cobertura.
+
+Las demás no las ve el lint. La 8, la 9, la 17 y la 18 se comprueban en la base de datos, con las pruebas que llegan en la fase 1. La 10, la 11, la 12, la 13, la 15 y la 16 se cuidan al escribir y en la revisión de cada módulo.
+
+Un comentario `eslint-disable` no tiene efecto: se corrige el código, no la regla. `pnpm lint:rules` comprueba que las reglas sigan atrapando lo que deben; si una se afloja, falla.
 
 Además:
 
@@ -68,8 +77,8 @@ Además:
 ```bash
 pnpm start --tunnel        # abre la app en Expo Go: el celular escanea el QR
 pnpm lint                  # reglas de estructura y de código, sin avisos
-pnpm lint:rules            # prueba las propias reglas contra archivos hechos para romperlas
-pnpm typecheck
+pnpm lint:rules            # prueba las propias reglas: archivos hechos para romperlas y la tabla de §9.1, celda por celda
+pnpm typecheck             # genera los tipos de las rutas y compila: un enlace a una pantalla que no existe falla
 pnpm test                  # Jest
 pnpm test:coverage         # exige 100 % en lib/{money,dates,errors}, theme/tokens y features/*/rules
 pnpm test:scripts          # las pruebas de scripts/ (node --test)
@@ -85,7 +94,7 @@ pnpm db:check              # la revisión completa de la base: lint, consejos, t
 
 Antes de dar algo por terminado pasan `pnpm lint`, `pnpm lint:rules`, `pnpm typecheck` y `pnpm test`.
 
-**Una vez por copia del repositorio,** para que cada commit se revise solo: instalar gitleaks 8.30.1 (el comando está en `docs/plan/fase-0-proyecto.md`, tarea 7) y correr `pnpm exec lefthook install`. Desde ahí, un commit entra solo si pasan la búsqueda de secretos, el formato, el lint, los tipos, las pruebas y el formato del mensaje. En GitHub corre lo mismo, más la cobertura (`.github/workflows/ci.yml`).
+**Una vez por copia del repositorio,** para que cada commit se revise solo: instalar gitleaks 8.30.1 (el comando está en `docs/plan/fase-0-proyecto.md`, tarea 7) y correr `pnpm exec lefthook install`. Desde ahí, un commit entra solo si pasan la búsqueda de secretos, el formato, el lint, los tipos, las pruebas y el formato del mensaje. En GitHub (`.github/workflows/ci.yml`) se revisa lo mismo, pero completo y no solo lo que cambió: el formato de todos los archivos, el lint y la prueba de sus reglas, los tipos, las pruebas con su cobertura, el mensaje de cada commit que llega y los secretos en toda la historia.
 
 ## 5. La base de datos
 
@@ -96,7 +105,7 @@ El detalle está en `docs/spec/README.md`, «Lo común a todos los módulos» y 
 - **Primero la prueba, después la migración:** se escribe el archivo de `supabase/tests/`, se ve fallar con `pnpm test:db`, se escribe la migración (`pnpm sb migration new <nombre>`), se ve pasar, se envía con `pnpm db:push` y se corre `pnpm db:lint` y `pnpm db:advisors`. Una migración enviada no se edita.
 - **Se lee con reglas de acceso y se escribe solo por funciones.** La lógica que escribe vive en `private.<nombre>` (`security definer`) y en `public.<nombre>` queda una envoltura que la llama.
 - **Toda función** fija `set search_path = ''`, nombra cada cosa con su esquema, usa parámetros con `p_`, recibe y devuelve JSON en camelCase, y avisa los errores con `private.fail('<código>')`.
-- **Toda tabla** lleva las reglas de acceso activadas, `business_id`, `created_at` y `updated_at` con su trigger, y un índice por cada llave foránea. Una función nueva para la app se agrega a la lista de `supabase/tests/900_structure.test.sql`.
+- **Toda tabla** lleva las reglas de acceso activadas y un índice por cada llave foránea; las de `public`, además, `business_id`, `created_at` y `updated_at` con su trigger. Una vista lleva `security_invoker`, y una regla de acceso es para `authenticated` y filtra con `private.owned_business_ids()`. Una función nueva para la app se agrega a la lista de `supabase/tests/900_structure.test.sql`.
 - **Antes de cerrar una fase** pasa `pnpm db:check`.
 
 ## 6. Commits
@@ -113,4 +122,4 @@ Leer la documentación de la versión instalada, no responder de memoria: Expo c
 - **Expo Go** solo trae sus propios módulos nativos. Una librería con código nativo nuevo pide una compilación de desarrollo.
 - **Versiones fijadas a propósito:** ESLint 9 (Expo 58 no admite la 10), TypeScript 6.0, NativeWind 4 con Tailwind 3.4 (nunca Tailwind 4) y pnpm con `node-linker=hoisted`.
 - **Pruebas:** primero la prueba. Con Testing Library 14, `render` es asíncrono: se usa `await renderWithProviders(...)`, de `@/test/render`. Las pruebas de las pantallas viven en `src/test/routes/`, porque todo archivo dentro de `src/app` es una ruta.
-- **Estilos:** clases de NativeWind con los colores del tema. Una imagen toma su tamaño de un `View` que la envuelve, no de sus clases.
+- **Estilos:** clases de NativeWind con los colores del tema, que son los únicos que existen: `bg-red-500` o `text-white` no generan nada. Una imagen toma su tamaño de un `View` que la envuelve, no de sus clases.

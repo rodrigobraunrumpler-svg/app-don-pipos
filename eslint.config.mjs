@@ -9,10 +9,13 @@ import { createTypeScriptImportResolver } from "eslint-import-resolver-typescrip
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
-import { boundaries, structureRules, structureSettings } from "./eslint/structure.mjs";
+import { colorSelectors } from "./eslint/colors.mjs";
+import { boundaries, CODE, structureRules, structureSettings } from "./eslint/structure.mjs";
 
-// Un color completo (#rgb, #rrggbb, #rrggbbaa), un valor suelto de Tailwind ([#fff]) o rgb()/hsl(). «#0042» no coincide: es un número de pedido
-const RAW_COLOR = "/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$|\\[#[0-9a-fA-F]{3,8}\\]|\\b(?:rgba?|hsla?)\\(/";
+const NO_EXPORT_ALL = {
+  selector: "ExportAllDeclaration",
+  message: "En index.ts lo público se elige nombre por nombre",
+};
 
 export default tseslint.config(
   {
@@ -31,7 +34,8 @@ export default tseslint.config(
   ...expo,
   ...pluginQuery.configs["flat/recommended"],
   {
-    files: ["**/src/**/*.{ts,tsx}"],
+    // Todo el código de src, también el que no es TypeScript: un .js o un .jsx no queda fuera de las reglas
+    files: [`**/src/**/*.${CODE}`],
     linterOptions: { noInlineConfig: true, reportUnusedDisableDirectives: "error" },
     plugins: {
       boundaries,
@@ -51,32 +55,26 @@ export default tseslint.config(
       "max-lines": [2, { max: 250, skipBlankLines: true, skipComments: true }],
       "react/no-multi-comp": 2,
       "no-console": 2,
-      "@typescript-eslint/no-explicit-any": 2,
-      "@typescript-eslint/ban-ts-comment": 2,
+      // La cobertura se cumple con pruebas, no sacando ramas de la cuenta con un comentario
+      "no-warning-comments": [2, { terms: ["istanbul ignore", "c8 ignore", "v8 ignore"], location: "anywhere" }],
       "react-native-a11y/has-valid-accessibility-descriptors": 2,
       "check-file/filename-naming-convention": [
         2,
-        { "**/src/!(app)/**/*.{ts,tsx}": "KEBAB_CASE" },
+        { [`**/src/!(app)/**/*.${CODE}`]: "KEBAB_CASE" },
         { ignoreMiddleExtensions: true },
       ],
       "check-file/folder-naming-convention": [2, { "**/src/!(app)/**": "KEBAB_CASE" }],
-      "no-restricted-syntax": [
-        2,
-        { selector: `Literal[value=${RAW_COLOR}]`, message: "Los colores van en src/theme" },
-        { selector: `TemplateElement[value.raw=${RAW_COLOR}]`, message: "Los colores van en src/theme" },
-      ],
+      "no-restricted-syntax": [2, ...colorSelectors],
     },
+  },
+  {
+    // Reglas que solo existen en TypeScript
+    files: ["**/src/**/*.{ts,tsx}"],
+    rules: { "@typescript-eslint/no-explicit-any": 2, "@typescript-eslint/ban-ts-comment": 2 },
   },
   { files: ["**/src/theme/**"], rules: { "no-restricted-syntax": 0 } },
-  {
-    files: ["**/src/features/*/index.ts"],
-    rules: {
-      "no-restricted-syntax": [
-        2,
-        { selector: "ExportAllDeclaration", message: "En index.ts lo público se elige nombre por nombre" },
-      ],
-    },
-  },
-  { files: ["**/*.test.{ts,tsx}", "jest.setup.js"], languageOptions: { globals: globals.jest } },
+  // Una regla solo admite una lista: en el index.ts de un módulo van las de colores y, además, la de export *
+  { files: ["**/src/features/*/index.ts"], rules: { "no-restricted-syntax": [2, ...colorSelectors, NO_EXPORT_ALL] } },
+  { files: [`**/*.test.${CODE}`, "jest.setup.js"], languageOptions: { globals: globals.jest } },
   prettier,
 );

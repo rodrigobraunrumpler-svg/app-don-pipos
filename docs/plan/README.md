@@ -57,10 +57,10 @@ Cómo se construye la app de Don Pipos, por fases. Cada fase deja algo que funci
 | Antes de | Qué | Para qué |
 |---|---|---|
 | Fase 0 | Nada. Opcional: crear el repositorio privado en GitHub | Con el repositorio, el CI empieza a correr |
-| Fase 0, tarea 7 (**pendiente**) | Instalar gitleaks en tu máquina y activar los hooks: los dos comandos están en `fase-0-proyecto.md`, «Lo que falta» | Bloquear llaves y secretos, y revisar cada commit antes de que entre |
-| Fase 0, tarea 8 (**pendiente**) | Abrir la app en tu celular con Expo Go y mirar cuatro cosas (`fase-0-proyecto.md`, «Lo que falta») | Confirmar los estilos en un Android de verdad |
+| Fase 0, tarea 7 (**postergado por ti el 2026-11-19; se retoma antes de la fase 2**) | Instalar gitleaks en tu máquina y activar los hooks: los dos comandos están en `fase-0-proyecto.md`, «Lo que falta» | Bloquear llaves y secretos, y revisar cada commit antes de que entre |
+| Fase 0, tarea 8 (**pendiente**) | Abrir la app en tu celular con Expo Go y mirar cinco cosas (`fase-0-proyecto.md`, «Lo que falta») | Confirmar los estilos y las fechas en un Android de verdad |
 | Fase 1 (**hecho**, 2026-11-19) | Un proyecto de Supabase para desarrollo, su sesión de la CLI, y la llave publicable y la contraseña de la base en `.env.local` | La base de desarrollo |
-| Fase 1 (**resuelto**: sin Docker por ahora) | Decidir si se instala Docker dentro de WSL. Sin Docker, las migraciones se escriben a mano y las pruebas corren contra el proyecto de desarrollo; si un día se activa, sirven las mismas pruebas | Cómo se trabaja la base |
+| Fase 1 (**resuelto**: sin Docker por ahora) | Decidir si se instala Docker dentro de WSL. Sin Docker, las migraciones se escriben a mano y las pruebas corren contra el proyecto de desarrollo; si un día se activa, las mismas pruebas sirven, pero el corredor necesita conectarse a la base local en vez de la de desarrollo | Cómo se trabaja la base |
 | Fase 2 | Una cuenta de Expo; la llave secreta de Supabase en tu `.env.local` (nunca en el chat) | La primera APK y los scripts que crean al dueño y su PIN |
 | Fase 7 | Los datos del cliente (§7 de `PROJECT_CONTEXT.md`) | La puesta en marcha real |
 | Fase 8 | Un token de Sanity con permiso de escritura, el VPS, el proyecto de Supabase de producción y la verificación de desarrollador de Google | Copia a la web, copias de seguridad y la APK final |
@@ -69,7 +69,7 @@ Cómo se construye la app de Don Pipos, por fases. Cada fase deja algo que funci
 
 | Fase | Estado |
 |---|---|
-| 0. El proyecto | Construida el 2026-11-19, en la rama `fase-0`. Faltan dos pasos del dueño del proyecto: gitleaks con los hooks, y la prueba en el celular |
-| 1. Los cimientos de la base | Construida el 2026-11-19, en la rama `fase-1`. Las pruebas de la base salen en verde con `pnpm db:check` |
+| 0. El proyecto | Construida y revisada el 2026-11-19, en la rama `fase-0`; las correcciones de la revisión final están en `fase-0-proyecto.md`, «Después de la revisión final». Falta la prueba en el celular. Gitleaks y los hooks quedaron postergados por el dueño del proyecto hasta antes de la fase 2 |
+| 1. Los cimientos de la base | Construida y revisada el 2026-11-19, en la rama `fase-1`; las correcciones están en `fase-1-base.md`, «Después de la revisión final». Las pruebas de la base salen en verde con `pnpm db:check` |
 | 2. El acceso | Sigue: su plan se escribe ahora |
 | 3 a 8 | Su plan se escribe al terminar la fase anterior |

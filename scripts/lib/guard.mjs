@@ -26,16 +26,42 @@ export function loadEnv() {
   if (existsSync(file)) process.loadEnvFile(file);
 }
 
-const isYes = (value) => !/^(false|no|off|0|n)$/i.test(value);
+const PROJECT_REF = /^[a-z]{20}$/;
+// Opciones con las que la CLI elige otro proyecto u otra carpeta. Al confirmar, solo vale el proyecto enlazado.
+const OTHER_TARGET_FLAGS = ["--workdir", "--project-ref", "--project-id", "--db-url"];
+
+const describe = (target) => (target.includes("://") ? "una URL de base de datos" : target);
 
 /**
- * A qué proyecto le diría «sí» este comando de la CLI. Devuelve `undefined` si no confirma nada
- * (ni `--yes` ni `SUPABASE_YES`); si confirma, el valor de `--remote=<…>` o, sin él, el proyecto enlazado.
+ * Si el comando confirma cambios en la nube (cualquier `--yes…` o `SUPABASE_YES`), comprueba que solo pueda tocar el
+ * proyecto de desarrollo. Devuelve el problema, en español, o null si no hay ninguno. Nunca repite una URL completa.
  */
-export function yesTarget(args, env, linked) {
-  const flag = args.findLast((arg) => arg === "--yes" || arg.startsWith("--yes="));
-  const confirms = flag ? isYes(flag.split("=")[1] ?? "true") : Boolean(env.SUPABASE_YES);
-  if (!confirms) return undefined;
-  const remote = args.find((arg) => arg.startsWith("--remote="));
-  return remote ? remote.slice("--remote=".length) : linked;
+export function confirmedCommandProblem(args, env, linked, devRef) {
+  const confirms = args.some((arg) => arg === "--yes" || arg.startsWith("--yes=")) || Boolean(env.SUPABASE_YES);
+  if (!confirms) return null;
+
+  const refuse = (detail) =>
+    `Confirmar cambios en la nube (--yes) solo corre en el proyecto de desarrollo (${devRef || "SUPABASE_DEV_PROJECT_REF sin definir"}). ${detail}`;
+
+  const otherFlag = args.find((arg) => OTHER_TARGET_FLAGS.some((flag) => arg === flag || arg.startsWith(`${flag}=`)));
+  if (otherFlag) return refuse(`Quita ${otherFlag.split("=")[0]}: al confirmar, el comando usa el proyecto enlazado.`);
+
+  // --remote=<valor> y «--remote <valor>»: la CLI lee los dos como el proyecto de destino
+  const targets = [];
+  args.forEach((arg, index) => {
+    if (arg.startsWith("--remote=")) targets.push(arg.slice("--remote=".length));
+    else if (arg === "--remote" && args[index + 1] && !args[index + 1].startsWith("-")) targets.push(args[index + 1]);
+    // Un proyecto o una URL escritos sueltos («projects delete <ref>», «link <ref>»)
+    else if (PROJECT_REF.test(arg) || arg.includes("://")) targets.push(arg);
+  });
+  if (targets.length === 0) targets.push(linked);
+
+  const wrong = targets.find((target) => !target || !devRef || target !== devRef);
+  return wrong === undefined ? null : refuse(`Destino: ${wrong ? describe(wrong) : "ninguno enlazado"}.`);
+}
+
+/** Las variables con que corre la CLI: sin las que eligen otro proyecto o carpeta, y con la sesión propia de esta app. */
+export function childEnv(env, home) {
+  const { SUPABASE_PROJECT_ID: _project, SUPABASE_WORKDIR: _workdir, ...rest } = env;
+  return { ...rest, SUPABASE_HOME: env.SUPABASE_HOME ?? join(home, ".supabase-varmar-app") };
 }

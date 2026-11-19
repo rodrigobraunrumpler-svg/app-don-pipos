@@ -4,9 +4,10 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { cases, selfTest } from "../supabase/perf/cases.mjs";
-import { connect, inTestTransaction } from "./lib/db.mjs";
+import { connect, inTestTransaction, leftoverProblems } from "./lib/db.mjs";
 import { ROOT } from "./lib/guard.mjs";
 import { evaluate } from "./lib/perf.mjs";
+import { assertIsolated } from "./lib/sql.mjs";
 
 const MAX_MS = 50;
 const SEQ_SCANS = `select relname, seq_scan::integer as scans from pg_stat_xact_user_tables
@@ -48,7 +49,9 @@ const client = await connect().catch((error) => {
 });
 try {
   await inTestTransaction(client, async () => {
-    await client.query(readFileSync(join(ROOT, "supabase", "perf", "seed.sql"), "utf8"));
+    const seed = readFileSync(join(ROOT, "supabase", "perf", "seed.sql"), "utf8");
+    assertIsolated(seed, "supabase/perf/seed.sql");
+    await client.query(seed);
     for (const testCase of selfTestMode ? [selfTest] : cases) {
       const result = await measure(client, testCase);
       const found = evaluate(result, testCase.maxMs ?? MAX_MS);
@@ -56,6 +59,7 @@ try {
       problems.push(...found);
     }
   });
+  problems.push(...(await leftoverProblems(client)).map((problem) => `${problem}: la medición no se deshizo`));
 } finally {
   await client.end();
 }
