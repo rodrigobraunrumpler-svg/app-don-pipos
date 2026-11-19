@@ -146,6 +146,10 @@ Un concepto nuevo se agrega aquí antes de usarlo en el código.
 | Copia de seguridad | `backup` | `private.backup_runs` | La anota el VPS; el dueño ve la última en Más |
 | Página de una lista | `Page<T>` | — | `{ items, meta: { limit, total, hasMore, nextCursor } }` (§14.3) |
 | Error | `AppError` | — | Tipos: `offline`, `notFound`, `forbidden`, `invalid`, `conflict` y `unexpected` (cualquier otra cosa) |
+| Intentos de ingreso | `signInAttempts` | `private.sign_in_attempts` | Contados por número: 5 errores, 15 minutos; 10, cuenta bloqueada |
+| Contraseña interna | `ownerPassword` | — | HMAC del id del dueño con `AUTH_PASSWORD_SECRET`; nadie la escribe |
+| WhatsApp del equipo | `supportWhatsapp` | — | `EXPO_PUBLIC_SUPPORT_WHATSAPP`, para «Olvidé mi PIN» |
+| Ofrecer la huella | `offerBiometrics` | — | Recién ingresado, si el celular tiene huella registrada |
 | Código de la operación | `requestId` | `request_id`, en `private.idempotency_keys` | Evita que un reintento duplique un pedido, un pago o un gasto |
 | Versión de una fila | `version` | `version` | Detecta dos ediciones a la vez (`conflict`) |
 | Registro de cambios | `auditLog` | `private.audit_log` | Precios, ajustes y anulaciones, con lo de antes y lo de después |

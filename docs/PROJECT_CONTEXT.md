@@ -167,13 +167,15 @@ app/
 ├── src/
 │   ├── app/                        Pantallas (Expo Router): solo arman la pantalla
 │   │   ├── _layout.tsx             Sesión, datos, colores claro/oscuro y letra
+│   │   ├── index.tsx               La entrada: lleva a Ingresar, Entrar, la huella o Inicio según la sesión
 │   │   ├── (auth)/
-│   │   │   ├── sign-in.tsx         Número + PIN, la primera vez en el celular
-│   │   │   └── unlock.tsx          Huella o PIN, las demás veces
+│   │   │   └── sign-in.tsx         Número + PIN, la primera vez en el celular
+│   │   ├── unlock.tsx              Entrar: huella o PIN, las demás veces
+│   │   ├── biometrics.tsx          «¿Entrar con tu huella?», recién ingresado
 │   │   ├── (setup)/                Puesta en marcha: productos, stock, gastos
 │   │   └── (main)/                 Todo lo que pide sesión
 │   │       ├── _layout.tsx         Pestañas: Inicio, Pedidos, +, Stock, Más
-│   │       ├── index.tsx           Inicio
+│   │       ├── home.tsx            Inicio
 │   │       ├── orders/             index · new · [id] · counter · receivables
 │   │       ├── stock/              index · production · [productId]
 │   │       ├── expenses/           index · new
@@ -441,11 +443,11 @@ Versiones vigentes en npm ese día.
 | Acceso | Supabase Auth, una Edge Function que revisa el PIN, expo-local-authentication y expo-secure-store | Número y PIN la primera vez en cada celular, con intentos contados en el servidor; después huella o PIN (D18) |
 | Fotos de boletas | expo-image-picker y compresión antes de subir | Se guardan en Supabase Storage, privado |
 | Exportar | CSV con expo-file-system y expo-sharing | Excel lo abre directamente |
-| Errores | Sentry, plan gratis | En Expo Go solo registra errores de JavaScript; completo en la APK |
+| Errores | Sentry, plan gratis, con la APK de la entrega | En Expo Go solo registraría errores de JavaScript; por eso llega con la APK (decidido el 2026-11-19) |
 | Base de datos | Supabase: PostgreSQL 17 con RLS, funciones (todo o nada), vistas para reportes y Edge Functions | Reportes calculados en la base, no en el celular |
 | Pruebas | Jest (jest-expo) y Testing Library; pgTAP para la base, con un corredor propio (`pnpm test:db`) contra el proyecto de desarrollo; Playwright sobre la versión web | En esta PC no hay emulador de Android ni Docker |
 | Calidad | ESLint con las reglas de §10, Prettier, lefthook y GitHub Actions | |
-| Entrega | EAS Build (APK) y EAS Update (canales de prueba y producción) | |
+| Entrega | EAS Build (APK) y EAS Update (canales de prueba y producción), o la APK compilada en esta PC | Hasta la entrega, todo se prueba en Expo Go: no hace falta cuenta de Expo |
 | Herramientas | Node 24, pnpm 10 y la CLI de Supabase 3.2 (siempre por `pnpm sb`) | Como la web |
 
 Buenas prácticas de rendimiento 2026–2027: `docs/spec/README.md`.
@@ -540,7 +542,7 @@ Buenas prácticas de rendimiento 2026–2027: `docs/spec/README.md`.
 3. Decidir el stack completo.
 4. Maqueta de las pantallas (28, en `docs/design/pantallas/`) y aprobación del cliente.
 5. Estructura de carpetas final, especificación (`docs/spec/`) y plan de trabajo por fases (`docs/plan/`).
-6. **Primera versión, en 9 fases: unos 33 días de trabajo completos, alrededor de 6 semanas y media** (`docs/plan/README.md`). El cálculo anterior era de unas 5 semanas; creció con la idempotencia, el registro de cambios, las devoluciones y las correcciones de pedidos entregados. ← aquí estamos: las fases 0 y 1 están construidas (2026-11-19) y sigue la fase 2
+6. **Primera versión, en 9 fases: unos 33 días de trabajo completos, alrededor de 6 semanas y media** (`docs/plan/README.md`). El cálculo anterior era de unas 5 semanas; creció con la idempotencia, el registro de cambios, las devoluciones y las correcciones de pedidos entregados. ← aquí estamos: las fases 0, 1 y 2 están construidas (2026-11-19) y sigue la fase 3
 7. Una o dos semanas de uso real, y ajustes.
 8. Fase 2: pedidos de la web. Después, VarMar.
 

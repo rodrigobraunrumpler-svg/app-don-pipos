@@ -549,3 +549,75 @@ git commit -m "docs: record phase 2 results and move the APK and Sentry to deliv
 ```
 
 Con esto, la fase 2 está terminada. Sigue el plan de la fase 3.
+
+---
+
+## Resultado (2026-11-19)
+
+La fase 2 quedó construida en la rama `fase-2`, con un commit por tarea.
+
+| Comprobación | Resultado |
+|---|---|
+| `pnpm test:coverage` | 236 pruebas; 100 % en `lib/{money,dates,errors}`, `theme/tokens` y `features/auth/rules` |
+| `pnpm test:db` | 176 pruebas de la base en 13 archivos, incluidas las dos de dos conexiones |
+| `pnpm test:auth` | 6 pruebas contra las funciones subidas, con un dueño temporal que se borra al terminar |
+| `pnpm db:check` | Pasa entera |
+| `pnpm lint`, `pnpm lint:rules`, `pnpm typecheck`, `pnpm test:scripts` | Pasan |
+| Android | El paquete compila (6.7 MB); dentro va la llave publicable y ningún secreto |
+
+En el proyecto de desarrollo quedaron: las funciones `sign-in-with-pin` y `change-pin`, el registro público cerrado y el dueño DEMO «Don Pipos (DEMO)», con el número 900 000 101.
+
+### Lo que falta: probar en el celular
+
+Con Expo Go, desde tu terminal:
+
+```bash
+cd /home/javier/var-mar/app && pnpm start --tunnel
+```
+
+El PIN de prueba está en tu `.env.local`, en la línea `DEMO_OWNER_PIN`. El número es el 900 000 101.
+
+1. Ingresa con el número y el PIN. Al sexto número se comprueba solo.
+2. Acepta la huella y entra con ella.
+3. Deja la app más de 5 minutos en segundo plano y vuelve: pide huella o PIN.
+4. En Más → Cuenta, cambia «Pedir huella o PIN» a «Al salir», sal de la app y vuelve.
+5. Escribe mal el PIN cinco veces: «Cerramos la sesión». Ingresa de nuevo.
+6. Cambia el PIN en Más → Cuenta y entra con el nuevo.
+7. Mira que Inicio muestre la fecha de hoy en español. Así se comprueban también las fechas de la fase 0 en el celular.
+
+Si el PIN de prueba se bloquea, `pnpm owner reset-pin --phone 900000101 --demo` pone uno nuevo en `.env.local`.
+
+### Lo que cambió respecto de este plan
+
+**Antes de empezar**
+- Se trabajó en una copia aparte de la rama `fase-2`, mientras se revisaban las fases 0 y 1. Después se juntaron las tres.
+
+**Tarea 2**
+- Los intentos se cuentan por número en su propia tabla (`private.sign_in_attempts`), y no en la del PIN. Ya estaba en el plan; se anotó primero en `auth.md`.
+- Un número o un PIN mal formados no cuentan como intento: responden `invalid`. `retryAt` va en UTC con milisegundos.
+
+**Tarea 3**
+- El cliente de la base vive en cada función; `_shared/` tiene solo código que corre igual en Node y en Deno, y su propio revisor de tipos.
+- `@supabase/supabase-js` se instaló en esta tarea y no en la 5: lo necesitan los scripts del equipo.
+
+**Tarea 4**
+- La prueba del registro cerrado revisa la configuración del proyecto: un intento real de registro choca primero con el límite de correos de Supabase.
+- `pnpm db:advisors` acepta a conciencia un solo aviso (la revisión de contraseñas filtradas: las contraseñas son internas), con su motivo en `scripts/lib/advisors.mjs`.
+- Las pruebas de la base ya no cuentan tablas enteras, y usan números 900 000 9xx: los 1xx son de los datos DEMO.
+
+**Tarea 5**
+- `supabase` es una función que crea el cliente la primera vez. Los plugins de SecureStore y de la huella se agregaron a mano a `app.config.ts`.
+
+**Tarea 6**
+- El candado vive en un hook (`use-unlock-state.ts`) y el proveedor solo lo conecta. La app no pasa por Entrar justo después de ingresar.
+- Una sesión sin PIN guardado en el celular pide ingresar de nuevo.
+- Los errores de red de supabase-js se leen como «Sin conexión» (el pendiente I13 de la fase 0).
+
+**Tarea 7**
+- Los íconos son de `@expo/vector-icons` (vienen en Expo Go), con colores del tema.
+- La huella se ofrece en su propia pantalla, recién ingresado.
+- Textos que la maqueta no dibuja, con su estilo: el número incompleto, «Volver» en la espera, sin señal al cambiar el PIN, el final del cambio y el mensaje de WhatsApp.
+
+**Tarea 8**
+- La entrada `/` (sin protección) lleva a donde corresponde, e Inicio quedó en `/home`.
+- El «+» de las pestañas se ve apagado hasta la fase 4.

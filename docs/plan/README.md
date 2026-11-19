@@ -23,7 +23,7 @@ Cómo se construye la app de Don Pipos, por fases. Cada fase deja algo que funci
 |---|---|---|---|---|
 | **0. El proyecto** ([plan](fase-0-proyecto.md)) | Expo 58 con la estructura de carpetas, las reglas de lint probadas, el tema claro y oscuro, lo común de `lib`, el generador de módulos, los commits vigilados y el CI | La app abre con el logo y la letra, y cambia a oscuro con el celular | `PROJECT_CONTEXT.md` §9, §10 y §14 | 2 |
 | **1. Los cimientos de la base** | Permisos cerrados, esquema `private`, tipos reutilizables, columnas y trigger comunes, idempotencia, registro de cambios, negocio y ajustes, pruebas de la base, medidor de rendimiento y tipos generados | Nada en pantalla: las pruebas de la base salen en verde con un comando | `spec/README.md`, `businesses.md` | 3 |
-| **2. El acceso** | PIN revisado en el servidor, huella, bloqueo, sesión cifrada, variables de entorno revisadas al arrancar, las pestañas vacías y Más → Cuenta. Sentry sin datos personales y la primera APK de prueba | Ingresar con tu número y tu PIN, entrar con la huella, el bloqueo a los 5 minutos e instalar la APK | `auth.md` | 4 |
+| **2. El acceso** ([plan](fase-2-acceso.md)) | PIN revisado en el servidor con los intentos contados, huella, bloqueo, sesión cifrada, variables de entorno revisadas al arrancar, las pestañas vacías y Más → Cuenta. La APK y Sentry pasan a la entrega (decidido el 2026-11-19) | Ingresar con el número y el PIN de prueba, entrar con la huella, el bloqueo al volver y cambiar el PIN | `auth.md` | 4 |
 | **3. Productos y stock** | Productos y precios, stock, producción, merma, conteo, sugerencia y «Un alfajor» | Cambiar un precio, registrar la producción sugerida, anotar una merma y contar | `products.md`, `stock.md` | 4 |
 | **4. Pedidos** | Pedidos, pagos y devoluciones, venta de mostrador, demorados y por cobrar. Clientes por teléfono y mensajes por defecto | Anotar un pedido de punta a punta, vender en el mostrador, cobrar, anular y cambiar un medio de pago | `orders.md`, `customers.md` (registro), `messages.md` (por defecto) | 7 |
 | **5. Gastos, ingresos y caja** | Gastos con foto, ingresos a mano y cuadre de caja | Anotar un gasto con su boleta y cuadrar la caja del día | `expenses.md`, `income.md`, `cash.md` | 3 |
@@ -48,7 +48,7 @@ Cómo se construye la app de Don Pipos, por fases. Cada fase deja algo que funci
 | NativeWind 4 en Expo 58 (oficialmente llega a SDK 57) | Fase 0, tarea 3, con un criterio escrito. Pasó todo lo que se puede revisar sin celular; falta verlo en Expo Go | Estilos con `StyleSheet` y el tema; no cambia nada más |
 | ESLint: Expo 58 solo admite la versión 9, que ya no recibe soporte | Fase 0, tarea 2. Las reglas ya se probaron con ESLint 9.39 | Se sube a la 10 cuando Expo la admita |
 | Los esquemas declarativos de Supabase están en alfa y necesitan una base local | Fase 1: no hay Docker, así que se aplicó el plan B | Migraciones escritas a mano, ordenadas por módulo, y probadas antes de enviarse |
-| Que la APK compile | Fase 2, al final: primera APK de prueba | Se corrige con el acceso recién hecho, no al final del proyecto |
+| Que la APK compile | La entrega (fase 8). Hasta entonces la app usa solo librerías que Expo Go ya trae, así compilar la APK no da sorpresas | Se corrige antes de entregarla al cliente |
 | Abrir la sesión desde el servidor con el PIN | Fase 2, primera tarea | Se ajusta el diseño de `auth.md` antes de construir lo demás |
 | Rendimiento con años de datos | Desde la fase 1: el medidor corre en cada fase | Se agrega el índice que falte, y la prueba lo confirma |
 
@@ -61,7 +61,8 @@ Cómo se construye la app de Don Pipos, por fases. Cada fase deja algo que funci
 | Fase 0, tarea 8 (**pendiente**) | Abrir la app en tu celular con Expo Go y mirar cinco cosas (`fase-0-proyecto.md`, «Lo que falta») | Confirmar los estilos y las fechas en un Android de verdad |
 | Fase 1 (**hecho**, 2026-11-19) | Un proyecto de Supabase para desarrollo, su sesión de la CLI, y la llave publicable y la contraseña de la base en `.env.local` | La base de desarrollo |
 | Fase 1 (**resuelto**: sin Docker por ahora) | Decidir si se instala Docker dentro de WSL. Sin Docker, las migraciones se escriben a mano y las pruebas corren contra el proyecto de desarrollo; si un día se activa, las mismas pruebas sirven, pero el corredor necesita conectarse a la base local en vez de la de desarrollo | Cómo se trabaja la base |
-| Fase 2 | Una cuenta de Expo; la llave secreta de Supabase en tu `.env.local` (nunca en el chat) | La primera APK y los scripts que crean al dueño y su PIN |
+| Fase 2 (**hecho**, 2026-11-19) | La llave secreta de Supabase en tu `.env.local` (nunca en el chat), el permiso para subir funciones y cerrar el registro, y el WhatsApp del equipo | Los scripts que crean al dueño y su PIN, y los botones de «Olvidé mi PIN» |
+| Fase 8 | Una cuenta de Expo (o las herramientas de Android en tu PC) y una de Sentry | La APK que se le entrega al cliente y ver sus errores |
 | Fase 7 | Los datos del cliente (§7 de `PROJECT_CONTEXT.md`) | La puesta en marcha real |
 | Fase 8 | Un token de Sanity con permiso de escritura, el VPS, el proyecto de Supabase de producción y la verificación de desarrollador de Google | Copia a la web, copias de seguridad y la APK final |
 
@@ -71,5 +72,6 @@ Cómo se construye la app de Don Pipos, por fases. Cada fase deja algo que funci
 |---|---|
 | 0. El proyecto | Construida y revisada el 2026-11-19, en la rama `fase-0`; las correcciones de la revisión final están en `fase-0-proyecto.md`, «Después de la revisión final». Falta la prueba en el celular. Gitleaks y los hooks quedaron postergados por el dueño del proyecto hasta antes de la fase 2 |
 | 1. Los cimientos de la base | Construida y revisada el 2026-11-19, en la rama `fase-1`; las correcciones están en `fase-1-base.md`, «Después de la revisión final». Las pruebas de la base salen en verde con `pnpm db:check` |
-| 2. El acceso | Sigue: su plan se escribe ahora |
-| 3 a 8 | Su plan se escribe al terminar la fase anterior |
+| 2. El acceso | Construida el 2026-11-19, en la rama `fase-2`. Falta tu prueba en el celular (`fase-2-acceso.md`, «Lo que falta») |
+| 3. Productos y stock | Sigue: su plan se escribe ahora |
+| 4 a 8 | Su plan se escribe al terminar la fase anterior |

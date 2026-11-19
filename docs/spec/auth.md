@@ -109,16 +109,18 @@ Son números que alguien escribió: las filas sin cambios hace más de 30 días 
   - «PIN incorrecto» con los intentos que quedan;
   - «Cerramos la sesión», con «Ingresar de nuevo».
 - **Más → Cuenta:** tu número, entrar con huella (interruptor), cuándo pedir huella o PIN (hoja), cambiar PIN y cerrar sesión en este celular.
-- **El layout raíz:** sin sesión manda a Ingresar; con sesión y bloqueo, a Entrar.
+- **Recién ingresado,** si el celular tiene huella: «¿Entrar con tu huella?» (`/biometrics`), antes de Inicio.
+- **El layout raíz:** sin sesión manda a Ingresar; con sesión y bloqueo, a Entrar; recién ingresado, a la huella; si no, a las pestañas. Lo hace con `Stack.Protected`, y la entrada `/` (sin protección) lleva a donde corresponde. Mientras se sabe si hay sesión, solo el fondo.
+- **Sin variables de entorno válidas:** «Falta configurar la app», con lo que falta.
+- **El WhatsApp del equipo** sale de `EXPO_PUBLIC_SUPPORT_WHATSAPP`; sin él, «Olvidé mi PIN» y «Pedir un PIN nuevo al equipo» no se muestran.
 
 ## 7. Con otros módulos
 
 **Usa:** ninguno; `businesses` lo usa a él.
 
 **Expone:**
-- `useSession()` y `useUnlock()`.
-- `signInWithPin`, `changePin` y `signOutHere`.
-- `AccountSection`.
+- `UnlockProvider`, `UnlockConsumer` y `useUnlock()`: la sesión (`sessionStatus`), el candado y sus acciones.
+- Las pantallas: `SignInView`, `UnlockView`, `OfferBiometrics`, `ChangePinFlow` y `AccountSection`.
 
 El teclado y los puntos son genéricos y viven en `components/ui`.
 
