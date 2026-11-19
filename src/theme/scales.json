@@ -1,0 +1,10 @@
+{
+  "radii": { "sm": 12, "md": 16, "lg": 20, "xl": 26 },
+  "fonts": {
+    "regular": "Manrope_400Regular",
+    "medium": "Manrope_500Medium",
+    "semibold": "Manrope_600SemiBold",
+    "bold": "Manrope_700Bold",
+    "extrabold": "Manrope_800ExtraBold"
+  }
+}

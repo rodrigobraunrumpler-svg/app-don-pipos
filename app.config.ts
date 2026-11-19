@@ -12,6 +12,7 @@ const config: ExpoConfig = {
     package: "pe.varmar.app",
     adaptiveIcon: { foregroundImage: "./assets/icon.png", backgroundColor: "#354b2e" },
   },
+  web: { bundler: "metro" },
   plugins: [
     "expo-router",
     "expo-font",

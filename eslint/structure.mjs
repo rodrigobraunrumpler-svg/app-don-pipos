@@ -26,6 +26,7 @@ export const structureSettings = {
     { type: "theme", pattern: "src/theme" },
     { type: "test-utils", pattern: "src/test" },
     { type: "types", pattern: "src/types" },
+    { type: "asset", pattern: "assets" },
   ],
   "boundaries/files": [{ pattern: "**/*.test.{ts,tsx}", category: "test" }],
   "boundaries/legacy-templates": false,
@@ -41,7 +42,7 @@ export const structureRules = {
       checkUnknownLocals: true,
       policies: [
         { allow: { to: { module: { origin: ["external", "core"] } } } },
-        { from: of("route"), allow: { to: [anyFeatureIndex, of("ui", "theme"), libButSupabase] } },
+        { from: of("route"), allow: { to: [anyFeatureIndex, of("ui", "theme", "asset"), libButSupabase] } },
         {
           from: of("feature-components"),
           allow: {
@@ -49,7 +50,7 @@ export const structureRules = {
               ...sameLayers("hooks", "queries", "rules", "schema"),
               ownFile("constants.ts"),
               otherFeatureIndex,
-              of("ui", "theme"),
+              of("ui", "theme", "asset"),
               libButSupabase,
             ],
           },
@@ -78,7 +79,7 @@ export const structureRules = {
           },
         },
         { from: of("feature"), allow: { to: sameLayers("components", "hooks", "queries", "rules", "schema") } },
-        { from: of("ui"), allow: { to: [of("theme"), libButSupabase] } },
+        { from: of("ui"), allow: { to: [of("theme", "asset"), libButSupabase] } },
         { from: of("lib"), allow: { to: of("types") } },
         { from: of("test-utils"), allow: { to: [anyFeatureIndex, of("ui", "theme", "lib", "route")] } },
         { from: { file: { categories: "test" } }, allow: { to: of("test-utils") } },

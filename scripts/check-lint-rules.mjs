@@ -21,6 +21,7 @@ const EXPECTED = {
   "features/orders/rules/uses-api.ts": [D],
   "features/orders/rules/uses-lib-supabase.ts": [D],
   "features/orders/rules/uses-react.ts": [D],
+  "features/orders/rules/uses-asset.ts": [D],
   "features/orders/rules/shortcuts.ts": [
     "@typescript-eslint/ban-ts-comment",
     "@typescript-eslint/no-explicit-any",
