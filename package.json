@@ -15,7 +15,9 @@
     "test:coverage": "jest --coverage",
     "lint": "eslint . --max-warnings 0",
     "lint:rules": "node scripts/check-lint-rules.mjs",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "new:feature": "node scripts/new-feature.mjs",
+    "test:scripts": "node --test \"scripts/*.test.mjs\""
   },
   "dependencies": {
     "@date-fns/tz": "^1.5.0",
