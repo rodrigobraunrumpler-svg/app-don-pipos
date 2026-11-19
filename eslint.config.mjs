@@ -29,6 +29,8 @@ export default tseslint.config(
       "templates/**",
       "tools/lint-fixtures/**",
       "src/types/database.ts",
+      // Deno: lo revisan su propio tsconfig (supabase/functions/tsconfig.json) y la prueba contra las funciones subidas
+      "supabase/functions/**",
     ],
   },
   ...expo,
