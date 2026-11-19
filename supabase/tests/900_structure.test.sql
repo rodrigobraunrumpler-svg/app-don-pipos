@@ -1,7 +1,7 @@
--- La prueba que vigila la estructura de toda la base. Las fases siguientes la heredan.
+-- La prueba que vigila la estructura de toda la base, con 11 reglas. Las fases siguientes la heredan.
 -- Cada regla se comprueba dos veces: contra un objeto hecho para romperla, que tiene que ser detectado,
 -- y contra la base real, que tiene que salir limpia.
-select plan(18);
+select plan(26);
 
 -- 1. Toda tabla tiene las reglas de acceso activadas
 create function pg_temp.tables_without_rls() returns setof text language sql as $$
@@ -92,7 +92,11 @@ create function pg_temp.open_to_anon() returns setof text language sql as $$
   from pg_catalog.pg_class c
   join pg_catalog.pg_namespace n on n.oid = c.relnamespace
   where n.nspname in ('public', 'private') and c.relkind in ('r', 'p', 'v', 'm', 'f')
-    and has_table_privilege('anon', c.oid, 'select, insert, update, delete, truncate, references, trigger')
+    and (
+      has_table_privilege('anon', c.oid, 'select, insert, update, delete, truncate, references, trigger')
+      -- un permiso dado columna por columna no aparece en has_table_privilege
+      or has_any_column_privilege('anon', c.oid, 'select, insert, update, references')
+    )
   union all
   select 'secuencia ' || c.oid::regclass::text
   from pg_catalog.pg_class c
@@ -111,6 +115,10 @@ create table public.zz_canary (id integer);
 grant select on public.zz_canary to anon;
 select isnt_empty('select * from pg_temp.open_to_anon()', 'detecta una tabla abierta sin sesión');
 drop table public.zz_canary;
+create table public.zz_canary (id integer, x integer);
+grant select (x) on public.zz_canary to anon;
+select isnt_empty('select * from pg_temp.open_to_anon()', 'detecta una columna abierta sin sesión');
+drop table public.zz_canary;
 select is_empty('select * from pg_temp.open_to_anon()', 'nada es accesible sin sesión');
 
 -- 7. La app no escribe directo en ninguna tabla
@@ -119,12 +127,19 @@ create function pg_temp.tables_writable_by_app() returns setof text language sql
   from pg_catalog.pg_class c
   join pg_catalog.pg_namespace n on n.oid = c.relnamespace
   where n.nspname in ('public', 'private') and c.relkind in ('r', 'p', 'v', 'm', 'f')
-    and has_table_privilege('authenticated', c.oid, 'insert, update, delete, truncate')
+    and (
+      has_table_privilege('authenticated', c.oid, 'insert, update, delete, truncate')
+      or has_any_column_privilege('authenticated', c.oid, 'insert, update')
+    )
 $$;
 
 create table public.zz_canary (id integer);
 grant insert on public.zz_canary to authenticated;
 select isnt_empty('select * from pg_temp.tables_writable_by_app()', 'detecta una tabla donde la app puede escribir directo');
+drop table public.zz_canary;
+create table public.zz_canary (id integer, x integer);
+grant update (x) on public.zz_canary to authenticated;
+select isnt_empty('select * from pg_temp.tables_writable_by_app()', 'detecta una columna donde la app puede escribir directo');
 drop table public.zz_canary;
 select is_empty('select * from pg_temp.tables_writable_by_app()', 'la app no escribe directo en ninguna tabla');
 
@@ -165,5 +180,54 @@ grant execute on function public.zz_canary_fn() to authenticated;
 select isnt_empty('select * from pg_temp.definer_functions_in_public()', 'detecta una función security definer de public al alcance de la app');
 drop function public.zz_canary_fn();
 select is_empty('select * from pg_temp.definer_functions_in_public()', 'ninguna función security definer de public está al alcance de la app');
+
+-- 10. Una vista lee con los permisos de quien consulta (security_invoker), y la app no lee vistas materializadas ni tablas foráneas
+create function pg_temp.unsafe_views() returns setof text language sql as $$
+  select c.oid::regclass::text
+  from pg_catalog.pg_class c
+  join pg_catalog.pg_namespace n on n.oid = c.relnamespace
+  where n.nspname in ('public', 'private')
+    and (
+      (c.relkind = 'v'
+        and not coalesce(c.reloptions, '{}') && array['security_invoker=true', 'security_invoker=on', 'security_invoker=1', 'security_invoker=yes'])
+      or (c.relkind in ('m', 'f')
+        and (has_table_privilege('authenticated', c.oid, 'select') or has_any_column_privilege('authenticated', c.oid, 'select')
+          or has_table_privilege('anon', c.oid, 'select') or has_any_column_privilege('anon', c.oid, 'select')))
+    )
+$$;
+
+create view public.zz_canary_view as select id from public.businesses;
+select isnt_empty('select * from pg_temp.unsafe_views()', 'detecta una vista que lee con los permisos de su dueño');
+drop view public.zz_canary_view;
+create materialized view public.zz_canary_mv as select 1 as x;
+grant select on public.zz_canary_mv to authenticated;
+select isnt_empty('select * from pg_temp.unsafe_views()', 'detecta una vista materializada que la app puede leer');
+drop materialized view public.zz_canary_mv;
+select is_empty('select * from pg_temp.unsafe_views()', 'toda vista lee con los permisos de quien consulta');
+
+-- 11. Toda regla de acceso es para authenticated y filtra por los negocios del usuario
+create function pg_temp.loose_policies() returns setof text language sql as $$
+  select p.polrelid::regclass::text || ' (' || p.polname || ')'
+  from pg_catalog.pg_policy p
+  join pg_catalog.pg_class c on c.oid = p.polrelid
+  join pg_catalog.pg_namespace n on n.oid = c.relnamespace
+  where n.nspname in ('public', 'private')
+    and (
+      -- polroles = {0} es «para cualquier rol» (PUBLIC)
+      p.polroles <> array['authenticated'::regrole::oid]
+      or coalesce(pg_get_expr(p.polqual, p.polrelid), '') || coalesce(pg_get_expr(p.polwithcheck, p.polrelid), '')
+        not like '%owned_business_ids%'
+    )
+$$;
+
+create table public.zz_canary (id integer, business_id uuid);
+alter table public.zz_canary enable row level security;
+create policy zz_open on public.zz_canary for select to authenticated using (true);
+select isnt_empty('select * from pg_temp.loose_policies()', 'detecta una regla de acceso que deja leer todo');
+drop policy zz_open on public.zz_canary;
+create policy zz_public on public.zz_canary for select using (business_id = any ((select private.owned_business_ids())::uuid[]));
+select isnt_empty('select * from pg_temp.loose_policies()', 'detecta una regla de acceso para cualquier rol');
+drop table public.zz_canary;
+select is_empty('select * from pg_temp.loose_policies()', 'toda regla de acceso es para authenticated y filtra por negocio');
 
 select * from finish();
