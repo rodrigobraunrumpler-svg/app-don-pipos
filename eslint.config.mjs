@@ -76,6 +76,6 @@ export default tseslint.config(
       ],
     },
   },
-  { files: ["**/*.test.{ts,tsx}"], languageOptions: { globals: globals.jest } },
+  { files: ["**/*.test.{ts,tsx}", "jest.setup.js"], languageOptions: { globals: globals.jest } },
   prettier,
 );

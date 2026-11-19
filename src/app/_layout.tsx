@@ -8,13 +8,22 @@ import {
   Manrope_800ExtraBold,
   useFonts,
 } from "@expo-google-fonts/manrope";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import Constants from "expo-constants";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 
+import { createPersistOptions, createQueryClient, setupFocusManager, setupOnlineManager } from "@/lib/query";
 import { ThemeProvider } from "@/theme";
 
 SplashScreen.preventAutoHideAsync();
+
+// Uno solo para toda la app, creado fuera del componente
+const queryClient = createQueryClient();
+const persistOptions = createPersistOptions(Constants.expoConfig?.version ?? "0");
+setupOnlineManager();
+setupFocusManager();
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -34,8 +43,10 @@ export default function RootLayout() {
   if (!ready) return null;
 
   return (
-    <ThemeProvider>
-      <Stack screenOptions={{ headerShown: false }} />
-    </ThemeProvider>
+    <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
+      <ThemeProvider>
+        <Stack screenOptions={{ headerShown: false }} />
+      </ThemeProvider>
+    </PersistQueryClientProvider>
   );
 }
