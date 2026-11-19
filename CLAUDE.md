@@ -1,0 +1,98 @@
+# CLAUDE.md — Reglas para trabajar en la app de Don Pipos
+
+App de gestión para Android (Expo SDK 58 + Supabase). Idioma del proyecto: español (Perú). Este archivo resume; cuando haga falta el detalle, manda el documento que se cita.
+
+## 1. Mapa de documentos
+
+| Documento                 | Qué tiene                                                                                                                         |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `docs/PROJECT_CONTEXT.md` | Alcance, decisiones, reglas del negocio (§6), estructura de carpetas (§9), reglas del código (§10), seguridad (§12) y stack (§14) |
+| `docs/glossary.md`        | El nombre de cada concepto en la pantalla, en el código y en la base. Manda sobre cualquier otro nombre                           |
+| `docs/spec/`              | `README.md` con las reglas comunes de la base, y un archivo por módulo                                                            |
+| `docs/plan/`              | `README.md` con las fases y su estado, y el plan detallado de cada fase                                                           |
+| `docs/design/pantallas/`  | La maqueta aprobada (`index.html`). Es la referencia visual; sus datos son de ejemplo                                             |
+
+Si un cambio se aparta de la especificación, primero se actualiza la especificación.
+
+## 2. Reglas que no se negocian
+
+Las 18 reglas del código (`PROJECT_CONTEXT.md` §10.1):
+
+1. **Pantallas delgadas:** `src/app` pide los datos a los módulos y los muestra; no consulta ni calcula.
+2. **Supabase solo en `api/`:** es el único punto de contacto de cada módulo.
+3. **Módulos que no se pisan:** un módulo usa otro solo por su `index.ts`, sin ciclos.
+4. **Cada carpeta en su papel:** la tabla de `PROJECT_CONTEXT.md` §9.1.
+5. **Lo común no sabe del negocio:** `components/ui` y `lib` no importan de ningún módulo.
+6. **Las cuentas, donde corresponde:** lo guardado lo calcula la base; el celular solo calcula la vista previa, en `rules/` y con pruebas.
+7. **Archivos chicos:** un componente por archivo y 250 líneas como máximo.
+8. **La base cambia solo con migraciones,** generadas desde `supabase/schemas/`; los tipos se generan de ella.
+9. **Cada tabla igual de segura:** `business_id`, `created_at`, `updated_at`, reglas de acceso activas y `search_path` fijo en las funciones.
+10. **Montos y fechas centralizados:** céntimos enteros y hora de Lima, siempre con `lib/money.ts` y `lib/dates.ts`.
+11. **Idioma:** el código en inglés; los textos que ve el dueño, en español.
+12. **Sin librerías de más:** TanStack Query para los datos y el estado de React para lo demás.
+13. **Lo que se repite sube:** si lo usan dos módulos, pasa a `components/ui` o a `lib`.
+14. **Módulos con la misma forma:** se crean con `pnpm new:feature <nombre>`, nunca a mano.
+15. **Un nombre por concepto:** manda `docs/glossary.md`; un concepto nuevo se agrega ahí antes de usarlo.
+16. **Errores con un solo formato:** `api/` convierte todo en `AppError`; los textos para el dueño salen de `lib/errors.ts`.
+17. **Base rápida desde el principio:** un índice compuesto por consulta (empieza por `business_id`), cursor en vez de OFFSET y lo muy leído ya calculado.
+18. **Que nada se duplique:** cada creación lleva un `request_id`; si se reintenta, la base devuelve lo ya creado.
+
+El lint las hace cumplir (`eslint.config.mjs`, `eslint/structure.mjs`). Un comentario `eslint-disable` no tiene efecto: se corrige el código, no la regla.
+
+Además:
+
+- **No inventar datos del negocio:** productos, precios, clientes, teléfonos ni textos del dueño. Lo que falta se pregunta; lo de prueba se marca como DEMO y vive solo en desarrollo.
+- **Nunca pedir ni escribir una llave secreta:** ni la de Supabase (`sb_secret_…`), ni la contraseña de la base, ni un token; tampoco en el chat. El dueño del proyecto corre `supabase login` y `supabase link` en su terminal. Las llaves viven en `.env.local`, que no entra al repositorio, y ninguna secreta lleva el prefijo `EXPO_PUBLIC_`.
+
+## 3. Dónde va cada cosa
+
+| Si es…                                  | Va en…                                     |
+| --------------------------------------- | ------------------------------------------ |
+| Una pantalla, o la unión de dos módulos | `src/app/`, y solo arma la pantalla        |
+| Hablar con Supabase                     | `features/<módulo>/api/`                   |
+| Claves, consultas y mutaciones          | `features/<módulo>/queries/`               |
+| La forma de los datos                   | `features/<módulo>/schema/`                |
+| Una cuenta (total, estado, demora)      | `features/<módulo>/rules/`, con su prueba  |
+| Una pieza propia del módulo             | `features/<módulo>/components/`            |
+| Una pieza que usan dos o más módulos    | `components/ui/`                           |
+| Una función común (montos, fechas)      | `lib/`                                     |
+| Un error y su texto para el dueño       | `lib/errors.ts`                            |
+| Un concepto nuevo del negocio           | `docs/glossary.md`, antes que en el código |
+| Una ayuda para las pruebas              | `src/test/`                                |
+| Un precio, un producto o un límite      | La base de datos                           |
+| Un color o un tamaño                    | `theme/`                                   |
+| Un cambio en la base de datos           | `supabase/migrations/`                     |
+
+## 4. Comandos
+
+```bash
+pnpm start --tunnel        # abre la app en Expo Go: el celular escanea el QR
+pnpm lint                  # reglas de estructura y de código, sin avisos
+pnpm lint:rules            # prueba las propias reglas contra archivos hechos para romperlas
+pnpm typecheck
+pnpm test                  # Jest
+pnpm test:coverage         # exige 100 % en lib/{money,dates,errors}, theme/tokens y features/*/rules
+pnpm test:scripts          # las pruebas de scripts/ (node --test)
+pnpm format                # Prettier
+pnpm new:feature <nombre>  # crea un módulo en src/features desde templates/feature
+```
+
+Antes de dar algo por terminado pasan `pnpm lint`, `pnpm lint:rules`, `pnpm typecheck` y `pnpm test`.
+
+**Una vez por copia del repositorio,** para que cada commit se revise solo: instalar gitleaks 8.30.1 (el comando está en `docs/plan/fase-0-proyecto.md`, tarea 7) y correr `pnpm exec lefthook install`. Desde ahí, un commit entra solo si pasan la búsqueda de secretos, el formato, el lint, los tipos, las pruebas y el formato del mensaje. En GitHub corre lo mismo, más la cobertura (`.github/workflows/ci.yml`).
+
+## 5. Commits
+
+En inglés y con Conventional Commits: `feat`, `fix`, `docs`, `chore`, `refactor` o `test`. El asunto tiene hasta 100 caracteres. Sin cuerpo y sin pie (tampoco `Co-Authored-By`). Un commit por tarea del plan.
+
+## 6. Antes de escribir código de Expo o de una librería
+
+Leer la documentación de la versión instalada, no responder de memoria: Expo cambia en cada SDK.
+
+- **Expo:** la versión está en `package.json`; su documentación, en `https://docs.expo.dev/versions/v58.0.0/`, y el índice en `https://docs.expo.dev/llms.txt`.
+- **Paquetes de Expo:** se instalan con `pnpm expo install <paquete>`, para que la versión coincida con el SDK. `npx expo-doctor` revisa y `pnpm expo install --fix` corrige.
+- **Carpetas `android/` e `ios/`:** se generan; no se crean ni se editan a mano. Lo nativo se configura en `app.config.ts`.
+- **Expo Go** solo trae sus propios módulos nativos. Una librería con código nativo nuevo pide una compilación de desarrollo.
+- **Versiones fijadas a propósito:** ESLint 9 (Expo 58 no admite la 10), TypeScript 6.0, NativeWind 4 con Tailwind 3.4 (nunca Tailwind 4) y pnpm con `node-linker=hoisted`.
+- **Pruebas:** primero la prueba. Con Testing Library 14, `render` es asíncrono: se usa `await renderWithProviders(...)`, de `@/test/render`. Las pruebas de las pantallas viven en `src/test/routes/`, porque todo archivo dentro de `src/app` es una ruta.
+- **Estilos:** clases de NativeWind con los colores del tema. Una imagen toma su tamaño de un `View` que la envuelve, no de sus clases.

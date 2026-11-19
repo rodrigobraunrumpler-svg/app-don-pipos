@@ -1,0 +1,20 @@
+# Lo que revisa cada commit. Se activa una vez por copia del repositorio: pnpm exec lefthook install
+pre-commit:
+  parallel: true
+  commands:
+    secrets:
+      run: gitleaks git --pre-commit --staged --redact --no-banner
+      fail_text: "gitleaks encontró un posible secreto, o no está instalado (CLAUDE.md, «Comandos»)"
+    format:
+      glob: "*.{ts,tsx,js,mjs,json,md,yml}"
+      run: pnpm exec prettier --check {staged_files}
+    lint:
+      run: pnpm lint && pnpm lint:rules
+    types:
+      run: pnpm typecheck
+    tests:
+      run: pnpm test && pnpm test:scripts
+commit-msg:
+  commands:
+    message:
+      run: pnpm exec commitlint --edit {1}
