@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="es-PE">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Maqueta de la app de Don Pipos</title>
+    <link rel="stylesheet" href="assets/donpipos.css" />
+  </head>
+  <body>
+    <header class="portada">
+      <div class="portada-in">
+        <div>
+          <p class="marca"><img src="img/logo.png" alt="" /><span>Don Pipos</span></p>
+          <h1>Así se verá la app</h1>
+          <p class="bajada">
+            Lo que el dueño hará todos los días desde su celular: ver cómo va el día, anotar un pedido y cuidar su
+            stock. Todo se puede tocar: cambia el estado de cada pantalla, suma alfajores, guarda el pedido o registra
+            la producción, y mira cómo responden las demás.
+          </p>
+          <p class="sello-fecha" data-icono="calendar">Datos de ejemplo del miércoles 18 de noviembre, 11:40</p>
+          <p class="nota-demo">
+            Los alfajores y sus precios son los reales. Clientes, cantidades, montos cobrados y el costo del delivery
+            son de ejemplo.
+          </p>
+        </div>
+        <div class="fotos" aria-hidden="true">
+          <img class="f1" src="img/portada.jpg" alt="" />
+          <img class="f2" src="img/bandeja.jpg" alt="" />
+          <img class="f3" src="img/limon-kiss.jpg" alt="" />
+        </div>
+      </div>
+    </header>
+
+    <nav class="indice" aria-label="Secciones de la maqueta">
+      <ul>
+        <li><a href="#dia">Cómo va el día</a></li>
+        <li><a href="#pedido">Anotar un pedido</a></li>
+        <li><a href="#pedidos">Los pedidos</a></li>
+        <li><a href="#stock">El stock</a></li>
+        <li><a href="#gastos">Gastos</a></li>
+        <li><a href="#reportes">Reportes</a></li>
+        <li><a href="#clientes">Clientes y fidelidad</a></li>
+        <li><a href="#ajustes">Ajustes</a></li>
+        <li><a href="#acceso">Acceso</a></li>
+        <li><a href="#detalles">Detalles que se sienten</a></li>
+        <li class="indice-tema"><button type="button" data-tema aria-pressed="false" data-icono="moon">Modo oscuro</button></li>
+      </ul>
+    </nav>
+
+    <section class="leyenda" aria-label="Leyenda">
+      <h2>Estados de un pedido</h2>
+      <div class="leyenda-fila" data-leyenda="pedido"></div>
+      <h2>Estado del stock</h2>
+      <div class="leyenda-fila" data-leyenda="stock"></div>
+    </section>
+
+    <main>
+      <section class="seccion" id="dia">
+        <h2>Cómo va el día</h2>
+        <p>Una sola pantalla para saber lo cobrado, lo que queda y lo que falta entregar, sin entrar a ningún menú. Al cerrar, el cuadre de caja.</p>
+        <div class="telefonos">
+          <article class="telefono" data-pantalla="inicio" data-vistas="datos,cargando,actualizando,vacio,error,sininternet,pausa,primeravez">
+            <h3>Inicio</h3>
+            <p class="desc">
+              Lo primero que ve al abrir la app: arriba lo urgente (un pedido que va tarde, lo agotado o lo que se acaba,
+              con un toque para resolverlo), cuánto cobró hoy (los números de abajo abren la lista filtrada), su stock como una bandeja de
+              alfajores, qué le conviene producir y los pedidos que faltan entregar. El + abre pedido, gasto o producción.
+              «Primera vez» muestra el consejo que sale al terminar la puesta en marcha.
+            </p>
+            <div class="vistas" role="group" aria-label="Ver la pantalla de Inicio"></div>
+            <div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app"></div><div class="gestos"></div></div></div></div>
+          </article>
+          <article class="telefono" data-pantalla="caja" data-vistas="datos,cuadra,falta,cargando,sininternet">
+            <h3>Cuadre de caja</h3>
+            <p class="desc">Al cerrar el día, la app calcula cuánto efectivo debería haber: con cuánto abrió, más lo cobrado en efectivo, menos los gastos pagados en efectivo. Escribe lo que contó y ve si cuadra, sobra o falta. Yape y Plin van aparte, para compararlos con sus apps. Se abre desde «Cuadrar caja» en Inicio o desde Más.</p>
+            <div class="vistas" role="group" aria-label="Ver la pantalla Cuadre de caja"></div>
+            <div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app"></div><div class="gestos"></div></div></div></div>
+          </article>
+          <ul class="notas">
+            <li data-icono="banknote">
+              <div>
+                <b>Cobrado hoy</b>
+                <p>Lo que entró hoy, separado por Yape, Plin, transferencia y efectivo, para cuadrarlo con su celular y su caja.</p>
+              </div>
+            </li>
+            <li data-icono="cookie">
+              <div>
+                <b>La bandeja</b>
+                <p>Cada alfajor con lo que queda; al tocarlo se abre su detalle. El que se acaba se marca, y el aviso lleva directo a registrar la producción.</p>
+              </div>
+            </li>
+            <li data-icono="chef-hat">
+              <div>
+                <b>Qué producir</b>
+                <p>La cuenta de la semana sale sola de lo que vende cada día. Un toque y queda registrada la producción.</p>
+              </div>
+            </li>
+            <li data-icono="motorbike">
+              <div>
+                <b>Por entregar y próximos</b>
+                <p>Los pedidos de hoy con su estado y lo que falta cobrar. Los de otros días esperan en «Próximos».</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="seccion" id="pedido">
+        <h2>Anotar un pedido</h2>
+        <p>
+          En dos pasos: qué lleva, y cómo se entrega y se paga. Suma alfajores en el primer celular y mira cómo cambian
+          el total, el resumen y el mensaje de WhatsApp en los otros dos. La venta de mostrador, sin cliente, va en uno.
+        </p>
+        <div class="telefonos">
+          <article class="telefono" data-pantalla="pedido1" data-vistas="datos,cargando,borrador,sininternet">
+            <h3>Qué lleva</h3>
+            <p class="desc">
+              Un toque suma un alfajor. Si el stock no alcanza, avisa pero deja anotarlo. Si se corta la señal o se
+              cierra la app, el pedido queda guardado.
+            </p>
+            <div class="vistas" role="group" aria-label="Ver la pantalla Qué lleva"></div>
+            <div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app"></div><div class="gestos"></div></div></div></div>
+          </article>
+          <article class="telefono" data-pantalla="pedido2" data-vistas="datos,sininternet,error,pausa">
+            <h3>Entrega y pago</h3>
+            <p class="desc">
+              El cliente aparece solo con su teléfono, con su último pedido para repetirlo y su premio de fidelidad si le
+              toca. Recoge, delivery o mostrador; descuento con motivo; y cuánto paga ahora.
+            </p>
+            <div class="vistas" role="group" aria-label="Ver la pantalla Entrega y pago"></div>
+            <div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app"></div><div class="gestos"></div></div></div></div>
+          </article>
+          <article class="telefono" data-pantalla="guardado" data-vistas="datos,mostrador">
+            <h3>Pedido guardado</h3>
+            <p class="desc">
+              El número corto para hablar con el cliente y el aviso de WhatsApp, escrito con la plantilla de Ajustes. El
+              dueño lo revisa y lo envía desde su propio WhatsApp.
+            </p>
+            <div class="vistas" role="group" aria-label="Ver la pantalla Pedido guardado"></div>
+            <div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app"></div><div class="gestos"></div></div></div></div>
+          </article>
+          <article class="telefono" data-pantalla="venta" data-vistas="datos,sininternet">
+            <h3>Venta de mostrador</h3>
+            <p class="desc">Para quien compra en el local, sin nombre: toca los alfajores y cobra con Efectivo, Yape o Plin, en una sola pantalla. Queda como pedido entregado y pagado, el stock baja solo y se puede deshacer. Se abre desde el +.</p>
+            <div class="vistas" role="group" aria-label="Ver la pantalla Venta de mostrador"></div>
+            <div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app"></div><div class="gestos"></div></div></div></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="seccion" id="pedidos">
+        <h2>Los pedidos</h2>
+        <p>Todos los pedidos en un lugar: los de hoy, los que faltan entregar, los que deben y los de otros días. Abre uno, cámbiale el estado o regístrale un pago y mira cómo se actualizan Inicio y «Por cobrar».</p>
+        <div class="telefonos">
+          <article class="telefono" data-pantalla="pedidos" data-vistas="datos,cargando,actualizando,vacio,error,sininternet">
+            <h3>Lista de pedidos</h3>
+            <p class="desc">Con filtros de un toque: hoy, por entregar, por cobrar y próximos. Cada fila dice el estado y lo que falta cobrar. Toca uno para abrirlo. Si pasó la hora de un pedido y todavía no está listo, se marca «10 min tarde». En «Todos», los pedidos llegan del servidor de 20 en 20: al bajar se cargan más, y el total lo cuenta el servidor.</p>
+            <div class="vistas" role="group" aria-label="Ver la pantalla Lista de pedidos"></div>
+            <div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app"></div><div class="gestos"></div></div></div></div>
+          </article>
+          <article class="telefono" data-pantalla="pedido" data-vistas="datos,cargando,fallo,sininternet,error">
+            <h3>Un pedido</h3>
+            <p class="desc">La línea de tiempo y, fijo abajo, el botón de lo que toca ahora (el siguiente estado o, ya entregado, cobrar lo que falta), con «Deshacer» por unos segundos. El aviso de WhatsApp de ese estado, los precios congelados, los pagos, el mapa del delivery, y editar o anular.</p>
+            <div class="vistas" role="group" aria-label="Ver la pantalla Un pedido"></div>
+            <div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app"></div><div class="gestos"></div></div></div></div>
+          </article>
+          <article class="telefono" data-pantalla="porcobrar" data-vistas="datos,cargando,vacio,sininternet">
+            <h3>Por cobrar</h3>
+            <p class="desc">Lo que te deben, de mayor a menor. El recordatorio de saldo solo aparece si ya entregaste o si recibiste un adelanto.</p>
+            <div class="vistas" role="group" aria-label="Ver la pantalla Por cobrar"></div>
+            <div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app"></div><div class="gestos"></div></div></div></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="seccion" id="stock">
+        <h2>El stock</h2>
+        <p>
+          Lo que hay de cada alfajor, hasta cuándo alcanza y qué producir. Registra la producción en el segundo celular
+          y mira cómo se llena el stock en los demás, también en Inicio.
+        </p>
+        <div class="telefonos">
+          <article class="telefono" data-pantalla="stock" data-vistas="datos,cargando,actualizando,vacio,error,sininternet,pausa">
+            <h3>Stock</h3>
+            <p class="desc">
+              Cada alfajor con lo que queda y hasta qué día alcanza. «Contar stock» anota la diferencia con lo que hay
+              de verdad, y así se corrige el que quedó en negativo.
+            </p>
+            <div class="vistas" role="group" aria-label="Ver la pantalla de Stock"></div>
+            <div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app"></div><div class="gestos"></div></div></div></div>
+          </article>
+          <article class="telefono" data-pantalla="produccion" data-vistas="datos,cargando,sinhistorial">
+            <h3>Registrar producción</h3>
+            <p class="desc">
+              Viene con lo sugerido para la semana y se corrige con + y −. Cada número explica de dónde sale.
+            </p>
+            <div class="vistas" role="group" aria-label="Ver la pantalla Registrar producción"></div>
+            <div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app"></div><div class="gestos"></div></div></div></div>
+          </article>
+          <article class="telefono" data-pantalla="historial" data-vistas="datos,cargando,sininternet,error">
+            <h3>Un alfajor</h3>
+            <p class="desc">
+              Cómo se vende cada día de la semana y todos sus movimientos: ventas, producción y mermas. La merma se
+              anota con su motivo. Toca un alfajor en Stock para verlo aquí.
+            </p>
+            <div class="vistas" role="group" aria-label="Ver la pantalla de un alfajor"></div>
+            <div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app"></div><div class="gestos"></div></div></div></div>
+          </article>
+        </div>
+      </section>
+      <section class="seccion" id="gastos">
+        <h2>Gastos</h2>
+        <p>Cada compra con su tipo, cómo se pagó y la foto de la boleta. Anota un gasto en el segundo celular y mira cómo cambian el total del mes y la ganancia en Reportes.</p>
+        <div class="telefonos">
+          <article class="telefono" data-pantalla="gastos" data-vistas="datos,cargando,vacio,error,sininternet">
+            <h3>Gastos del mes</h3>
+            <p class="desc">El total del mes, cuánto se va en cada tipo de gasto y los últimos gastos. Toca uno para corregirlo o anularlo: nada se borra.</p>
+            <div class="vistas" role="group" aria-label="Ver la pantalla Gastos del mes"></div>
+            <div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app"></div><div class="gestos"></div></div></div></div>
+          </article>
+          <article class="telefono" data-pantalla="gasto" data-vistas="datos,sininternet,error">
+            <h3>Anotar un gasto</h3>
+            <p class="desc">El monto en grande, el tipo, en qué, cómo se pagó y la foto de la boleta. En segundos, sin formularios largos.</p>
+            <div class="vistas" role="group" aria-label="Ver la pantalla Anotar un gasto"></div>
+            <div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app"></div><div class="gestos"></div></div></div></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="seccion" id="reportes">
+        <h2>Reportes</h2>
+        <p>Cuánto entra, cuánto sale y cuánto queda. Los ingresos son los pagos recibidos, por fecha de pago; las ventas y el ranking cuentan los pedidos entregados.</p>
+        <div class="telefonos">
+          <article class="telefono" data-pantalla="reportes" data-vistas="datos,cargando,vacio,error,sininternet">
+            <h3>Resumen</h3>
+            <p class="desc">La ganancia del mes o de la semana comparada con el periodo anterior, ingresos y gastos lado a lado (toca una barra para ver los montos), y cuánto entró por cada medio de pago.</p>
+            <div class="vistas" role="group" aria-label="Ver la pantalla Resumen"></div>
+            <div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app"></div><div class="gestos"></div></div></div></div>
+          </article>
+          <article class="telefono" data-pantalla="ranking" data-vistas="datos,cargando,sincostos">
+            <h3>Alfajores</h3>
+            <p class="desc">Cuál se vende más, en unidades o en soles; por dónde llegan los pedidos; y cuánto gana con cada alfajor si tiene un costo aproximado.</p>
+            <div class="vistas" role="group" aria-label="Ver la pantalla Alfajores"></div>
+            <div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app"></div><div class="gestos"></div></div></div></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="seccion" id="clientes">
+        <h2>Clientes y fidelidad</h2>
+        <p>Los clientes se registran solos con su teléfono. Se ve quién compra más y quién dejó de venir, y la tarjeta de sellos premia a los frecuentes.</p>
+        <div class="telefonos">
+          <article class="telefono" data-pantalla="clientes" data-vistas="datos,cargando,vacio,sininternet">
+            <h3>Clientes</h3>
+            <p class="desc">Todos, los que más compran y los que no vuelven hace más de 30 días, con un mensaje para ellos si aceptaron promociones.</p>
+            <div class="vistas" role="group" aria-label="Ver la pantalla Clientes"></div>
+            <div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app"></div><div class="gestos"></div></div></div></div>
+          </article>
+          <article class="telefono" data-pantalla="cliente" data-vistas="datos,cargando,apagada,sininternet">
+            <h3>Ficha del cliente</h3>
+            <p class="desc">Sus pedidos, cuánto ha gastado, su tarjeta de sellos y si acepta promociones. Si lo pide, se borran sus datos.</p>
+            <div class="vistas" role="group" aria-label="Ver la pantalla Ficha del cliente"></div>
+            <div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app"></div><div class="gestos"></div></div></div></div>
+          </article>
+          <article class="telefono" data-pantalla="fidelidad" data-vistas="datos,cargando,apagada">
+            <h3>Fidelidad</h3>
+            <p class="desc">La meta y el premio los decide el dueño. Muestra cómo ve la tarjeta el cliente y quiénes están cerca del premio.</p>
+            <div class="vistas" role="group" aria-label="Ver la pantalla Fidelidad"></div>
+            <div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app"></div><div class="gestos"></div></div></div></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="seccion" id="ajustes">
+        <h2>Ajustes</h2>
+        <p>Todo lo que el dueño puede cambiar sin pedirlo: precios, mensajes, fidelidad y su cuenta. Cambia un precio y mira cómo se actualiza en «Qué lleva» y en Reportes.</p>
+        <div class="telefonos">
+          <article class="telefono" data-pantalla="ajustes" data-vistas="datos,cargando,sininternet">
+            <h3>Más</h3>
+            <p class="desc">La pestaña «Más», con la última copia de seguridad a la vista. Tipos de gasto, medios de pago, delivery y producción se cambian aquí mismo.</p>
+            <div class="vistas" role="group" aria-label="Ver la pantalla Más"></div>
+            <div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app"></div><div class="gestos"></div></div></div></div>
+          </article>
+          <article class="telefono" data-pantalla="productos" data-vistas="datos,cargando,sininternet">
+            <h3>Productos y precios</h3>
+            <p class="desc">Precio, costo aproximado, stock mínimo y si se muestra en la web. Toca un alfajor para editarlo. Los pedidos ya anotados no cambian de precio.</p>
+            <div class="vistas" role="group" aria-label="Ver la pantalla Productos y precios"></div>
+            <div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app"></div><div class="gestos"></div></div></div></div>
+          </article>
+          <article class="telefono" data-pantalla="mensajes" data-vistas="datos,cargando">
+            <h3>Mensajes de WhatsApp</h3>
+            <p class="desc">Los textos de cada paso, con datos que se completan solos. Escribe en el cuadro y mira cómo queda el mensaje al instante.</p>
+            <div class="vistas" role="group" aria-label="Ver la pantalla Mensajes de WhatsApp"></div>
+            <div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app"></div><div class="gestos"></div></div></div></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="seccion" id="acceso">
+        <h2>El acceso</h2>
+        <p>Sin correo, sin contraseña y sin SMS. El equipo le crea la cuenta con su número de celular y un PIN de 6 números. La primera vez en un celular escribe los dos; después entra con la huella o el PIN, como en su app del banco. El servidor cuenta los intentos: con 5 errores espera 15 minutos, y con 10 la cuenta queda bloqueada hasta que el equipo la revise.</p>
+        <div class="telefonos">
+          <article class="telefono" data-pantalla="carga" data-vistas="datos">
+            <h3>Al abrir</h3>
+            <p class="desc">La pantalla de carga, con el logo de Don Pipos, mientras trae los datos del día.</p>
+            <div class="vistas" role="group" aria-label="Ver la pantalla Al abrir"></div>
+            <div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app"></div><div class="gestos"></div></div></div></div>
+          </article>
+          <article class="telefono" data-pantalla="ingresar" data-vistas="datos,pinmal,espera,sininternet">
+            <h3>Ingresar en un celular</h3>
+            <p class="desc">Solo la primera vez en cada celular, en una sola pantalla: su número y el PIN que le dio el equipo. Al completar el PIN entra solo, sin botón, y después elige si usa la huella. Si se equivoca, le dice cuántos intentos le quedan. En la maqueta el PIN es 197346.</p>
+            <div class="vistas" role="group" aria-label="Ver la pantalla Ingresar en un celular"></div>
+            <div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app"></div><div class="gestos"></div></div></div></div>
+          </article>
+          <article class="telefono" data-pantalla="huella" data-vistas="datos,conpin,pinmal,bloqueado">
+            <h3>Entrar</h3>
+            <p class="desc">Las siguientes veces, huella o PIN, sin escribir su número. Si se equivoca 5 veces, la app se cierra en ese celular y vuelve a ingresar con su número y su PIN (197346 en la maqueta).</p>
+            <div class="vistas" role="group" aria-label="Ver la pantalla Entrar"></div>
+            <div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app"></div><div class="gestos"></div></div></div></div>
+          </article>
+          <article class="telefono" data-pantalla="puesta" data-vistas="datos">
+            <h3>Puesta en marcha</h3>
+            <p class="desc">La primera vez, tres pasos para dejarla lista: sus productos, el stock de hoy y sus tipos de gasto. Después ya puede anotar su primer pedido.</p>
+            <div class="vistas" role="group" aria-label="Ver la pantalla Puesta en marcha"></div>
+            <div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app"></div><div class="gestos"></div></div></div></div>
+          </article>
+        </div>
+      </section>
+      <section class="seccion" id="detalles">
+        <h2>Detalles que se sienten</h2>
+        <p>Lo que no se ve en una captura pero hace que la app se sienta rápida y confiable. Casi todo se puede probar en las pantallas de arriba.</p>
+        <div class="telefonos">
+          <article class="telefono" data-pantalla="recordatorios" data-vistas="datos">
+            <h3>Recordatorios</h3>
+            <p class="desc">Avisos del propio celular, aunque la app esté cerrada: el pedido de mañana, el alfajor que se acaba y el saldo pendiente. Se eligen en Más, Recordatorios.</p>
+            <div class="vistas" role="group" aria-label="Ver la pantalla Recordatorios"></div>
+            <div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app"></div><div class="gestos"></div></div></div></div>
+          </article>
+          <article class="telefono" data-pantalla="grande" data-letra="grande" data-vistas="datos">
+            <h3>Con letra grande</h3>
+            <p class="desc">Inicio con la letra y la pantalla agrandadas desde los ajustes del celular. Todo sigue cabiendo y se puede leer sin anteojos.</p>
+            <div class="vistas" role="group" aria-label="Ver la pantalla con letra grande"></div>
+            <div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app"></div><div class="gestos"></div></div></div></div>
+          </article>
+          <ul class="notas">
+            <li data-icono="zap"><div><b>Abre al instante</b><p>Guarda en el celular lo último que cargó. El skeleton («Cargando») sale solo la primera vez y únicamente si tarda más de un instante.</p></div></li>
+            <li data-icono="refresh-cw"><div><b>Deslizar para actualizar</b><p>Como en cualquier app. Mira «Actualizando» en Inicio, Pedidos y Stock.</p></div></li>
+            <li data-icono="save"><div><b>«Guardando…» sin doble toque</b><p>Guarda cualquier cosa (un pedido, un gasto, la producción): el botón se bloquea mientras guarda.</p></div></li>
+            <li data-icono="check-check"><div><b>Respuesta al instante</b><p>El cambio se ve en el momento. Si no se pudo guardar, vuelve atrás y lo dice: prueba «Falla al guardar» en Un pedido.</p></div></li>
+            <li data-icono="vibrate"><div><b>Vibración, teclado y celulares sencillos</b><p>Una vibración corta al guardar o cambiar el estado de un pedido, el teclado numérico para montos, y listas y fotos optimizadas para un Android económico. Si abres esta maqueta en tu Android, ya vibra.</p></div></li>
+            <li data-icono="moon"><div><b>Modo oscuro</b><p>Sigue el ajuste del celular. Pruébalo con el botón «Modo oscuro» del índice de arriba.</p></div></li>
+            <li data-icono="chevron-up"><div><b>El título se achica al bajar</b><p>En Pedidos, Stock, Gastos, Reportes, Clientes y Más: al bajar, queda arriba una barra con el nombre de la pantalla.</p></div></li>
+          </ul>
+        </div>
+      </section>
+    </main>
+
+    <footer class="cierre">
+      <p>
+        <b>Prototipo de la primera versión.</b> Todas las pantallas que acordamos, conectadas entre sí: lo que cambias
+        en una se ve en las demás.
+      </p>
+      <p>Es una maqueta de diseño: no guarda nada y los datos viven solo en esta página.</p>
+    </footer>
+
+    <script src="assets/iconos.js"></script>
+    <script src="assets/donpipos.js"></script>
+    <script src="assets/donpipos-2.js"></script>
+  </body>
+</html>
