@@ -17,7 +17,7 @@ const LAYERS = ["api", "queries", "schema", "rules", "hooks", "components"];
 // Dónde puede vivir una prueba (*.test.*). En src/app no: ahí todo archivo es una pantalla
 const TESTABLE = [...LAYERS.map((layer) => `features/*/${layer}`), "components/ui", "lib", "theme", "test"];
 
-// Para escribir las políticas: carpetas por su tipo, y los archivos sueltos por su categoría
+// Para escribir las políticas: las carpetas van por su tipo, y los archivos sueltos por su categoría
 const of = (...types) => ({ element: { type: types } });
 const file = (category, captured) => ({ file: { categories: category, ...(captured && { captured }) } });
 const fromFolder = { feature: "{{ from.element.captured.feature }}" };
@@ -30,6 +30,8 @@ const asset = file("asset");
 // El cliente de Supabase es un archivo de lib con su propia regla: solo lo importan api/ y su propia prueba
 const supabaseClient = file("supabase-client");
 const supabaseClientTest = { file: { path: at("lib/supabase.test.ts") } };
+const anyPackage = { module: { origin: ["external", "core"] } };
+const packages = (...names) => ({ module: { origin: "external", source: names } });
 
 export const structureSettings = {
   // Los patrones se leen desde la raíz del repositorio, se corra el lint desde donde se corra
@@ -43,7 +45,7 @@ export const structureSettings = {
     folder("test-utils", "test"),
     folder("types", "types"),
   ],
-  // Archivos sueltos con su propio papel. Dentro de un módulo solo existen estos dos y las seis carpetas:
+  // Archivos sueltos con su propio papel. Dentro de un módulo solo existen index.ts, constants.ts y las seis carpetas:
   // cualquier otro archivo o carpeta no coincide con nada y falla (boundaries/no-unknown-files)
   "boundaries/files": [
     { pattern: at("features/*/index.ts"), category: "feature-index", capture: ["feature"] },
@@ -67,8 +69,11 @@ export const structureRules = {
       // También se revisa lo que se importa dentro de una misma carpeta: lib/supabase.ts vive en lib
       checkInternals: true,
       policies: [
+        // 1. Lo que se puede en general: los archivos de una misma carpeta entre sí, y los paquetes
         { allow: { dependency: { relationship: { to: "internal" } } } },
-        { allow: { to: { module: { origin: ["external", "core"] } } } },
+        { allow: { to: anyPackage } },
+
+        // 2. La tabla, fila por fila. Lo que no está aquí no se puede
         { from: of("route"), allow: { to: [anyFeatureIndex, of("ui", "theme", "lib"), asset] } },
         {
           from: of("feature-components"),
@@ -98,7 +103,7 @@ export const structureRules = {
             ],
           },
         },
-        // index.ts publica lo de su módulo, menos api. constants.ts no tiene política: no usa nada de la app
+        // schema/ y constants.ts no tienen fila: no usan nada de la app. index.ts publica lo de su módulo, menos api
         {
           from: file("feature-index"),
           allow: {
@@ -111,30 +116,38 @@ export const structureRules = {
         { from: of("lib"), allow: { to: of("types") } },
         { from: of("test-utils"), allow: { to: [anyFeatureIndex, of("ui", "theme", "lib", "route")] } },
         { from: file("test"), allow: { to: of("test-utils") } },
-        // Un solo punto de contacto con Supabase: el cliente lo importa api/, nadie más (tampoco otro archivo de lib)
+
+        // 3. Un solo punto de contacto con Supabase: el cliente lo importa api/, nadie más (tampoco otro archivo de lib)
         {
           disallow: { to: supabaseClient },
           message: "Solo api/ importa el cliente de Supabase (src/lib/supabase.ts)",
         },
         { from: [of("feature-api"), supabaseClientTest], allow: { to: supabaseClient } },
+
+        // 4. Los paquetes que una carpeta no puede usar.
+        // rules/ son cuentas puras: ningún paquete. schema/ y constants.ts: solo zod. api/: nada de React
         {
-          from: [of("feature-api", "feature-rules", "feature-schema"), file("feature-constants")],
-          disallow: {
-            to: {
-              module: { origin: "external", source: ["react", "react-native", "expo-*", "@tanstack/react-query"] },
-            },
-          },
-          message: "Esta carpeta no usa React: {{ to.module.source }} va en components/, hooks/ o queries/",
+          from: of("feature-rules"),
+          disallow: { to: anyPackage },
+          message:
+            "rules/ no importa paquetes ({{ to.module.source }}): solo schema, constants y lib/money o lib/dates",
         },
         {
-          from: [
-            of("route", "feature-*", "ui", "theme", "test-utils"),
-            file("feature-index"),
-            file("feature-constants"),
-          ],
-          disallow: { to: { module: { origin: "external", source: "@supabase/*" } } },
-          message: "Solo src/lib/supabase.ts importa {{ to.module.source }}",
+          from: [of("feature-schema"), file("feature-constants")],
+          disallow: { to: anyPackage },
+          message: "schema/ y constants.ts solo importan zod, no {{ to.module.source }}",
         },
+        { from: [of("feature-schema"), file("feature-constants")], allow: { to: packages("zod") } },
+        {
+          from: of("feature-api"),
+          disallow: { to: packages("react", "react-native", "expo-*", "@tanstack/react-query") },
+          message: "api/ no usa React: {{ to.module.source }} va en components/, hooks/ o queries/",
+        },
+        {
+          disallow: { to: packages("@supabase/*") },
+          message: "Solo src/lib/supabase.ts y api/ importan {{ to.module.source }}",
+        },
+        { from: [of("feature-api"), supabaseClient, supabaseClientTest], allow: { to: packages("@supabase/*") } },
       ],
     },
   ],

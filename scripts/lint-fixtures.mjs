@@ -39,6 +39,18 @@ export const EXPECTED = {
   "lib/db.ts": [D],
   "test/uses-supabase.ts": [D],
 
+  // Paquetes externos: rules/ no importa ninguno; schema/ y constants.ts, solo zod; api/ no usa React;
+  // y @supabase/* solo en lib/supabase.ts y en api/ (schema/uses-zod.ts y api/uses-supabase-js.ts pasan limpios)
+  "features/orders/rules/uses-reanimated.ts": [D],
+  "features/orders/rules/uses-zod.ts": [D],
+  "features/orders/rules/uses-node.ts": [D],
+  "features/orders/schema/uses-date-fns.ts": [D],
+  "features/orders/schema/uses-react.ts": [D],
+  "features/noisy/constants.ts": [D],
+  "features/orders/api/uses-react-query.ts": [D],
+  "lib/uses-supabase-js.ts": [D],
+  "types/uses-supabase-js.ts": [D],
+
   // «assets» es solo la carpeta de imágenes y letras de la raíz: una carpeta con ese nombre dentro de src no tiene trato especial
   "assets/fake-asset.ts": ["boundaries/no-unknown-files"],
   "app/enters-feature-through-assets.tsx": [D],

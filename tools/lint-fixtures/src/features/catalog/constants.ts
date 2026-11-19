@@ -1,1 +1,2 @@
-export const PAGE_SIZE = 20;
+import { z } from "zod";
+export const PAGE_SIZE = z.number().int().parse(20);
