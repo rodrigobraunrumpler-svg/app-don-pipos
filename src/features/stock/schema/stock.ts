@@ -45,3 +45,11 @@ export type RevertResult = z.infer<typeof revertResultSchema>;
 
 export type WasteInput = { requestId: string; productId: string; quantity: number; reason: WasteReason };
 export type CountInput = { requestId: string; counts: { productId: string; counted: number }[] };
+
+export const productionResultSchema = z.object({
+  total: z.number().int(),
+  items: z.array(levelSchema),
+  backOnWeb: z.array(webProductSchema),
+});
+export type ProductionResult = z.infer<typeof productionResultSchema>;
+export type ProductionInput = { requestId: string; items: { productId: string; quantity: number }[] };

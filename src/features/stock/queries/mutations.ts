@@ -1,10 +1,17 @@
 import { mutationOptions } from "@tanstack/react-query";
 
-import { registerStockCount, registerWaste, revertStockChange } from "../api/stock";
+import { registerProduction, registerStockCount, registerWaste, revertStockChange } from "../api/stock";
 import { stockKeys } from "./keys";
 
 // Las del stock van en fila (`scope`): una merma y un conteo del mismo alfajor no se cruzan.
 // La respuesta al instante (con vuelta atrás) la ponen los hooks, que tienen el cliente de consultas
+// La producción espera la respuesta («Guardando…»): la pantalla de después dice qué vuelve a la web
+export const registerProductionMutation = mutationOptions({
+  mutationFn: registerProduction,
+  scope: { id: "stock" },
+  meta: { invalidates: [stockKeys.all] },
+});
+
 export const registerWasteMutation = mutationOptions({
   mutationFn: registerWaste,
   scope: { id: "stock" },

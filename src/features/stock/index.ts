@@ -7,3 +7,4 @@ export type { MovementKind, StockState, WasteReason } from "./schema/stock";
 export { StockOverview } from "./components/stock-overview";
 export { stockOverviewQuery } from "./queries/stock";
 export type { StockItem } from "./schema/stock";
+export { ProductionForm } from "./components/production-form";

@@ -5,11 +5,14 @@ import { supabase } from "@/lib/supabase";
 
 import {
   countResultSchema,
+  productionResultSchema,
   revertResultSchema,
   stockOverviewSchema,
   wasteResultSchema,
   type CountInput,
   type CountResult,
+  type ProductionInput,
+  type ProductionResult,
   type RevertResult,
   type StockItem,
   type WasteInput,
@@ -26,6 +29,15 @@ export async function getStockOverview(): Promise<StockItem[]> {
   const { data, error } = await supabase().rpc("stock_overview");
   if (error) throw toAppError(error);
   return parse(stockOverviewSchema, data);
+}
+
+export async function registerProduction(input: ProductionInput): Promise<ProductionResult> {
+  const { data, error } = await supabase().rpc("register_production", {
+    p_request_id: input.requestId,
+    p_items: input.items,
+  });
+  if (error) throw toAppError(error);
+  return parse(productionResultSchema, data);
 }
 
 export async function registerWaste(input: WasteInput): Promise<WasteResult> {
