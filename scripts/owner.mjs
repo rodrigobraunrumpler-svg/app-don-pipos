@@ -3,32 +3,16 @@
 //   pnpm owner reset-pin --phone <9 números> [--demo]
 //   pnpm owner sign-out-everywhere --phone <9 números>
 // Con --demo el PIN no se imprime: queda en .env.local como DEMO_OWNER_PHONE y DEMO_OWNER_PIN.
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
+import { saveDemo } from "./lib/demo-env.mjs";
 import { ROOT } from "./lib/guard.mjs";
 import { parseOwnerArgs } from "./lib/owner-args.mjs";
 import { createOwner, randomPin, resetOwnerPin, signOutEverywhere } from "./lib/owners.mjs";
 
-function saveDemo(phone, pin) {
-  const file = join(ROOT, ".env.local");
-  const kept = (existsSync(file) ? readFileSync(file, "utf8") : "")
-    .split("\n")
-    .filter((line) => !line.startsWith("DEMO_OWNER_"));
-  while (kept.at(-1) === "") kept.pop();
-  kept.push(
-    "",
-    "# Dueño DEMO del proyecto de desarrollo, para probar el ingreso en Expo Go",
-    `DEMO_OWNER_PHONE=${phone}`,
-    `DEMO_OWNER_PIN=${pin}`,
-    "",
-  );
-  writeFileSync(file, kept.join("\n"));
-}
-
 function report(phone, pin, demo) {
   if (demo) {
-    saveDemo(phone, pin);
+    saveDemo(join(ROOT, ".env.local"), phone, pin);
     console.log(`Listo: ${phone}. El PIN quedó en .env.local (DEMO_OWNER_PIN).`);
   } else {
     console.log(`Listo: ${phone}. PIN: ${pin}. Entrégalo en persona y no lo guardes en otro lado.`);
