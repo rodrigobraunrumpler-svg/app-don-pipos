@@ -22,6 +22,17 @@ export const EXPECTED = {
   "lib/knows-business.ts": [D],
   "outside-structure.ts": ["boundaries/no-unknown-files"],
 
+  // Dentro de un módulo solo existen index.ts, constants.ts y las seis carpetas; fuera de las carpetas conocidas, nada
+  "features/orders/utils/helper.ts": ["boundaries/no-unknown-files"],
+  "features/orders/widget.tsx": ["boundaries/no-unknown-files"],
+  "features/orders/extra.ts": ["boundaries/no-unknown-files"],
+  "features/shared.ts": ["boundaries/no-unknown-files"],
+  "misc/orphan.test.ts": ["boundaries/no-unknown-files"], // llamarse .test.ts no vuelve conocido a un archivo
+  "features/leaky/constants.ts": [D], // constants.ts no usa nada del módulo
+  "features/catalog/index.ts": [D], // index.ts publica carpetas del módulo; constants.ts no está en su lista (§9.1)
+  // Una ruta repetida más adentro no da los permisos de la verdadera: esto es components/ui, no un api/
+  "components/ui/src/features/fake/api/talks-to-supabase.ts": [D],
+
   // «assets» es solo la carpeta de imágenes y letras de la raíz: una carpeta con ese nombre dentro de src no tiene trato especial
   "assets/fake-asset.ts": ["boundaries/no-unknown-files"],
   "app/enters-feature-through-assets.tsx": [D],
