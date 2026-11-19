@@ -75,3 +75,5 @@ Cómo se construye la app de Don Pipos, por fases. Cada fase deja algo que funci
 | 2. El acceso | Construida y revisada el 2026-11-19, en la rama `fase-2`; las correcciones están en `fase-2-acceso.md`, «Después de la revisión final». Falta tu prueba en el celular («Lo que falta») y tu decisión sobre el bloqueo con 10 intentos |
 | 3. Productos y stock | Sigue: su plan se escribe ahora |
 | 4 a 8 | Su plan se escribe al terminar la fase anterior |
+
+Las fases 0, 1 y 2 se juntaron en `main` el 2026-11-19, con todas sus pruebas en verde.
