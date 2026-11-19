@@ -20,5 +20,10 @@ if (target !== undefined) {
   }
 }
 
-const run = spawnSync(join(ROOT, "node_modules", ".bin", "supabase"), args, { stdio: "inherit", cwd: ROOT });
+// Sin terminal (un script, un asistente), la entrada se cierra: «migration new» la lee y se quedaría esperando
+const stdin = process.stdin.isTTY ? "inherit" : "ignore";
+const run = spawnSync(join(ROOT, "node_modules", ".bin", "supabase"), args, {
+  stdio: [stdin, "inherit", "inherit"],
+  cwd: ROOT,
+});
 process.exit(run.status ?? 1);
