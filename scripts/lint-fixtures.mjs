@@ -56,6 +56,8 @@ export const EXPECTED = {
   "app/enters-feature-through-assets.tsx": [D],
   "features/orders/components/assets/talks-to-supabase.ts": [D],
   "app/imports-code-from-assets.tsx": [D], // en assets/ solo cuentan las imágenes y las letras
+
+  // Sin importaciones en círculo
   "lib/cycle-a.ts": ["import-x/no-cycle"],
   "lib/cycle-b.ts": ["import-x/no-cycle"],
 
@@ -85,7 +87,7 @@ export const EXPECTED = {
   "features/orders/components/OrderCard.tsx": ["check-file/filename-naming-convention"],
   "features/orders/components/two-components.tsx": ["react/no-multi-comp"],
   "features/orders/rules/too-long.ts": ["max-lines"], // 251 líneas; just-fits.ts tiene 250 y pasa
-  "features/leaky/index.ts": ["no-restricted-syntax"], // export *
+  "features/leaky/index.ts": ["no-restricted-syntax"], // export * en el index.ts de un módulo
 
   // Atajos prohibidos
   "features/orders/rules/uses-any.ts": ["@typescript-eslint/no-explicit-any"],

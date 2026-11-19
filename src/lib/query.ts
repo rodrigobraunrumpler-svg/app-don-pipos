@@ -49,8 +49,8 @@ export function createQueryClient(options?: { onError?: (error: AppError) => voi
         gcTime: CACHE_MAX_AGE,
         retry: (failureCount, error) => isRetryable(error) && failureCount < 2,
       },
-      // «always»: sin señal, un guardado se intenta igual, falla al momento y avisa «sin conexión».
-      // Por defecto quedaría en espera, sin aviso, y saldría solo al volver la señal (guardar sin señal queda para después, §14.2)
+      // «always»: sin señal, un guardado se intenta igual, falla al momento y avisa «sin conexión». Por defecto quedaría
+      // en espera, sin aviso, y saldría solo al volver la señal. Guardar sin señal queda para después (§14.2)
       mutations: { retry: false, networkMode: "always" },
     },
   });
