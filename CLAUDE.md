@@ -69,7 +69,7 @@ Además:
 pnpm start --tunnel        # abre la app en Expo Go: el celular escanea el QR
 pnpm lint                  # reglas de estructura y de código, sin avisos
 pnpm lint:rules            # prueba las propias reglas contra archivos hechos para romperlas
-pnpm typecheck
+pnpm typecheck             # genera los tipos de las rutas y compila: un enlace a una pantalla que no existe falla
 pnpm test                  # Jest
 pnpm test:coverage         # exige 100 % en lib/{money,dates,errors}, theme/tokens y features/*/rules
 pnpm test:scripts          # las pruebas de scripts/ (node --test)
@@ -79,7 +79,7 @@ pnpm new:feature <nombre>  # crea un módulo en src/features desde templates/fea
 
 Antes de dar algo por terminado pasan `pnpm lint`, `pnpm lint:rules`, `pnpm typecheck` y `pnpm test`.
 
-**Una vez por copia del repositorio,** para que cada commit se revise solo: instalar gitleaks 8.30.1 (el comando está en `docs/plan/fase-0-proyecto.md`, tarea 7) y correr `pnpm exec lefthook install`. Desde ahí, un commit entra solo si pasan la búsqueda de secretos, el formato, el lint, los tipos, las pruebas y el formato del mensaje. En GitHub corre lo mismo, más la cobertura (`.github/workflows/ci.yml`).
+**Una vez por copia del repositorio,** para que cada commit se revise solo: instalar gitleaks 8.30.1 (el comando está en `docs/plan/fase-0-proyecto.md`, tarea 7) y correr `pnpm exec lefthook install`. Desde ahí, un commit entra solo si pasan la búsqueda de secretos, el formato, el lint, los tipos, las pruebas y el formato del mensaje. En GitHub (`.github/workflows/ci.yml`) se revisa lo mismo, pero completo y no solo lo que cambió: el formato de todos los archivos, el lint y la prueba de sus reglas, los tipos, las pruebas con su cobertura, el mensaje de cada commit que llega y los secretos en toda la historia.
 
 ## 5. Commits
 

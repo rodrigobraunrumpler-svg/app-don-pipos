@@ -18,13 +18,13 @@ env:
 
 jobs:
   check:
-    name: Lint, tipos, pruebas y secretos
+    name: Formato, lint, tipos, pruebas, commits y secretos
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
         with:
-          fetch-depth: 0 # gitleaks revisa toda la historia
+          fetch-depth: 0 # commitlint y gitleaks leen la historia
           persist-credentials: false
       - uses: pnpm/action-setup@v6 # la versión de pnpm sale de «packageManager»
       - uses: actions/setup-node@v7
@@ -32,11 +32,23 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm exec prettier --check .
       - run: pnpm lint
       - run: pnpm lint:rules
-      - run: pnpm typecheck
+      - run: pnpm typecheck # antes genera los tipos de las rutas: un enlace a una pantalla que no existe no compila
       - run: pnpm test:coverage
       - run: pnpm test:scripts
+      - name: Revisar el mensaje de los commits que llegan
+        env:
+          # En un pull request, desde su base; en un push, desde donde estaba la rama
+          BEFORE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          AFTER: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          # Una rama nueva o un push forzado no traen un punto de partida que exista: se revisa toda la historia
+          if ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
+            BEFORE="$(git rev-list --max-parents=0 "$AFTER" | tail -n 1)"
+          fi
+          pnpm exec commitlint --from "$BEFORE" --to "$AFTER" --verbose
       - name: Buscar llaves y secretos en toda la historia
         run: |
           cd "$RUNNER_TEMP"
