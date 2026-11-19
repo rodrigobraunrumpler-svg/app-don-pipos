@@ -25,8 +25,9 @@ select is(current_setting('t.p1')::jsonb -> 'items',
   'y devuelve el stock nuevo de cada uno, ordenados');
 select is(current_setting('t.p1')::jsonb -> 'backOnWeb', '[{"productId": "00000000-0000-4000-8000-000000000a01", "name": "Coqueta"}]'::jsonb,
   'Coqueta (enlazada) vuelve a la web; Morenita no está en la web');
-select is(public.register_production(current_setting('t.r1')::uuid, '[{"productId": "00000000-0000-4000-8000-000000000a01", "quantity": 99}]'),
-  current_setting('t.p1')::jsonb, 'el mismo código otra vez devuelve lo mismo, sin registrar de nuevo');
+select is(public.register_production(current_setting('t.r1')::uuid,
+  '[{"productId": "00000000-0000-4000-8000-000000000a02", "quantity": 5}, {"productId": "00000000-0000-4000-8000-000000000a01", "quantity": 10}]'),
+  current_setting('t.p1')::jsonb, 'el mismo código con los mismos datos devuelve lo mismo, sin registrar de nuevo');
 select is((select on_hand from public.stock_levels where product_id = '00000000-0000-4000-8000-000000000a01'), 10, 'y el stock no cambió');
 
 select throws_ok($$select public.register_production(gen_random_uuid(), '[{"productId": "00000000-0000-4000-8000-000000000a01", "quantity": 0}]')$$, 'P0001', 'invalid', 'una cantidad de 0');
