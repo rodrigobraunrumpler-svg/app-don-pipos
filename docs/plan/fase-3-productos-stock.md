@@ -719,6 +719,9 @@ Ingresa con el dueño DEMO (900 000 101, el PIN de tu `.env.local`):
 5. Contar stock: cambia un número; el botón dice «Guardar 1 ajuste».
 6. Toca Coqueta: sus movimientos, del más nuevo al más viejo.
 7. Con el modo avión: Stock dice «Sin conexión…» con la hora, y los botones se apagan.
+8. Cierra la app del todo (deslízala fuera de las recientes), ábrela otra vez y toca Coqueta: sus movimientos se ven.
+9. En Agregar producto y en la hoja de un producto, el teclado no tapa el precio ni «Guardar».
+10. En Registrar producción, toca el número de un alfajor y escribe 36: no hace falta tocar «+» 36 veces.
 
 ### Lo que cambió respecto de este plan
 
@@ -763,4 +766,21 @@ Ingresa con el dueño DEMO (900 000 101, el PIN de tu `.env.local`):
 
 **Tarea 12**
 - Dos pruebas de la base contaban filas de toda la tabla; con los datos DEMO, ahora cuentan solo las suyas.
+
+## Después de la revisión final (2026-11-19)
+
+Una revisión independiente de toda la rama encontró sólida la base (los cruces del cero, el «Deshacer», el cursor y 300 operaciones al azar) y seis problemas en la app. Se corrigió todo, cada arreglo con su prueba primero:
+
+- **Un alfajor se caía al volver a abrir la app.** La caché guardada en el celular devolvía las fechas como texto. Ahora la fecha viaja siempre como texto, y la base la manda con milisegundos y en UTC, un formato que cualquier celular lee.
+- **Después de un guardado fallido, la lista se vuelve a cargar.** Si la respuesta se perdió con el cambio ya hecho, el stock y los productos muestran lo de verdad.
+- **El mismo código con otros datos es un conflicto.** Si la señal falla y el dueño cambia la merma, el conteo o la producción antes de reintentar, la base ya no devuelve lo de antes como si fuera lo nuevo: la app lo explica y el siguiente intento es otro registro. Es una regla para todas las funciones que vienen (`docs/spec/README.md`).
+- **Un producto que ya tenía otro cambio guardado** cierra su hoja, lo dice y la lista vuelve a cargarse; Productos y precios también se recarga al tirar hacia abajo.
+- **El número de cada contador se escribe:** una producción de 145 ya no son 145 toques.
+- **Un alfajor** dice si sus movimientos no cargaron (con «Reintentar») y, sin señal, desde cuándo son los que se ven.
+- **La hoja sube con el teclado**, para que el precio y «Guardar» queden a la vista (se mira en el celular, paso 9).
+- **El precio de Un alfajor lo trae la pantalla,** que une productos y stock, como pide la estructura.
+
+Lo menor quedó anotado para después: «Deshacer» del aviso no se puede reintentar si falla; pasados 10 minutos, deshacer muestra un error genérico; un conteo sin diferencias igual ofrece «Deshacer»; «Actualizado a las…» se mueve con cada cambio al instante y no dice el día; Productos y Registrar producción no dicen la hora sin señal; cambiar un producto no refresca un Un alfajor abierto; al lector de pantalla le faltan datos en algunas filas; mensajes de precio para «12,345» y para más de S/ 10,000; y la regla de qué negocio se usa está copiada en cuatro funciones (cuando haya varios negocios, cambian juntas).
+
+**Total de pruebas:** 363 de la app (Jest), 321 de la base y 44 de los scripts.
 

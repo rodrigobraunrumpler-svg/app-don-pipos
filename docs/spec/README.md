@@ -36,7 +36,8 @@ Esto no se repite en cada archivo.
 - **Que una señal mala no duplique nada (idempotencia):**
   - Cada función que crea algo recibe un `request_id`: pedidos, ventas, pagos, gastos, ingresos, producción, mermas, conteos y cierres de caja.
   - El celular lo genera una vez por intención del usuario (`crypto.randomUUID()`) y lo repite en cada reintento.
-  - La función pide su clave al empezar (`private.claim_request`) y guarda su respuesta al terminar (`private.complete_request`), en `private.idempotency_keys`. Si el mismo código vuelve, devuelve lo que ya creó, sin crear otro.
+  - La función pide su clave al empezar (`private.claim_request`) y guarda su respuesta al terminar (`private.complete_request`), en `private.idempotency_keys`. Si el mismo código vuelve con los mismos datos, devuelve lo que ya creó, sin crear otro.
+  - La clave guarda una huella de los datos (un md5 de los argumentos, desde la fase 3). El mismo código con otros datos responde `conflict`: la respuesta pudo perderse y el dueño cambió el formulario, y devolver lo de antes como si fuera lo nuevo mentiría. La app lo explica y el siguiente intento usa otro código.
   - La clave se inserta antes de crear nada: si dos reintentos llegan a la vez, el segundo espera al primero. Una prueba con dos conexiones lo comprueba.
   - La clave no lleva llave foránea al negocio, a propósito: la tabla es interna y efímera, y solo la escriben funciones que ya comprobaron el negocio.
   - Las claves se borran a los 7 días (pg_cron).

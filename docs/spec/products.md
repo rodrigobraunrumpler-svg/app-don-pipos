@@ -89,7 +89,7 @@ Solo para productos enlazados a la web (`sanity_id` con valor): lo que no está 
 
 ## 7. Con otros módulos
 
-**Usa:** ninguno. El stock de cada producto llega ya junto desde `list_products`.
+**Usa:** ninguno. El stock de cada producto llega con `stock_overview` (`stock.md`).
 
 **Expone:**
 - `productsQuery` y las mutaciones.
