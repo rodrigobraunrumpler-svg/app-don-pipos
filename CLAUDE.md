@@ -25,7 +25,7 @@ Las 18 reglas del código (`PROJECT_CONTEXT.md` §10.1):
 5. **Lo común no sabe del negocio:** `components/ui` y `lib` no importan de ningún módulo.
 6. **Las cuentas, donde corresponde:** lo guardado lo calcula la base; el celular solo calcula la vista previa, en `rules/` y con pruebas.
 7. **Archivos chicos:** un componente por archivo y 250 líneas como máximo.
-8. **La base cambia solo con migraciones,** generadas desde `supabase/schemas/`; los tipos se generan de ella.
+8. **La base cambia solo con migraciones** (`supabase/migrations/`), cada una probada antes de enviarse; los tipos se generan de la base.
 9. **Cada tabla igual de segura:** `business_id`, `created_at`, `updated_at`, reglas de acceso activas y `search_path` fijo en las funciones.
 10. **Montos y fechas centralizados:** céntimos enteros y hora de Lima, siempre con `lib/money.ts` y `lib/dates.ts`.
 11. **Idioma:** el código en inglés; los textos que ve el dueño, en español.
@@ -42,7 +42,7 @@ El lint las hace cumplir (`eslint.config.mjs`, `eslint/structure.mjs`). Un comen
 Además:
 
 - **No inventar datos del negocio:** productos, precios, clientes, teléfonos ni textos del dueño. Lo que falta se pregunta; lo de prueba se marca como DEMO y vive solo en desarrollo.
-- **Nunca pedir ni escribir una llave secreta:** ni la de Supabase (`sb_secret_…`), ni la contraseña de la base, ni un token; tampoco en el chat. El dueño del proyecto corre `supabase login` y `supabase link` en su terminal. Las llaves viven en `.env.local`, que no entra al repositorio, y ninguna secreta lleva el prefijo `EXPO_PUBLIC_`.
+- **Nunca pedir ni escribir una llave secreta:** ni la de Supabase (`sb_secret_…`), ni la contraseña de la base, ni un token; tampoco en el chat. Las llaves viven en `.env.local`, que no entra al repositorio y **nunca se abre ni se muestra**: las herramientas lo cargan solas. Ninguna secreta lleva el prefijo `EXPO_PUBLIC_`.
 
 ## 3. Dónde va cada cosa
 
@@ -75,17 +75,35 @@ pnpm test:coverage         # exige 100 % en lib/{money,dates,errors}, theme/toke
 pnpm test:scripts          # las pruebas de scripts/ (node --test)
 pnpm format                # Prettier
 pnpm new:feature <nombre>  # crea un módulo en src/features desde templates/feature
+
+pnpm sb <comando>          # la CLI de Supabase, con .env.local y la sesión propia de esta app
+pnpm test:db [texto]       # las pruebas de la base (pgTAP); no dejan nada guardado
+pnpm db:push               # envía las migraciones pendientes al proyecto de desarrollo
+pnpm db:types              # vuelve a generar src/types/database.ts
+pnpm db:check              # la revisión completa de la base: lint, consejos, tipos, pruebas y medidor
 ```
 
 Antes de dar algo por terminado pasan `pnpm lint`, `pnpm lint:rules`, `pnpm typecheck` y `pnpm test`.
 
 **Una vez por copia del repositorio,** para que cada commit se revise solo: instalar gitleaks 8.30.1 (el comando está en `docs/plan/fase-0-proyecto.md`, tarea 7) y correr `pnpm exec lefthook install`. Desde ahí, un commit entra solo si pasan la búsqueda de secretos, el formato, el lint, los tipos, las pruebas y el formato del mensaje. En GitHub corre lo mismo, más la cobertura (`.github/workflows/ci.yml`).
 
-## 5. Commits
+## 5. La base de datos
+
+El detalle está en `docs/spec/README.md`, «Lo común a todos los módulos» y «Cómo se prueba la base».
+
+- **La CLI de Supabase va siempre por `pnpm sb`,** nunca `supabase` directo: cada comando actúa sobre una base local salvo que lleve `--remote`, y la sesión de esta app vive aparte de la de otros proyectos de la máquina.
+- **Solo el proyecto de desarrollo.** Las herramientas se niegan a probar, medir o confirmar cambios (`--yes`) en otro proyecto. El dueño del proyecto autorizó crear, cambiar y reiniciar esa base; cualquier otra base se pregunta antes.
+- **Primero la prueba, después la migración:** se escribe el archivo de `supabase/tests/`, se ve fallar con `pnpm test:db`, se escribe la migración (`pnpm sb migration new <nombre>`), se ve pasar, se envía con `pnpm db:push` y se corre `pnpm db:lint` y `pnpm db:advisors`. Una migración enviada no se edita.
+- **Se lee con reglas de acceso y se escribe solo por funciones.** La lógica que escribe vive en `private.<nombre>` (`security definer`) y en `public.<nombre>` queda una envoltura que la llama.
+- **Toda función** fija `set search_path = ''`, nombra cada cosa con su esquema, usa parámetros con `p_`, recibe y devuelve JSON en camelCase, y avisa los errores con `private.fail('<código>')`.
+- **Toda tabla** lleva las reglas de acceso activadas, `business_id`, `created_at` y `updated_at` con su trigger, y un índice por cada llave foránea. Una función nueva para la app se agrega a la lista de `supabase/tests/900_structure.test.sql`.
+- **Antes de cerrar una fase** pasa `pnpm db:check`.
+
+## 6. Commits
 
 En inglés y con Conventional Commits: `feat`, `fix`, `docs`, `chore`, `refactor` o `test`. El asunto tiene hasta 100 caracteres. Sin cuerpo y sin pie (tampoco `Co-Authored-By`). Un commit por tarea del plan.
 
-## 6. Antes de escribir código de Expo o de una librería
+## 7. Antes de escribir código de Expo o de una librería
 
 Leer la documentación de la versión instalada, no responder de memoria: Expo cambia en cada SDK.
 

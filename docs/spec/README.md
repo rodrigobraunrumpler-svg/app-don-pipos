@@ -28,14 +28,17 @@ Esto no se repite en cada archivo.
   - columnas: `id` (uuid), `business_id`, `created_at` y `updated_at` (con un trigger común);
   - reglas de acceso activadas (regla 9).
 - **Se lee con RLS; se escribe solo por funciones.**
-  - **Lectura:** el dueño lee las filas de su negocio.
-  - **Escritura:** solo con funciones `security definer`. Cada función comprueba que el negocio sea del usuario y fija su `search_path`.
+  - **Lectura:** el dueño lee las filas de su negocio. Las reglas comparan con `= any ((select private.owned_business_ids())::uuid[])`: la lista se calcula una vez por consulta y el índice de la tabla se puede usar.
+  - **Escritura:** solo con funciones `security definer`. Cada función comprueba que el negocio sea del usuario (`private.current_business_id()`) y fija su `search_path`.
+  - **Dónde vive cada función que escribe:** la lógica, en `private.<nombre>` (`security definer`); en `public.<nombre>` queda una envoltura sin permisos elevados que la llama. Así el consejero de seguridad de Supabase no avisa por cada función, y una prueba lo vigila.
   - La app no puede insertar ni cambiar filas directo, así ningún total, número o stock queda mal guardado.
 - **Nada se borra.** Lo que se equivoca se anula o se corrige con un movimiento (§6 de `PROJECT_CONTEXT.md`).
 - **Que una señal mala no duplique nada (idempotencia):**
   - Cada función que crea algo recibe un `request_id`: pedidos, ventas, pagos, gastos, ingresos, producción, mermas, conteos y cierres de caja.
   - El celular lo genera una vez por intención del usuario (`crypto.randomUUID()`) y lo repite en cada reintento.
-  - La función lo anota en `private.idempotency_keys` con su respuesta. Si el mismo código vuelve, devuelve lo que ya creó, sin crear otro.
+  - La función pide su clave al empezar (`private.claim_request`) y guarda su respuesta al terminar (`private.complete_request`), en `private.idempotency_keys`. Si el mismo código vuelve, devuelve lo que ya creó, sin crear otro.
+  - La clave se inserta antes de crear nada: si dos reintentos llegan a la vez, el segundo espera al primero. Una prueba con dos conexiones lo comprueba.
+  - La clave no lleva llave foránea al negocio, a propósito: la tabla es interna y efímera, y solo la escriben funciones que ya comprobaron el negocio.
   - Las claves se borran a los 7 días (pg_cron).
 - **Permisos cerrados de base,** en la primera migración:
   - se revoca todo a `anon` y a `PUBLIC`, incluido el `EXECUTE` que Postgres da a todas las funciones;
@@ -61,16 +64,17 @@ Esto no se repite en cada archivo.
   - qué guarda: la fecha, el valor anterior y el nuevo.
   - Sirve para responder «¿cuándo subí el precio?». En esta versión no tiene pantalla.
 - **La base organizada por módulos, igual que la app:**
-  - `supabase/schemas/<módulo>.sql` tiene las tablas, índices, funciones y permisos de cada módulo;
-  - las migraciones se generan con `supabase db schema declarative sync` y no se escriben a mano;
-  - la versión 2.0 (pg-delta) está en alfa pública; si da problemas, se usa el motor anterior (migra).
+  - mientras no haya una base local (pide Docker), las migraciones se escriben a mano en `supabase/migrations/`, una por módulo y por fase, y se crean con `pnpm sb migration new <nombre>`;
+  - una migración se prueba antes de enviarla y se envía con `pnpm db:push`; una migración enviada no se edita: lo que haya que corregir va en otra;
+  - los esquemas declarativos (`supabase/schemas/<módulo>.sql` con `supabase db schema declarative sync`) quedan para cuando haya base local.
+- **Nombres en las funciones:** los parámetros llevan el prefijo `p_`. El JSON que reciben y devuelven usa los nombres del código, en camelCase (`deliveryFeeCents`), como manda el glosario.
 - **Montos:**
   - en céntimos enteros, mayores que cero salvo que se diga otra cosa;
   - lo guardado lo calcula la base (§14.3).
 - **Fechas:** en `timestamptz`. El día del negocio es el de `America/Lima`.
 - **Listas largas:** funciones con página por cursor que devuelven `{ items, meta: { limit, total, hasMore, nextCursor } }`. `limit` es 20 por defecto y 50 como máximo (§14.3).
 - **Errores:**
-  - las funciones de la base avisan con `raise exception using errcode = 'P0001', message = '<código>'`, donde el código es `invalid`, `not_found`, `forbidden` o `conflict`;
+  - las funciones de la base avisan con `raise exception using errcode = 'P0001', message = '<código>'`, donde el código es `invalid`, `not_found`, `forbidden` o `conflict`. Siempre a través de `private.fail('<código>')`;
   - `api/` los convierte en `AppError`; una red caída es `offline` y cualquier otra falla es `unexpected` (regla 16).
 - **Respuesta al instante:**
   - las ediciones se ven en el momento y vuelven atrás si fallan;
@@ -95,10 +99,22 @@ Pensada desde el primer día para varios negocios y años de datos.
 - **Espacio libre en las tablas que cambian a cada rato** (`fillfactor`): 70 en `stock_levels` y 85 en `orders`. Postgres actualiza la fila en el mismo bloque sin reescribir sus índices (actualizaciones HOT): es más rápido y la tabla no se hincha.
 - **Funciones en una sola consulta:** cada función arma su respuesta trabajando por conjuntos, sin bucles fila por fila ni una consulta por pedido, y devuelve solo lo que muestra la pantalla.
 - **Cómo se comprueba:**
-  - Un script carga datos de prueba de varios negocios y años (cientos de miles de pedidos). Con `EXPLAIN` revisa que las funciones principales usen sus índices y respondan en menos de 50 ms. Corre en GitHub cuando cambia una migración.
+  - `pnpm db:perf` carga datos de prueba de muchos negocios dentro de una transacción que se deshace (hoy, 5,000 negocios; cada fase suma los suyos, hasta cientos de miles de pedidos). Con `EXPLAIN` revisa que las funciones principales respondan en menos de 50 ms y que no lean ninguna tabla entera. Corre dentro de `pnpm db:check`, y en GitHub cuando exista el repositorio.
   - Cada noche, pg_cron corre `private.check_consistency()`. Compara el stock guardado con sus movimientos, los totales y lo pagado con sus líneas y pagos, y los sellos con sus movimientos. Si algo no coincide, avisa al equipo (Sentry) antes de que el dueño lo note.
   - Una vez al mes, en producción, `supabase inspect db seq-scans` y `supabase inspect db unused-indexes` muestran las lecturas sin índice y los índices que sobran.
 - **Lo que todavía no hace falta:** particionar tablas o guardar resúmenes diarios precalculados. Con estos índices, un negocio con 50 pedidos al día pasa años sin notarlo. Se agregan solo si una función pasa de su tiempo en la prueba de arriba.
+
+## Cómo se prueba la base
+
+Sin base local, todo corre contra el proyecto de desarrollo, y nada queda guardado.
+
+- **`pnpm test:db`:** corre cada archivo de `supabase/tests/` (pgTAP) en su propia transacción, que siempre se deshace. Antes aplica, dentro de esa misma transacción, las migraciones que todavía no se enviaron: así una migración se prueba antes de llegar a la base.
+  - Las pruebas entran como un usuario con `tests.make_user`, `tests.login_as` y `tests.logout` (`supabase/tests/_prelude.sql`).
+  - Un archivo de prueba no abre ni cierra transacciones; el corredor lo rechaza.
+- **La prueba de estructura** (`900_structure.test.sql`) revisa el catálogo entero con 9 reglas: reglas de acceso en toda tabla, `created_at` y `updated_at` con su trigger, `business_id`, `search_path` fijo, índice en cada llave foránea, nada para quien no tiene sesión, ninguna escritura directa de la app, la lista de funciones que la app puede ejecutar y ninguna función con permisos elevados en `public`. Cada regla se prueba primero contra un objeto hecho para romperla.
+- **El revisor de funciones** (`910_plpgsql_check.test.sql`) corre plpgsql_check dentro de la transacción de prueba.
+- **`pnpm db:check`** es la revisión completa: que no haya migraciones sin enviar, el lint y los consejos de Supabase, los tipos al día, las pruebas y el medidor.
+- **Solo en el proyecto de desarrollo:** las herramientas se niegan a probar, medir o confirmar cambios (`--yes`) en cualquier otro proyecto.
 
 ## Buenas prácticas 2026–2027
 

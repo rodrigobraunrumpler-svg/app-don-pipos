@@ -203,17 +203,19 @@ app/
 │   ├── theme/                      Colores claro y oscuro, Manrope y tamaños
 │   └── types/database.ts           Generado desde Supabase; no se edita a mano
 ├── supabase/
-│   ├── schemas/                    Un archivo por módulo: tablas, índices, funciones y permisos
-│   ├── migrations/                 Cada cambio, en orden; se generan desde schemas/, no a mano
+│   ├── migrations/                 Cada cambio, en orden; a mano mientras no haya base local (spec/README.md)
 │   ├── functions/
 │   │   ├── sign-in-with-pin/       Revisa el PIN y cuenta los intentos (D18)
 │   │   └── sync-to-web/            Precio y «Agotado» a la web (D13)
-│   ├── tests/                      Permisos, totales, paginado e intentos del PIN
+│   ├── tests/                      Pruebas pgTAP: permisos, reglas de acceso, funciones y la estructura entera
+│   ├── perf/                       Datos y casos del medidor de rendimiento
+│   ├── certs/                      Certificado público de Supabase, para verificar la conexión
 │   ├── seed.sql                    Datos DEMO, solo para desarrollar
 │   └── config.toml
 ├── e2e/                            Recorridos completos (Playwright sobre la versión web)
 ├── templates/feature/              Plantilla de un módulo nuevo
-├── scripts/                        Crear un módulo · probar las reglas de lint · copia diaria de la base
+├── scripts/                        Crear un módulo · probar las reglas de lint · la CLI de Supabase (pnpm sb) ·
+│                                   pruebas, medidor y tipos de la base · copia diaria de la base
 ├── tools/lint-fixtures/            Archivos hechos para romper cada regla: prueban que el lint las atrapa
 ├── assets/                         Ícono y pantalla de carga
 ├── docs/
@@ -304,7 +306,7 @@ features/orders/
 5. **Lo común no sabe del negocio:** `components/ui` y `lib` sirven para cualquier módulo y no importan de ninguno.
 6. **Cuentas probadas, y donde corresponde:** lo guardado (totales, stock, conteos, reportes) lo calcula la base de datos (§14.3). El celular solo calcula la vista previa antes de guardar, como el total mientras se arma un pedido, y esas cuentas van en `rules/`, con sus pruebas.
 7. **Archivos chicos:** un componente por archivo y nada de más de 250 líneas; lo que crece se parte por tema.
-8. **Base de datos con migraciones:** la base de datos solo cambia con migraciones, generadas desde `supabase/schemas/` (un archivo por módulo), y los tipos se generan a partir de ella.
+8. **Base de datos con migraciones:** la base de datos solo cambia con migraciones (`supabase/migrations/`, una por módulo y por fase; a mano mientras no haya base local). Cada una se prueba antes de enviarse, y los tipos se generan a partir de la base (`pnpm db:types`).
 9. **Cada tabla igual de segura:** lleva `business_id`, `created_at` y `updated_at` (con un trigger común), tiene las reglas de acceso activadas y filtra por negocio. Las funciones de la base fijan su `search_path`.
 10. **Montos y fechas centralizados:** céntimos y hora de Lima, siempre con las funciones de `lib`.
 11. **Idioma:** el código en inglés; los textos que ve el dueño, en español.
@@ -328,9 +330,11 @@ Si algo se sale, el lint, las pruebas o GitHub bloquean el cambio:
 - **Cobertura del 100 % en `rules/`.**
 - **TypeScript estricto, sin atajos:** prohibidos `any`, `@ts-ignore` y `console.log`.
 - **Rutas tipadas de Expo Router** y el alias `@/`: un enlace a una pantalla que no existe no compila.
-- **Tipos de la base al día:** en GitHub se regenera `types/database.ts` desde las migraciones; si no coincide con el del repositorio, falla.
-- **Base de datos revisada:** una prueba falla si alguna tabla no tiene las reglas de acceso activadas, y `supabase db lint` revisa las funciones en cada cambio.
-- **Rendimiento medido:** con datos de prueba de varios negocios y años, un script revisa con `EXPLAIN` que las funciones principales usen sus índices y respondan en menos de 50 ms (en GitHub, cuando cambia una migración). Una vez al mes, `supabase inspect db seq-scans` y `supabase inspect db unused-indexes` en producción.
+- **Tipos de la base al día:** `pnpm db:types:check` regenera `types/database.ts` desde la base y falla si no coincide con el del repositorio.
+- **Base de datos revisada:** una prueba revisa el catálogo entero con 9 reglas (reglas de acceso en toda tabla, índices en las llaves foráneas, qué puede ejecutar la app…), plpgsql_check revisa las funciones antes de enviar cada migración, y `pnpm db:lint` y `pnpm db:advisors` revisan después (`docs/spec/README.md`, «Cómo se prueba la base»).
+- **Rendimiento medido:** `pnpm db:perf` carga datos de prueba de muchos negocios y revisa con `EXPLAIN` que las funciones principales respondan en menos de 50 ms sin leer tablas enteras. Una vez al mes, `supabase inspect db seq-scans` y `supabase inspect db unused-indexes` en producción.
+- **La revisión completa de la base:** `pnpm db:check` junta todo lo anterior. Corre a mano antes de cerrar cada fase; en GitHub, cuando exista el repositorio.
+- **Solo el proyecto de desarrollo:** las herramientas se niegan a probar, medir o confirmar cambios en cualquier otro proyecto de Supabase.
 - **Variables de entorno revisadas al arrancar** (`lib/env.ts` con Zod): si falta una, la app lo dice en vez de fallar en silencio.
 - **Accesibilidad:** eslint-plugin-react-native-a11y; cada botón con su nombre para el lector de pantalla.
 - **Commits:** commitlint (Conventional Commits en inglés, máximo 100 caracteres) y gitleaks, que bloquea cualquier llave o secreto antes de que entre.
@@ -427,17 +431,17 @@ Versiones vigentes en npm ese día.
 | Fotos de boletas | expo-image-picker y compresión antes de subir | Se guardan en Supabase Storage, privado |
 | Exportar | CSV con expo-file-system y expo-sharing | Excel lo abre directamente |
 | Errores | Sentry, plan gratis | En Expo Go solo registra errores de JavaScript; completo en la APK |
-| Base de datos | Supabase: PostgreSQL con RLS, funciones (todo o nada), vistas para reportes y Edge Functions | Reportes calculados en la base, no en el celular |
-| Pruebas | Jest (jest-expo) y Testing Library; pgTAP para la base; Playwright sobre la versión web | En esta PC no hay emulador de Android |
+| Base de datos | Supabase: PostgreSQL 17 con RLS, funciones (todo o nada), vistas para reportes y Edge Functions | Reportes calculados en la base, no en el celular |
+| Pruebas | Jest (jest-expo) y Testing Library; pgTAP para la base, con un corredor propio (`pnpm test:db`) contra el proyecto de desarrollo; Playwright sobre la versión web | En esta PC no hay emulador de Android ni Docker |
 | Calidad | ESLint con las reglas de §10, Prettier, lefthook y GitHub Actions | |
 | Entrega | EAS Build (APK) y EAS Update (canales de prueba y producción) | |
-| Herramientas | Node 24 y pnpm 10 | Como la web |
+| Herramientas | Node 24, pnpm 10 y la CLI de Supabase 3.2 (siempre por `pnpm sb`) | Como la web |
 
 Buenas prácticas de rendimiento 2026–2027: `docs/spec/README.md`.
 
 ### 14.1 Entornos
 
-- **Desarrollo:** un proyecto de Supabase en la nube, que da el equipo, solo con datos inventados. Los cambios van por migraciones del repositorio, así que se puede reiniciar de cero con un comando.
+- **Desarrollo:** un proyecto de Supabase en la nube, que da el equipo, solo con datos inventados. Los cambios van por migraciones del repositorio, así que se puede reiniciar de cero con un comando. Las herramientas del repositorio solo aceptan ese proyecto (`SUPABASE_DEV_PROJECT_REF` en `.env.local`). Está en Oregon; el de producción se crea en una región más cercana a Perú.
 - **Producción:** un proyecto nuevo y limpio, creado con las mismas migraciones. El de desarrollo sigue para los cambios futuros sin tocar los datos reales del cliente. Esto ocupa los 2 proyectos gratis de la cuenta.
 - **Probar en el celular:** Expo Go de la Play Store, en modo túnel desde WSL.
   - Expo Go solo abre proyectos de la versión más reciente de Expo. Cuando salga la 59, hay que actualizar o pasar a una versión de desarrollo de la app.
@@ -521,7 +525,7 @@ Buenas prácticas de rendimiento 2026–2027: `docs/spec/README.md`.
 3. Decidir el stack completo.
 4. Maqueta de las pantallas (28, en `docs/design/pantallas/`) y aprobación del cliente.
 5. Estructura de carpetas final, especificación (`docs/spec/`) y plan de trabajo por fases (`docs/plan/`).
-6. **Primera versión, en 9 fases: unos 33 días de trabajo completos, alrededor de 6 semanas y media** (`docs/plan/README.md`). El cálculo anterior era de unas 5 semanas; creció con la idempotencia, el registro de cambios, las devoluciones y las correcciones de pedidos entregados. ← aquí estamos: la fase 0 está construida (2026-11-19) y sigue la fase 1
+6. **Primera versión, en 9 fases: unos 33 días de trabajo completos, alrededor de 6 semanas y media** (`docs/plan/README.md`). El cálculo anterior era de unas 5 semanas; creció con la idempotencia, el registro de cambios, las devoluciones y las correcciones de pedidos entregados. ← aquí estamos: las fases 0 y 1 están construidas (2026-11-19) y sigue la fase 2
 7. Una o dos semanas de uso real, y ajustes.
 8. Fase 2: pedidos de la web. Después, VarMar.
 

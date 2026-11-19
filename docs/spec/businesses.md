@@ -67,11 +67,15 @@ La anota el script de copia del VPS. No lleva `business_id` porque la copia es d
 
 ## 3. Funciones de la base
 
-- **`private.owned_business_ids()`:** devuelve los negocios del usuario (`owner_id = (select auth.uid())`).
+- **`private.owned_business_ids()`:** devuelve la lista (`uuid[]`) de los negocios del usuario (`owner_id = (select auth.uid())`).
   - Es `security definer` y `stable`, y vive en el esquema `private`, que la API no expone.
   - La usan todas las reglas de acceso.
-- **`get_business()`:** el negocio activo con sus ajustes y si falta la puesta en marcha.
-- **`update_settings(expected_version, patch)`:** cambia uno o varios ajustes. Valida los rangos y que quede al menos un medio de pago. Con otra versión responde `conflict`. Cada cambio queda en el registro de cambios (`private.audit_log`).
+- **`private.current_business_id()`:** el negocio con el que trabaja el usuario; sin negocio responde `not_found`. La usan las funciones que escriben. Hoy cada dueño tiene uno; cuando haya varios, aquí se elige el activo.
+- **`get_business()`:** el negocio activo con sus ajustes y si falta la puesta en marcha. Lee con las reglas de acceso. Devuelve `{ id, name, modules, setupDone, settings }`, y `settings` trae `activePaymentMethods`, `deliveryFeeCents`, `deliveryZone`, `productionIntervalDays`, `lapsedAfterDays`, `reminders` y `version`.
+- **`update_settings(p_expected_version, p_patch)`:** cambia uno o varios ajustes y devuelve el objeto `settings` nuevo. Cada cambio queda en el registro de cambios (`private.audit_log`).
+  - `p_patch` trae una o más de las claves de `settings` (menos `version`), y ninguna otra.
+  - Valida todo antes de guardar: de 1 a 4 medios de pago válidos y sin repetir; el delivery, un entero de 0 a 1,000,000 céntimos; producir cada 1 a 14 días; «no vuelve» de 7 a 120 días; la zona, un texto de hasta 120 caracteres (vacío se guarda como `null`); los recordatorios, con sus tres claves.
+  - Cualquier otra forma responde `invalid` y no guarda nada. Con otra versión responde `conflict`.
 - **`complete_setup(stock, expense_category_names)`:** en una sola operación:
   - carga el stock de hoy de cada producto, como movimientos `adjustment` con motivo «stock inicial»;
   - crea los tipos de gasto elegidos;

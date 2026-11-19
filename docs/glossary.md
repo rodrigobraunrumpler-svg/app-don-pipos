@@ -19,6 +19,13 @@ Un concepto nuevo se agrega aquí antes de usarlo en el código.
 | Pedir huella o PIN | `autoLock` | — | Minutos en segundo plano |
 | Puesta en marcha | `setup` | `businesses.setup_done_at` | Productos, stock de hoy y tipos de gasto |
 | Ajustes | `settings` | `business_settings` | Medios de pago, delivery, días de producción |
+| Módulos del negocio | `modules` | `businesses.modules` | Lo que usa cada negocio: `orders`, `stock`… |
+| Falta la puesta en marcha | `setupDone` | `businesses.setup_done_at` | `false` mientras la fecha esté vacía |
+| Medios de pago activos | `activePaymentMethods` | `active_payment_methods` | Los apagados no aparecen al anotar pedidos y gastos |
+| Zona de reparto | `deliveryZone` | `delivery_zone` | Pendiente con el cliente |
+| «No vuelve» a los… días | `lapsedAfterDays` | `lapsed_after_days` | 30 por defecto |
+| Recordatorios activos | `reminders` | `business_settings.reminders` | `scheduled`, `stock` y `balances` |
+| Versión esperada | `expectedVersion` | `p_expected_version` | La versión que la app tenía al abrir el formulario |
 
 ## Productos y stock
 

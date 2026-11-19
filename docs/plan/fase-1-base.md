@@ -879,3 +879,63 @@ git commit -m "docs: record phase 1 results and bring the specification up to da
 ```
 
 Con esto, la fase 1 está terminada. Sigue escribir el plan de la fase 2.
+
+---
+
+## Resultado (2026-11-19)
+
+La fase 1 quedó construida en la rama `fase-1`, con un commit por tarea.
+
+| Comprobación | Resultado |
+|---|---|
+| `pnpm db:check` | Pasa entera: sin migraciones pendientes, lint, consejos, tipos, pruebas y medidor |
+| `pnpm test:db` | 123 pruebas en 11 archivos, incluida la de dos conexiones a la vez |
+| `pnpm db:perf` | 4 casos con 5,000 negocios de prueba: entre 0.3 y 0.9 ms, todos con índice |
+| `pnpm db:lint` y `pnpm db:advisors` | No reportan nada |
+| Migraciones enviadas al proyecto de desarrollo | 7: `foundations`, `businesses`, `fail_is_stable`, `idempotency`, `audit_log`, `settings_functions` y `definer_functions_in_private` |
+| La app | `pnpm lint`, `pnpm lint:rules`, `pnpm typecheck`, 98 pruebas de Jest con 100 % de cobertura y 17 pruebas de scripts |
+
+En la base de desarrollo no hay ningún dato guardado todavía: solo la estructura. El negocio DEMO llega en la fase 2, junto con la cuenta del dueño.
+
+### Cómo verlo tú
+
+```bash
+cd /home/javier/var-mar/app && pnpm db:check
+```
+
+Tiene que terminar en «pnpm db:check: todo pasa».
+
+### Lo que cambió respecto de este plan
+
+**Tarea 1**
+- El envoltorio de la CLI cierra la entrada cuando no hay terminal: `supabase migration new` la lee y se quedaba esperando.
+- `guard.mjs` también decide cuándo un comando confirma cambios en la nube (`--yes`, `SUPABASE_YES`) y a qué proyecto, con tres pruebas más.
+- `prepare <nombre> as …` se acepta en las pruebas (es de pgTAP); solo se rechaza `prepare transaction`.
+
+**Tarea 2**
+- `private.fail(null)` también es un error interno.
+
+**Tarea 3**
+- La prueba destapó un hueco en el primer borrador: una regla `CHECK` pasa cuando su expresión da `null`, así que aceptaba recordatorios incompletos. Se corrigió antes de enviar.
+- Prueba nueva, `910_plpgsql_check.test.sql`: el revisor de funciones corre dentro de la transacción de prueba, antes de enviar cada migración. El plan solo lo corría después.
+- Migración extra, `fail_is_stable`: `private.fail` pasó a `stable` para que las funciones `stable` puedan llamarla.
+
+**Tarea 4**
+- `claim_request` responde `conflict` si la clave existe pero quedó sin respuesta, y `complete_request` falla con una respuesta vacía o sin clave. Una prueba más (13).
+
+**Tarea 5**
+- `audit_changes` falla si se engancha a un `insert` o a un `delete`: el plan solo define el `update`.
+
+**Tarea 6**
+- **Regla nueva para toda función que escribe:** la lógica vive en `private.<nombre>` (`security definer`) y `public.<nombre>` es una envoltura que la llama. El consejero de seguridad de Supabase avisa por cada función con permisos elevados del esquema público, y el panel se llenaría de advertencias. Migración extra, `definer_functions_in_private`.
+- `get_business` corre con el rol del usuario, así que `authenticated` también ejecuta `private.fail` y `private.settings_json`.
+- Ayuda nueva, `private.json_integer`, y un tope de 1,000,000 céntimos para el delivery.
+
+**Tarea 7**
+- La prueba de estructura tiene 9 reglas y 18 comprobaciones (el plan decía 8 y 16): la novena refleja la regla de la tarea 6. Su lista de funciones para la app tiene 6.
+
+**Tarea 9**
+- Los tipos generados pasan por Prettier antes de guardarse y no se ignoran: así sus cambios se leen en un diff.
+- `pnpm db:check` es un script propio (`scripts/db-check.mjs`).
+
+**Total de pruebas:** 123 en 11 archivos (el plan sumaba 117 en 9).
