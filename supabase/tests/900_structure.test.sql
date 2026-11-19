@@ -153,11 +153,17 @@ create function pg_temp.unlisted_functions_for_app() returns setof text language
       -- lo que llama la app
       'public.get_business()',
       'public.update_settings(integer, jsonb)',
+      'public.list_products()',
+      'public.save_product(uuid, integer, text, integer, integer, integer, boolean)',
+      'public.set_product_active(uuid, boolean)',
       -- lo que usan por dentro las reglas de acceso y las funciones de arriba
       'private.owned_business_ids()',
       'private.fail(text)',
       'private.settings_json(business_settings)',
-      'private.update_settings(integer, jsonb)'
+      'private.update_settings(integer, jsonb)',
+      'private.product_json(products)',
+      'private.save_product(uuid, integer, text, integer, integer, integer, boolean)',
+      'private.set_product_active(uuid, boolean)'
     )
 $$;
 

@@ -246,6 +246,20 @@ export type Database = {
     };
     Functions: {
       get_business: { Args: Record<PropertyKey, never>; Returns: Json };
+      list_products: { Args: Record<PropertyKey, never>; Returns: Json };
+      save_product: {
+        Args: {
+          p_cost_cents: number;
+          p_expected_version: number;
+          p_id: string;
+          p_min_stock: number;
+          p_name: string;
+          p_price_cents: number;
+          p_show_on_web: boolean;
+        };
+        Returns: Json;
+      };
+      set_product_active: { Args: { p_active: boolean; p_id: string }; Returns: Json };
       update_settings: { Args: { p_expected_version: number; p_patch: Json }; Returns: Json };
     };
     Enums: {
