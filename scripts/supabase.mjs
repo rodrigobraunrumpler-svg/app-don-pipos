@@ -3,21 +3,15 @@ import { spawnSync } from "node:child_process";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-import { assertDevProject, linkedRef, loadEnv, ROOT, yesTarget } from "./lib/guard.mjs";
+import { childEnv, confirmedCommandProblem, linkedRef, loadEnv, ROOT } from "./lib/guard.mjs";
 
 loadEnv();
-// La sesión de esta app vive aparte de la de otros proyectos de la máquina
-process.env.SUPABASE_HOME ??= join(homedir(), ".supabase-varmar-app");
 
 const args = process.argv.slice(2);
-const target = yesTarget(args, process.env, linkedRef());
-if (target !== undefined) {
-  try {
-    assertDevProject(target, process.env.SUPABASE_DEV_PROJECT_REF, "Confirmar cambios en la nube (--yes)");
-  } catch (error) {
-    console.error(error.message);
-    process.exit(1);
-  }
+const problem = confirmedCommandProblem(args, process.env, linkedRef(), process.env.SUPABASE_DEV_PROJECT_REF);
+if (problem) {
+  console.error(problem);
+  process.exit(1);
 }
 
 // Sin terminal (un script, un asistente), la entrada se cierra: «migration new» la lee y se quedaría esperando
@@ -25,5 +19,6 @@ const stdin = process.stdin.isTTY ? "inherit" : "ignore";
 const run = spawnSync(join(ROOT, "node_modules", ".bin", "supabase"), args, {
   stdio: [stdin, "inherit", "inherit"],
   cwd: ROOT,
+  env: childEnv(process.env, homedir()),
 });
 process.exit(run.status ?? 1);
