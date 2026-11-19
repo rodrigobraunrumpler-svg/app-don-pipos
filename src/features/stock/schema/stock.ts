@@ -9,3 +9,19 @@ export type MovementKind = z.infer<typeof movementKindSchema>;
 
 export const wasteReasonSchema = z.enum(["broken", "expired", "gift", "other"]);
 export type WasteReason = z.infer<typeof wasteReasonSchema>;
+
+// Un alfajor como lo devuelve stock_overview
+export const stockItemSchema = z.object({
+  productId: z.string(),
+  name: z.string(),
+  imageUrl: z.string().nullable(),
+  linkedToWeb: z.boolean(),
+  minStock: z.number().int(),
+  onHand: z.number().int(),
+  reserved: z.number().int(),
+  physical: z.number().int(),
+  state: stockStateSchema,
+});
+export type StockItem = z.infer<typeof stockItemSchema>;
+
+export const stockOverviewSchema = z.array(stockItemSchema);

@@ -63,7 +63,7 @@ export default function MainLayout() {
         }}
       />
       <Tabs.Screen
-        name="stock/index"
+        name="stock"
         options={{
           title: "Stock",
           tabBarIcon: ({ focused, size }) => (

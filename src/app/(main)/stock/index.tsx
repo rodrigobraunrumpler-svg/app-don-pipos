@@ -1,14 +1,18 @@
-import { Text, View } from "react-native";
+import { router } from "expo-router";
 
 import { Screen } from "@/components/ui/screen";
+import { StockOverview, stockOverviewQuery } from "@/features/stock";
+import { useRefreshOnFocus } from "@/lib/use-refresh-on-focus";
 
-// Stock llega en la fase 3
 export default function Stock() {
+  useRefreshOnFocus(stockOverviewQuery.queryKey);
   return (
     <Screen bottom={false}>
-      <View className="flex-1 px-5 pt-4">
-        <Text className="font-extrabold text-3xl text-text">Stock</Text>
-      </View>
+      <StockOverview
+        onOpenProduct={(productId) => router.push({ pathname: "/stock/[productId]", params: { productId } })}
+        onRegisterProduction={() => router.push("/stock/production")}
+        onGoToProducts={() => router.push("/more/products")}
+      />
     </Screen>
   );
 }
