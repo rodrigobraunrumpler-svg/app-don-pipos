@@ -5,8 +5,13 @@ import { join } from "node:path";
 import pg from "pg";
 
 import { assertDevProject, loadEnv, ROOT } from "./guard.mjs";
+import { assertIsolated } from "./sql.mjs";
 
 const SUPABASE = join(ROOT, "supabase");
+const MIGRATIONS = join(SUPABASE, "migrations");
+const PRELUDE = join(SUPABASE, "tests", "_prelude.sql");
+// Una marca que vive solo mientras dura la transacción de prueba: si falta al final, la transacción se cerró antes
+const MARK = "varmar.test_transaction";
 
 /** Abre una conexión al pooler en modo sesión, con TLS verificado. Solo conecta al proyecto de desarrollo. */
 export async function connect() {
@@ -27,8 +32,7 @@ export async function connect() {
 }
 
 /** Las migraciones de supabase/migrations que la base todavía no tiene, en orden. */
-export async function pendingMigrations(client) {
-  const dir = join(SUPABASE, "migrations");
+export async function pendingMigrations(client, dir = MIGRATIONS) {
   const files = existsSync(dir)
     ? readdirSync(dir)
         .filter((file) => /^\d+_.+\.sql$/.test(file))
@@ -47,14 +51,33 @@ export async function pendingMigrations(client) {
     .map((file) => ({ file, sql: readFileSync(join(dir, file), "utf8") }));
 }
 
+// ¿Sigue abierta la transacción de prueba? Una transacción que falló (25P02) sigue abierta hasta el rollback
+async function stillInTestTransaction(client) {
+  try {
+    const { rows } = await client.query(`select current_setting('${MARK}', true) as mark`);
+    return rows[0]?.mark === "on";
+  } catch (error) {
+    if (error.code === "25P02") return true;
+    throw error;
+  }
+}
+
 /**
  * Corre `run` dentro de una transacción que siempre se deshace. Antes aplica las migraciones pendientes,
  * crea pgTAP y carga las ayudas de supabase/tests/_prelude.sql.
+ * Nada que abra o cierre una transacción llega a la base: lo que se enviara después de un commit quedaría guardado.
  */
-export async function inTestTransaction(client, run) {
+export async function inTestTransaction(client, run, { migrationsDir = MIGRATIONS, prelude = PRELUDE } = {}) {
+  const pending = await pendingMigrations(client, migrationsDir);
+  const preludeSql = readFileSync(prelude, "utf8");
+  for (const migration of pending) assertIsolated(migration.sql, migration.file);
+  assertIsolated(preludeSql, "_prelude.sql");
+
   await client.query("begin");
+  await client.query(`select set_config('${MARK}', 'on', true)`);
+  let outcome;
   try {
-    for (const migration of await pendingMigrations(client)) {
+    for (const migration of pending) {
       try {
         await client.query(migration.sql);
       } catch (error) {
@@ -62,9 +85,36 @@ export async function inTestTransaction(client, run) {
       }
     }
     await client.query("create extension if not exists pgtap with schema extensions");
-    await client.query(readFileSync(join(SUPABASE, "tests", "_prelude.sql"), "utf8"));
-    return await run();
-  } finally {
-    await client.query("rollback");
+    await client.query(preludeSql);
+    outcome = { value: await run() };
+  } catch (error) {
+    outcome = { error };
   }
+
+  const open = await stillInTestTransaction(client);
+  await client.query("rollback");
+  // Lo que no se deshace con la transacción (sentencias preparadas, bloqueos de sesión) no pasa a la prueba siguiente
+  await client.query("discard all");
+  // Esta falla tapa cualquier otra: algo pudo quedar guardado
+  if (!open) {
+    throw new Error(
+      "La transacción de prueba se cerró antes de tiempo: lo que corrió después pudo quedar guardado en la base de desarrollo. Revísala con pnpm sb db query.",
+    );
+  }
+  if ("error" in outcome) throw outcome.error;
+  return outcome.value;
+}
+
+/** Lo que quedó en la base después de las pruebas, con su nombre. Sin nada, una lista vacía. */
+export async function leftoverProblems(client) {
+  const {
+    rows: [row],
+  } = await client.query(`select to_regnamespace('tests') is not null as tests_schema,
+      exists (select 1 from pg_catalog.pg_extension where extname = 'pgtap') as pgtap,
+      (select count(*)::integer from auth.users where email like '%@prueba.invalid') as users`);
+  const problems = [];
+  if (row.tests_schema) problems.push("quedó el esquema tests");
+  if (row.pgtap) problems.push("quedó la extensión pgtap");
+  if (row.users > 0) problems.push(`quedaron ${row.users} usuarios de prueba (@prueba.invalid)`);
+  return problems;
 }

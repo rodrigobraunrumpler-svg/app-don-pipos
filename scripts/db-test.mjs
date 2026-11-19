@@ -5,7 +5,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
-import { connect, inTestTransaction, pendingMigrations } from "./lib/db.mjs";
+import { connect, inTestTransaction, leftoverProblems, pendingMigrations } from "./lib/db.mjs";
 import { ROOT } from "./lib/guard.mjs";
 import { assertIsolated, parseTap } from "./lib/sql.mjs";
 
@@ -95,12 +95,10 @@ try {
     }
   }
 
-  const leftovers = await client.query(
-    "select count(*)::integer as total from auth.users where email like '%@prueba.invalid'",
-  );
-  if (leftovers.rows[0].total > 0) {
+  // Después de todo, la base tiene que quedar como estaba: sin ayudas de prueba, sin pgTAP y sin usuarios de prueba
+  for (const problem of await leftoverProblems(client)) {
     failedFiles += 1;
-    console.log(`FALLA  quedaron ${leftovers.rows[0].total} usuarios de prueba en la base: una prueba no se deshizo`);
+    console.log(`FALLA  ${problem}: una prueba no se deshizo`);
   }
 } finally {
   await client.end();
