@@ -91,6 +91,11 @@ export const EXPECTED = {
   "features/orders/rules/uses-any.ts": ["@typescript-eslint/no-explicit-any"],
   "features/orders/rules/uses-ts-ignore.ts": ["@typescript-eslint/ban-ts-comment"],
   "features/orders/rules/uses-console.ts": ["no-console"],
+  // Un comentario no saca una rama de la cuenta de cobertura (el 100 % de rules/ se cumple con pruebas)
+  "features/orders/rules/hides-coverage-istanbul.ts": ["no-warning-comments"],
+  "features/orders/rules/hides-coverage-c8.ts": ["no-warning-comments"],
+  "features/orders/rules/hides-coverage-v8.ts": ["no-warning-comments"],
+  "features/orders/rules/hides-coverage-inline.ts": ["no-warning-comments"], // aunque no esté al principio del comentario
   // El comentario no apaga la regla: se avisa el comentario y la falta sigue ahí
   "lib/disables-lint.ts": ["comentario-sin-efecto", "no-console"],
 

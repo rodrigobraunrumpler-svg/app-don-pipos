@@ -55,6 +55,8 @@ export default tseslint.config(
       "max-lines": [2, { max: 250, skipBlankLines: true, skipComments: true }],
       "react/no-multi-comp": 2,
       "no-console": 2,
+      // La cobertura se cumple con pruebas, no sacando ramas de la cuenta con un comentario
+      "no-warning-comments": [2, { terms: ["istanbul ignore", "c8 ignore", "v8 ignore"], location: "anywhere" }],
       "react-native-a11y/has-valid-accessibility-descriptors": 2,
       "check-file/filename-naming-convention": [
         2,
