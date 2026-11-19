@@ -57,8 +57,8 @@ Cómo se construye la app de Don Pipos, por fases. Cada fase deja algo que funci
 | Antes de | Qué | Para qué |
 |---|---|---|
 | Fase 0 | Nada. Opcional: crear el repositorio privado en GitHub | Con el repositorio, el CI empieza a correr |
-| Fase 0, tarea 7 (**pendiente**) | Instalar gitleaks en tu máquina y activar los hooks: los dos comandos están en `fase-0-proyecto.md`, «Lo que falta» | Bloquear llaves y secretos, y revisar cada commit antes de que entre |
-| Fase 0, tarea 8 (**pendiente**) | Abrir la app en tu celular con Expo Go y mirar cuatro cosas (`fase-0-proyecto.md`, «Lo que falta») | Confirmar los estilos en un Android de verdad |
+| Fase 0, tarea 7 (**postergado por ti el 2026-11-19; se retoma antes de la fase 2**) | Instalar gitleaks en tu máquina y activar los hooks: los dos comandos están en `fase-0-proyecto.md`, «Lo que falta» | Bloquear llaves y secretos, y revisar cada commit antes de que entre |
+| Fase 0, tarea 8 (**pendiente**) | Abrir la app en tu celular con Expo Go y mirar cinco cosas (`fase-0-proyecto.md`, «Lo que falta») | Confirmar los estilos y las fechas en un Android de verdad |
 | Fase 1 | Un proyecto de Supabase para desarrollo; `supabase login` y `supabase link` en tu terminal; la URL y la llave publicable en `.env.local` | La base de desarrollo |
 | Fase 1 | **Decidir: ¿instalamos Docker Engine dentro de WSL?** Es gratis y no usa Docker Desktop. Con Docker, las pruebas de la base y los esquemas por módulo corren en tu máquina sin tocar la nube. Sin Docker, las migraciones se escriben a mano y las pruebas corren contra el proyecto de desarrollo | Cómo se trabaja la base |
 | Fase 2 | Una cuenta de Expo; la llave secreta de Supabase en tu `.env.local` (nunca en el chat) | La primera APK y los scripts que crean al dueño y su PIN |
@@ -69,6 +69,6 @@ Cómo se construye la app de Don Pipos, por fases. Cada fase deja algo que funci
 
 | Fase | Estado |
 |---|---|
-| 0. El proyecto | Construida el 2026-11-19, en la rama `fase-0`. Faltan dos pasos del dueño del proyecto: gitleaks con los hooks, y la prueba en el celular |
+| 0. El proyecto | Construida y revisada el 2026-11-19, en la rama `fase-0`; las correcciones de la revisión final están en `fase-0-proyecto.md`, «Después de la revisión final». Falta la prueba en el celular. Gitleaks y los hooks quedaron postergados por el dueño del proyecto hasta antes de la fase 2 |
 | 1. Los cimientos de la base | Sigue: su plan se escribe ahora |
 | 2 a 8 | Su plan se escribe al terminar la fase anterior |

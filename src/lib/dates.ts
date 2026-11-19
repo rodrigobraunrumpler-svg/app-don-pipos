@@ -4,8 +4,9 @@ import { es } from "date-fns/locale";
 
 // El nombre de la zona, para la base de datos
 export const TIME_ZONE = "America/Lima";
-// En el celular se usa su desfase, que es fijo: Perú no cambia la hora desde 1994. Así no hace falta que el motor
-// de JavaScript traiga los datos de las zonas horarias (el del celular, Hermes, no los trae)
+// En el celular se usa su desfase, que es fijo: Perú no cambia la hora desde 1994. Así las fechas no dependen de lo que
+// el motor de JavaScript del celular (Hermes) sepa de zonas horarias: para leer el desfase de una zona con nombre,
+// @date-fns/tz usa una función de Intl que, según su documentación, Hermes no trae
 const LIMA_OFFSET = "-05:00";
 
 const DAY_FORMAT = /^\d{4}-\d{2}-\d{2}$/;

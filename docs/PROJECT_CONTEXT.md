@@ -1,6 +1,6 @@
 # APP DE GESTIÓN (DON PIPOS, LUEGO VARMAR) — CONTEXTO DEL PROYECTO
 
-> **Estado:** borrador para acordar. Todavía no hay nada construido.
+> **Estado:** acordado y en construcción. La fase 0 (el proyecto con su estructura y sus reglas) está construida y revisada en la rama `fase-0`; el avance de cada fase está en `docs/plan/README.md`.
 > **Versión:** 0.3 · **Fecha:** 2026-11-18 · **Idioma de la app:** español (Perú).
 > **Relacionado:** la web está en `/home/javier/var-mar/product`. Su `CLAUDE.md` (§2) y su `docs/PROJECT_CONTEXT.md` (§6) son la fuente del catálogo confirmado de Don Pipos.
 
@@ -91,7 +91,6 @@ Una app para el celular del dueño (Android) que registra los pedidos, el stock,
 - VarMar (mesas, cocina).
 - **Fase 2:** que los pedidos hechos en la web entren solos a la app.
 - **Para una versión siguiente:**
-  - cierre de caja diario (contar el efectivo y ver la diferencia con lo registrado);
   - gastos que se repiten cada mes (alquiler, luz), anotados solos;
   - proveedores: a quién le compra y cuánto le gasta;
   - un resumen semanal escrito con IA, solo si el cliente lo quiere. Con un plan de pago, porque en los planes gratis (como el de Gemini) Google puede usar los datos y leerlos personas de su equipo.
@@ -213,9 +212,9 @@ app/
 │   └── config.toml
 ├── e2e/                            Recorridos completos (Playwright sobre la versión web)
 ├── templates/feature/              Plantilla de un módulo nuevo
-├── scripts/                        Crear un módulo · probar las reglas de lint · copia diaria de la base
+├── scripts/                        Crear un módulo · probar las reglas de lint (con la tabla de §9.1, celda por celda) · copia diaria de la base
 ├── tools/lint-fixtures/            Archivos hechos para romper cada regla: prueban que el lint las atrapa
-├── assets/                         Ícono y pantalla de carga
+├── assets/                         Ícono, pantalla de carga y las demás imágenes y letras
 ├── docs/
 │   ├── PROJECT_CONTEXT.md          Este documento
 │   ├── glossary.md                 Un nombre por concepto, en el código y en pantalla
@@ -225,6 +224,7 @@ app/
 ├── .github/workflows/              Lint, tipos y pruebas en cada cambio
 ├── eslint.config.mjs               Las reglas del código (§10.2)
 ├── eslint/structure.mjs            Quién puede usar a quién (§9.1)
+├── eslint/colors.mjs               Los colores escritos a mano que el lint no deja pasar
 ├── lefthook.yml                    Lo mismo antes de cada commit
 ├── app.config.ts · eas.json · tsconfig.json · commitlint.config.js · .env.example · package.json
 ├── babel.config.js · metro.config.js · tailwind.config.js · jest.config.js · jest.setup.js
@@ -270,20 +270,31 @@ features/orders/
 
 **Quién puede usar a quién** (lo revisa el lint, §10.2):
 
-| Carpeta | Puede usar | No puede usar |
+| Carpeta o archivo | Puede usar | No puede usar |
 |---|---|---|
-| `components/` | hooks, queries, rules, schema, constants, `components/ui`, `theme`, `lib` (menos `supabase`) y el `index.ts` de otro módulo | api ni Supabase |
-| `hooks/` | queries, rules, schema, constants, `lib` (menos `supabase`) y el `index.ts` de otro módulo | components, api |
-| `queries/` | api, schema, `lib` (menos `supabase`) | components, hooks |
-| `api/` | schema, `lib` (con `supabase`), `types` | React, queries, components |
-| `rules/` | schema, constants, `lib/money`, `lib/dates` | React, Supabase, api, queries |
-| `schema/`, `constants.ts` | Zod | nada más |
-| `index.ts` del módulo | components, hooks, queries, rules y schema de su módulo | api |
-| `components/ui` | `theme`, `lib` (menos `supabase`) | cualquier módulo |
+| `components/` | hooks, queries, rules, schema y `constants.ts` de su módulo; el `index.ts` de otro módulo; `components/ui`, `theme`, `lib` (menos `lib/supabase.ts`) y las imágenes y letras de `assets/` | api, `lib/supabase.ts` y `@supabase/*` |
+| `hooks/` | queries, rules, schema y `constants.ts` de su módulo; el `index.ts` de otro módulo; `lib` (menos `lib/supabase.ts`) | components, api, `components/ui` y `theme` |
+| `queries/` | api y schema de su módulo; `lib` (menos `lib/supabase.ts`) | components, hooks, rules y `constants.ts` |
+| `api/` | schema de su módulo, `lib` con `lib/supabase.ts`, `types` y `@supabase/*` | React (`react`, `react-native`, `expo-*` y `@tanstack/react-query`), queries, components |
+| `rules/` | schema y `constants.ts` de su módulo, `lib/money` y `lib/dates` | cualquier paquete (tampoco Zod), el resto de `lib`, api, queries |
+| `schema/`, `constants.ts` | Zod | nada más: ni otra carpeta, ni `lib`, ni otro paquete |
+| `index.ts` del módulo | components, hooks, queries, rules y schema de su módulo | api, `constants.ts` y cualquier otro módulo |
+| `components/ui` | `theme`, `lib` (menos `lib/supabase.ts`) y las imágenes y letras de `assets/` | cualquier módulo |
 | `lib` | `types` | cualquier módulo, `components/ui`, `theme` |
-| `src/app` (pantallas) | el `index.ts` de los módulos, `components/ui`, `theme`, `lib` (menos `supabase`) | las carpetas de un módulo por dentro, Supabase |
+| `lib/supabase.ts` | lo mismo que `lib`, más `@supabase/*` | lo mismo que `lib`. Solo lo importan `api/` y su propia prueba: tampoco otro archivo de `lib` |
+| `theme`, `types` | nada de la app | |
+| `src/app` (pantallas) | el `index.ts` de los módulos, `components/ui`, `theme`, `lib` (menos `lib/supabase.ts`) y las imágenes y letras de `assets/` | las carpetas de un módulo por dentro, `lib/supabase.ts` y `@supabase/*` |
+| `src/test` (ayudas de prueba) | el `index.ts` de los módulos, `components/ui`, `theme`, `lib` (menos `lib/supabase.ts`) y `src/app` | las carpetas de un módulo por dentro y `lib/supabase.ts` |
 | Una prueba (`*.test.ts`) | lo mismo que su carpeta, más `src/test` | |
-| Otro módulo | solo el `index.ts` | sus carpetas por dentro |
+| Otro módulo | solo el `index.ts` | sus carpetas por dentro y su `constants.ts` |
+
+- **Lo que una fila no nombra en «Puede usar» está prohibido.** La tercera columna solo resalta lo que más se intenta. Dentro de su propia carpeta, un archivo usa a los demás sin límite.
+- **Paquetes:** `rules/` no importa ninguno, y `schema/` y `constants.ts`, solo Zod. Los demás usan los paquetes instalados, con dos límites: `api/` no usa React, y `@supabase/*` solo se importa en `lib/supabase.ts` y en `api/`.
+- **Dentro de un módulo solo existen** `index.ts`, `constants.ts` y las seis carpetas. Otro archivo u otra carpeta, o un archivo de `src` fuera de los lugares de esta tabla, es un error del lint, sea `.ts`, `.tsx` o JavaScript.
+- **Las pruebas** viven junto a su archivo, dentro de esas carpetas. En `src/app` no: las de las pantallas van en `src/test/routes/`.
+- **`assets/`** es la carpeta de la raíz, y de ella cuentan las imágenes y las letras (`png`, `jpg`, `jpeg`, `webp`, `gif`, `ttf` y `otf`). Una carpeta llamada `assets` dentro de `src` no tiene trato especial.
+- **Cada lugar se reconoce desde la raíz del repositorio:** una ruta repetida más adentro (`src/components/ui/src/features/x/api`) no recibe los permisos de la verdadera.
+- **La tabla está escrita celda por celda** en `scripts/lint-matrix.mjs`. `pnpm lint:rules` importa cada columna desde cada fila y comprueba que el lint deje pasar solo lo que dice la tabla: si alguien afloja una regla, falla.
 
 **Las pantallas juntan módulos:** si una pantalla necesita dos (la ficha del cliente con su historial de pedidos), los une la pantalla en `src/app/`; un módulo no importa a otro para eso. Así no se forman ciclos.
 
@@ -319,24 +330,24 @@ features/orders/
 ### 10.2 Cómo se hacen cumplir solas
 
 Si algo se sale, el lint, las pruebas o GitHub bloquean el cambio:
-- **eslint-plugin-boundaries:** aplica la tabla de §9.1 y prohíbe entrar a un módulo por dentro o que una pantalla hable directo con Supabase.
+- **eslint-plugin-boundaries:** aplica la tabla de §9.1 y prohíbe entrar a un módulo por dentro o que una pantalla hable directo con Supabase. Un archivo fuera de los lugares conocidos también falla.
 - **import-x/no-cycle:** prohíbe importaciones en círculo.
 - **`max-lines` (250) y `react/no-multi-comp`:** archivos chicos y un componente por archivo.
 - **eslint-plugin-check-file:** carpetas y archivos en kebab-case.
 - **`index.ts` sin `export *`:** lo público se elige nombre por nombre.
-- **Lint contra valores sueltos:** falla si aparece un color escrito a mano fuera de `theme/`.
-- **Cobertura del 100 % en `rules/`.**
-- **TypeScript estricto, sin atajos:** prohibidos `any`, `@ts-ignore` y `console.log`.
-- **Rutas tipadas de Expo Router** y el alias `@/`: un enlace a una pantalla que no existe no compila.
+- **Lint contra valores sueltos:** falla si aparece un color escrito a mano fuera de `theme/`: un hexadecimal, `rgb()` o `hsl()`, un valor suelto de Tailwind (`bg-[#…]`, `border-[color:…]`) o un texto como `"red"` en una propiedad de color. La paleta que trae Tailwind se quitó: `bg-red-500` o `text-white` no existen, solo las clases del tema.
+- **Cobertura del 100 % en `rules/`,** sin comentarios que saquen una rama de la cuenta (`istanbul ignore`, `c8 ignore`, `v8 ignore`).
+- **TypeScript estricto, sin atajos:** prohibidos `any`, `@ts-ignore` y `console.log`. Las reglas de estructura valen igual para un archivo `.js`, `.jsx`, `.mjs` o `.cjs` dentro de `src`.
+- **Rutas tipadas de Expo Router** y el alias `@/`: un enlace a una pantalla que no existe no compila. `pnpm typecheck` genera los tipos de las rutas antes de compilar, también en GitHub.
 - **Tipos de la base al día:** en GitHub se regenera `types/database.ts` desde las migraciones; si no coincide con el del repositorio, falla.
 - **Base de datos revisada:** una prueba falla si alguna tabla no tiene las reglas de acceso activadas, y `supabase db lint` revisa las funciones en cada cambio.
 - **Rendimiento medido:** con datos de prueba de varios negocios y años, un script revisa con `EXPLAIN` que las funciones principales usen sus índices y respondan en menos de 50 ms (en GitHub, cuando cambia una migración). Una vez al mes, `supabase inspect db seq-scans` y `supabase inspect db unused-indexes` en producción.
 - **Variables de entorno revisadas al arrancar** (`lib/env.ts` con Zod): si falta una, la app lo dice en vez de fallar en silencio.
 - **Accesibilidad:** eslint-plugin-react-native-a11y; cada botón con su nombre para el lector de pantalla.
-- **Commits:** commitlint (Conventional Commits en inglés, máximo 100 caracteres) y gitleaks, que bloquea cualquier llave o secreto antes de que entre.
-- **Antes de cada commit (lefthook) y en GitHub Actions:** lint, tipos y pruebas.
+- **Commits:** commitlint (Conventional Commits en inglés, máximo 100 caracteres) y gitleaks, que bloquea cualquier llave o secreto antes de que entre. Ningún archivo `.env` entra al repositorio, salvo la plantilla `.env.example`.
+- **Antes de cada commit (lefthook) y en GitHub Actions:** formato, lint, tipos, pruebas y el mensaje del commit. GitHub revisa además la cobertura, el formato de todos los archivos y los secretos en toda la historia. Los hooks se activan una vez por copia del repositorio (`CLAUDE.md`, «Comandos»).
 
-Estas reglas se probaron el 2026-11-19 con ESLint 9.39, la versión que admite la configuración de Expo 58; cuando Expo admita la 10, se sube. Los comentarios `eslint-disable` no tienen efecto (`noInlineConfig`), y `pnpm lint:rules` comprueba las propias reglas contra archivos hechos para romperlas (`docs/plan/fase-0-proyecto.md`, tarea 2).
+Estas reglas se probaron el 2026-11-19 con ESLint 9.39, la versión que admite la configuración de Expo 58; cuando Expo admita la 10, se sube. Los comentarios `eslint-disable` no tienen efecto (`noInlineConfig`). `pnpm lint:rules` comprueba las propias reglas de dos maneras: con archivos hechos para romperlas, uno por cada caso y con una sola falta cada uno, y con la tabla de §9.1 celda por celda. Apagar o aflojar una regla lo hace fallar (`docs/plan/fase-0-proyecto.md`, tarea 2 y «Después de la revisión final»).
 
 Las herramientas existen y están vigentes (consultado el 2026-11-18: eslint-plugin-boundaries 7, eslint-plugin-check-file 3, eslint-plugin-import-x 4, eslint-config-expo 58, eslint-plugin-react-native-a11y 3.5, commitlint 21, gitleaks 8.30). Las versiones exactas se fijan al crear el proyecto.
 
@@ -412,11 +423,11 @@ Versiones vigentes en npm ese día.
 | App | Expo SDK 58 (React Native 0.88) y TypeScript estricto | Se prueba con Expo Go y se entrega como APK |
 | Pantallas | Expo Router | Pantallas por archivos (§9) |
 | Datos en la app | TanStack Query 5 | Guarda lo último cargado y reintenta si falla la señal |
-| Estilos | NativeWind 4.2.7 (Tailwind 3.4) | Colores y tamaños solo en `theme/`; el lint prohíbe `bg-[#…]`. Oficialmente llega a SDK 57. En SDK 58 (2026-11-19) pasa sus pruebas, compila para Android y en la web se ve igual a la maqueta, en claro y en oscuro. Falta verlo en el celular (`docs/plan/fase-0-proyecto.md`, «Lo que falta»); si ahí fallara, los estilos pasan a `StyleSheet` con el mismo tema |
+| Estilos | NativeWind 4.2.7 (Tailwind 3.4) | Colores y tamaños solo en `theme/`: Tailwind no trae más colores que los del tema y el lint prohíbe los escritos a mano. Oficialmente llega a SDK 57. En SDK 58 (2026-11-19) compila para Android y en la web se ve igual a la maqueta, en claro y en oscuro; las pruebas de Jest no ven los estilos de las clases, así que no cuentan como comprobación. Falta verlo en el celular (`docs/plan/fase-0-proyecto.md`, «Lo que falta»); si ahí fallara, los estilos pasan a `StyleSheet` con el mismo tema |
 | Formularios | React Hook Form y Zod 4 | Zod también valida lo que llega de la base de datos |
 | Gráficos | react-native-gifted-charts | Barras, líneas y tortas. Usa react-native-svg, que Expo Go ya trae |
 | Montos | Céntimos enteros con `lib/money.ts`, sin librería | Lo guardado lo calcula la base; el celular solo suma enteros para la vista previa. Dinero.js 2 se agrega si aparece un reparto o un porcentaje que lo pida |
-| Fechas | date-fns 4 y @date-fns/tz | Siempre en `America/Lima` (Perú, UTC−5 todo el año) y en español |
+| Fechas | date-fns 4 y @date-fns/tz, siempre con `lib/dates.ts` | Hora de Lima y en español. En el celular se usa el desfase fijo UTC−5 (Perú no cambia la hora desde 1994): así las fechas no dependen de lo que el motor de JavaScript del celular sepa de zonas horarias. En la base de datos, la zona `America/Lima`. Una prueba avisa si las dos dejaran de coincidir |
 | Listas largas | FlashList v2 | Hecha para la nueva arquitectura, la única desde SDK 55 |
 | Imágenes | expo-image | Caché de las fotos de los alfajores |
 | Memorizar | React Compiler | Activado; sin `useMemo` ni `useCallback` a mano |
@@ -452,11 +463,15 @@ Buenas prácticas de rendimiento 2026–2027: `docs/spec/README.md`.
 - **Tiempo de vida por tipo de dato (`staleTime`):** catálogo y ajustes, 30 minutos; stock y pedidos de hoy, 30 segundos; reportes, 5 minutos.
 - **Celular:** `onlineManager` con expo-network, `focusManager` con AppState, recarga al volver a una pantalla (`useFocusEffect`) y `subscribed: false` en las pantallas que no se ven.
 - **Caché guardada en el celular:** `PersistQueryClientProvider` con `createAsyncStoragePersister`, con `buster` y `maxAge`. Por eso el skeleton sale solo la primera vez.
+  - Se descarta al cambiar la versión de la app o el número de esquema de la caché (`CACHE_SCHEMA`, en `lib/query.ts`), que sube cada vez que cambia la forma de lo que devuelve una consulta.
+  - Solo se guardan las consultas que cargaron bien y cuyo dato tiene menos de un día. Una consulta queda fuera con `meta: { persist: false }`.
+  - Lo que se estaba guardando (las mutaciones, con sus datos) nunca se escribe en el celular.
 
 **Respuesta al instante (optimistic) y cuándo no**
 - **Al instante, con vuelta atrás si falla:** cambios de estado, pagos, mermas, producción, conteos, editar cantidades, anular e interruptores. Se usa `onMutate` con `setQueryData`, `onError` para volver atrás y `onSettled` para refrescar.
 - **Con «Guardando…» y espera:** crear un pedido (el número correlativo lo da la base de datos), un gasto con foto (hay que subirla), cambiar un precio (se copia a la web) y borrar los datos de un cliente (no se puede deshacer).
 - **Sin doble guardado:** `isPending` bloquea el botón.
+- **Sin señal, guardar falla al momento** y avisa «Sin conexión» (`networkMode: "always"` en las mutaciones). No queda en espera para enviarse solo más tarde: eso es lo que sigue «para después».
 
 **La experiencia**
 - **Filtros sin parpadeo:** `placeholderData: keepPreviousData` al cambiar de filtro o de periodo.

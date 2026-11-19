@@ -69,8 +69,9 @@ test("el desfase fijo que usa el celular da el mismo día y la misma hora que Am
   expect(different).toEqual([]);
 });
 
-// El motor de JavaScript del celular (Hermes) no trae los datos de zonas horarias que Node sí tiene.
-// Aquí Intl falla como allá cuando se le pide una zona, y las fechas tienen que salir igual de bien
+// Para leer el desfase de una zona, @date-fns/tz usa una función de Intl que el motor de JavaScript del celular
+// (Hermes) no trae, según su documentación. Aquí Intl falla cada vez que se le pide una zona, que es el peor caso,
+// y las fechas tienen que salir igual de bien
 describe("en el motor del celular, donde Intl no sabe de zonas horarias", () => {
   const RealDateTimeFormat = Intl.DateTimeFormat;
   let phone: typeof dates;
