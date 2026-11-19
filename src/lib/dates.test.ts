@@ -16,6 +16,30 @@ test("el día va de las 00:00 de Lima a las 00:00 del día siguiente", () => {
   expect(to.toISOString()).toBe("2026-11-19T05:00:00.000Z");
 });
 
+test.each([
+  ["2026-11-30", "2026-11-30T05:00:00.000Z", "2026-12-01T05:00:00.000Z"],
+  ["2026-12-31", "2026-12-31T05:00:00.000Z", "2027-01-01T05:00:00.000Z"],
+  ["2028-02-29", "2028-02-29T05:00:00.000Z", "2028-03-01T05:00:00.000Z"],
+])("el día %s termina donde empieza el siguiente, también a fin de mes y en año bisiesto", (date, from, to) => {
+  const range = businessDayRange(date);
+  expect(range.from.toISOString()).toBe(from);
+  expect(range.to.toISOString()).toBe(to);
+});
+
+test.each([
+  ["18-11-2026", "con el día primero"],
+  ["2026-02-30", "un 30 de febrero"],
+  ["2027-02-29", "un 29 de febrero de un año que no es bisiesto"],
+  ["2026-11-00", "el día cero"],
+  ["2026-13-01", "el mes trece"],
+  ["2026-11-18T05:00:00.000Z", "una fecha con hora"],
+  ["2026-11-8", "sin el cero del día"],
+  ["", "vacío"],
+])("«%s» no es un día (%s): no se calcula un rango de otro día", (date) => {
+  expect(() => businessDayRange(date)).toThrow(RangeError);
+  expect(() => businessDayRange(date)).toThrow(`«${date}» no es un día válido. Se espera AAAA-MM-DD, como 2026-11-18.`);
+});
+
 test("las fechas se escriben en español de Perú", () => {
   const instant = new Date("2026-11-18T16:40:00Z");
   expect(formatLongDate(instant)).toBe("Miércoles 18 de noviembre");
