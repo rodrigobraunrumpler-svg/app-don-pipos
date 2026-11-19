@@ -29,7 +29,9 @@ type Props = {
 export function StockOverview({ onOpenProduct, onRegisterProduction, onGoToProducts }: Props) {
   const online = useOnline();
   const { colors } = useTheme();
-  const { data, isError, isRefetching, refetch, dataUpdatedAt } = useQuery(stockOverviewQuery);
+  const { data, isError, refetch, dataUpdatedAt } = useQuery(stockOverviewQuery);
+  // La rueda de recarga, solo mientras el dueño tira hacia abajo: con cada recarga de fondo aparecía sola
+  const [pulling, setPulling] = useState(false);
   const [sheet, setSheet] = useState<"waste" | "count" | null>(null);
   const undoToast = useUndoToast();
   const hasProducts = (data?.length ?? 0) > 0;
@@ -89,11 +91,15 @@ export function StockOverview({ onOpenProduct, onRegisterProduction, onGoToProdu
         </View>
       ) : (
         <ScrollView
+          testID="stock-scroll"
           contentContainerClassName="px-5 pb-6"
           refreshControl={
             <RefreshControl
-              refreshing={isRefetching}
-              onRefresh={() => void refetch()}
+              refreshing={pulling}
+              onRefresh={() => {
+                setPulling(true);
+                void refetch().finally(() => setPulling(false));
+              }}
               colors={[colors.primary]}
               tintColor={colors.primary}
             />

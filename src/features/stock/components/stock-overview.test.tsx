@@ -1,5 +1,5 @@
 import { onlineManager } from "@tanstack/react-query";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen } from "@testing-library/react-native";
 
 import { AppError } from "@/lib/errors";
 import { renderWithProviders } from "@/test/render";
@@ -84,4 +84,18 @@ test("si no se pudo cargar, lo dice", async () => {
   mockOverview.mockRejectedValue(new AppError("offline"));
   await renderWithProviders(<StockOverview {...handlers()} />);
   expect(await screen.findByText("No se pudo cargar el stock")).toBeOnTheScreen();
+});
+
+test("la rueda de recarga sale cuando el dueño tira hacia abajo, no con cada recarga de fondo", async () => {
+  const { queryClient } = await renderWithProviders(<StockOverview {...handlers()} />);
+  await screen.findByText("Coqueta");
+  mockOverview.mockReturnValue(new Promise(() => undefined));
+  // TanStack avisa los cambios un instante después: se espera un poco antes de mirar
+  const settle = () => act(() => new Promise((resolve) => setTimeout(resolve, 50)));
+  await act(() => void queryClient.invalidateQueries({ queryKey: ["stock"] }));
+  await settle();
+  expect(screen.getByTestId("stock-scroll").props.refreshControl.props.refreshing).toBe(false);
+  await act(() => void screen.getByTestId("stock-scroll").props.refreshControl.props.onRefresh());
+  await settle();
+  expect(screen.getByTestId("stock-scroll").props.refreshControl.props.refreshing).toBe(true);
 });

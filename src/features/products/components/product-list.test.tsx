@@ -149,3 +149,17 @@ test("al tirar hacia abajo, vuelve a cargar la lista", async () => {
   await act(() => screen.getByTestId("products-scroll").props.refreshControl.props.onRefresh());
   await waitFor(() => expect(mockList).toHaveBeenCalledTimes(2));
 });
+
+test("la rueda de recarga sale cuando el dueño tira hacia abajo, no con cada recarga de fondo", async () => {
+  const { queryClient } = await renderWithProviders(<ProductList onBack={jest.fn()} />);
+  await screen.findByText("Coqueta");
+  mockList.mockReturnValue(new Promise(() => undefined));
+  // TanStack avisa los cambios un instante después: se espera un poco antes de mirar
+  const settle = () => act(() => new Promise((resolve) => setTimeout(resolve, 50)));
+  await act(() => void queryClient.invalidateQueries({ queryKey: ["products"] }));
+  await settle();
+  expect(screen.getByTestId("products-scroll").props.refreshControl.props.refreshing).toBe(false);
+  await act(() => void screen.getByTestId("products-scroll").props.refreshControl.props.onRefresh());
+  await settle();
+  expect(screen.getByTestId("products-scroll").props.refreshControl.props.refreshing).toBe(true);
+});

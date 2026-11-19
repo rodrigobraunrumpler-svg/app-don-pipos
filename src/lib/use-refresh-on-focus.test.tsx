@@ -7,15 +7,15 @@ import { useRefreshOnFocus } from "./use-refresh-on-focus";
 let mockFocus: (() => void) | undefined;
 jest.mock("expo-router", () => ({ useFocusEffect: (effect: () => void) => (mockFocus = effect) }));
 
-test("al volver a la pantalla recarga su consulta, pero no la primera vez (ya se está cargando)", async () => {
+test("al volver a la pantalla recarga su consulta si ya no está fresca, pero no la primera vez (ya se está cargando)", async () => {
   const client = new QueryClient({ defaultOptions: { queries: { gcTime: Infinity } } });
-  const invalidate = jest.spyOn(client, "invalidateQueries");
+  const refetch = jest.spyOn(client, "refetchQueries");
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={client}>{children}</QueryClientProvider>
   );
   await renderHook(() => useRefreshOnFocus(["stock", "overview"]), { wrapper });
   mockFocus?.();
-  expect(invalidate).not.toHaveBeenCalled();
+  expect(refetch).not.toHaveBeenCalled();
   mockFocus?.();
-  expect(invalidate).toHaveBeenCalledWith({ queryKey: ["stock", "overview"] });
+  expect(refetch).toHaveBeenCalledWith({ queryKey: ["stock", "overview"], type: "active", stale: true });
 });

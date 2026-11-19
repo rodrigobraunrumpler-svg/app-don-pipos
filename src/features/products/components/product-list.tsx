@@ -22,7 +22,9 @@ import { ProductSheet } from "./product-sheet";
 export function ProductList({ onBack }: { onBack: () => void }) {
   const online = useOnline();
   const { colors } = useTheme();
-  const { data, isError, isRefetching, refetch } = useQuery(productsQuery);
+  const { data, isError, refetch } = useQuery(productsQuery);
+  // La rueda de recarga, solo mientras el dueño tira hacia abajo: con cada recarga de fondo aparecía sola
+  const [pulling, setPulling] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [adding, setAdding] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -54,8 +56,11 @@ export function ProductList({ onBack }: { onBack: () => void }) {
           contentContainerClassName="px-5 pb-24"
           refreshControl={
             <RefreshControl
-              refreshing={isRefetching}
-              onRefresh={() => void refetch()}
+              refreshing={pulling}
+              onRefresh={() => {
+                setPulling(true);
+                void refetch().finally(() => setPulling(false));
+              }}
               colors={[colors.primary]}
               tintColor={colors.primary}
             />
