@@ -9,10 +9,13 @@ import { createTypeScriptImportResolver } from "eslint-import-resolver-typescrip
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
+import { colorSelectors } from "./eslint/colors.mjs";
 import { boundaries, CODE, structureRules, structureSettings } from "./eslint/structure.mjs";
 
-// Un color completo (#rgb, #rrggbb, #rrggbbaa), un valor suelto de Tailwind ([#fff]) o rgb()/hsl(). «#0042» no coincide: es un número de pedido
-const RAW_COLOR = "/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$|\\[#[0-9a-fA-F]{3,8}\\]|\\b(?:rgba?|hsla?)\\(/";
+const NO_EXPORT_ALL = {
+  selector: "ExportAllDeclaration",
+  message: "En index.ts lo público se elige nombre por nombre",
+};
 
 export default tseslint.config(
   {
@@ -59,11 +62,7 @@ export default tseslint.config(
         { ignoreMiddleExtensions: true },
       ],
       "check-file/folder-naming-convention": [2, { "**/src/!(app)/**": "KEBAB_CASE" }],
-      "no-restricted-syntax": [
-        2,
-        { selector: `Literal[value=${RAW_COLOR}]`, message: "Los colores van en src/theme" },
-        { selector: `TemplateElement[value.raw=${RAW_COLOR}]`, message: "Los colores van en src/theme" },
-      ],
+      "no-restricted-syntax": [2, ...colorSelectors],
     },
   },
   {
@@ -72,15 +71,8 @@ export default tseslint.config(
     rules: { "@typescript-eslint/no-explicit-any": 2, "@typescript-eslint/ban-ts-comment": 2 },
   },
   { files: ["**/src/theme/**"], rules: { "no-restricted-syntax": 0 } },
-  {
-    files: ["**/src/features/*/index.ts"],
-    rules: {
-      "no-restricted-syntax": [
-        2,
-        { selector: "ExportAllDeclaration", message: "En index.ts lo público se elige nombre por nombre" },
-      ],
-    },
-  },
+  // Una regla solo admite una lista: en el index.ts de un módulo van las de colores y, además, la de export *
+  { files: ["**/src/features/*/index.ts"], rules: { "no-restricted-syntax": [2, ...colorSelectors, NO_EXPORT_ALL] } },
   { files: [`**/*.test.${CODE}`, "jest.setup.js"], languageOptions: { globals: globals.jest } },
   prettier,
 );

@@ -67,6 +67,18 @@ export const EXPECTED = {
   "features/orders/components/color-hsl.ts": [COLOR],
   "features/orders/components/color-template.ts": [COLOR],
   "features/orders/components/color-tailwind.tsx": [COLOR],
+  "features/orders/components/color-hex-4.ts": [COLOR], // order-number.ts («#0042») pasa: cuatro dígitos son un número de pedido
+  "features/orders/components/color-tailwind-typed.tsx": [COLOR], // border-[color:…]
+  // Un texto escrito a mano como valor de una propiedad de color («red», «white»); color-from-theme.tsx pasa limpio
+  "features/orders/components/color-named.tsx": [COLOR],
+  "features/orders/components/color-named-background.ts": [COLOR],
+  "features/orders/components/color-named-quoted-key.ts": [COLOR],
+  "features/orders/components/color-named-template.ts": [COLOR],
+  "features/orders/components/color-named-prop.tsx": [COLOR],
+  "features/orders/components/color-named-prop-braces.tsx": [COLOR],
+  "features/orders/components/color-named-ternary.ts": [COLOR], // también como rama de «a ? b : c» o de «a ?? b»
+  "features/orders/components/color-named-prop-ternary.tsx": [COLOR],
+  "features/painted/index.ts": [COLOR], // en el index.ts de un módulo valen las dos reglas: colores y export *
 
   // Nombres, tamaño y forma de los archivos
   "features/orders/components/BadFolder/thing.tsx": ["check-file/folder-naming-convention"],
