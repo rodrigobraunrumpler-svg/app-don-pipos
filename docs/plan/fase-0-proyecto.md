@@ -51,7 +51,7 @@ Se crean en la fase que los usa por primera vez, no antes:
 
 ---
 
-### Tarea 1: El proyecto Expo con sus pruebas
+### Task 1: El proyecto Expo con sus pruebas
 
 **Archivos:**
 - Crear: `package.json`, `pnpm-lock.yaml`, `.npmrc`, `.nvmrc`, `.gitignore`, `tsconfig.json`, `app.config.ts`, `jest.config.js`, `assets/icon.png`, `src/app/_layout.tsx`, `src/app/index.tsx`
@@ -205,7 +205,7 @@ git commit -m "chore: scaffold the Expo SDK 58 project with strict TypeScript an
 
 ---
 
-### Tarea 2: Las reglas de estructura, con su propia prueba
+### Task 2: Las reglas de estructura, con su propia prueba
 
 Estas reglas se probaron el 2026-11-19 con ESLint 9.39.5, eslint-plugin-boundaries 7.4.4 y la configuración de Expo 58. Por eso los dos archivos de configuración van completos.
 
@@ -509,7 +509,7 @@ git commit -m "chore: enforce the folder structure with ESLint rules and self-te
 
 ---
 
-### Tarea 3: El tema claro y oscuro, la letra y los estilos
+### Task 3: El tema claro y oscuro, la letra y los estilos
 
 **Archivos:**
 - Crear: `src/theme/colors.json`, `src/theme/tokens.ts`, `src/theme/theme-provider.tsx`, `src/theme/use-theme.ts`, `src/theme/index.ts`, `src/test/render.tsx`, `tailwind.config.js`, `global.css`, `babel.config.js`, `metro.config.js`, `nativewind-env.d.ts`
@@ -728,7 +728,7 @@ git commit -m "feat: add light and dark theme tokens, Manrope and the styling se
 
 ---
 
-### Tarea 4: Lo común de `lib`: errores, montos y fechas
+### Task 4: Lo común de `lib`: errores, montos y fechas
 
 **Archivos:**
 - Crear: `src/lib/errors.ts`, `src/lib/money.ts`, `src/lib/dates.ts`
@@ -924,7 +924,7 @@ git commit -m "feat: add shared error, money and date helpers"
 
 ---
 
-### Tarea 5: TanStack Query: el cliente, la señal, el foco y la caché guardada
+### Task 5: TanStack Query: el cliente, la señal, el foco y la caché guardada
 
 **Archivos:**
 - Crear: `src/lib/query.ts`
@@ -1069,7 +1069,7 @@ git commit -m "feat: add the TanStack Query client with network, focus and persi
 
 ---
 
-### Tarea 6: La plantilla de un módulo y su generador
+### Task 6: La plantilla de un módulo y su generador
 
 **Archivos:**
 - Crear: `templates/feature/index.ts.tpl`, `templates/feature/queries/keys.ts.tpl`, `templates/feature/{api,schema,rules,hooks,components}/.gitkeep`, `scripts/new-feature.mjs`
@@ -1151,7 +1151,7 @@ git commit -m "chore: add the feature template and its generator"
 
 ---
 
-### Tarea 7: Commits vigilados, CI y las reglas del repositorio
+### Task 7: Commits vigilados, CI y las reglas del repositorio
 
 **Archivos:**
 - Crear: `lefthook.yml`, `commitlint.config.js`, `.github/workflows/ci.yml`, `CLAUDE.md`, `.env.example`
@@ -1262,7 +1262,7 @@ Esperado: los cinco comandos de `pre-commit` y el de `commit-msg` pasan, y el co
 
 ---
 
-### Tarea 8: En el celular, y el cierre de la fase
+### Task 8: En el celular, y el cierre de la fase
 
 **Archivos:**
 - Modificar: `docs/plan/README.md` (estado), `docs/PROJECT_CONTEXT.md` (§14 y §16)
