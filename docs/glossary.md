@@ -47,6 +47,10 @@ Un concepto nuevo se agrega aquí antes de usarlo en el código.
 | Devolución por anulación | `cancellation` | `kind = 'cancellation'` | Suma al anular |
 | Merma | `waste` | `kind = 'waste'` | Resta, con motivo |
 | Ajuste, conteo | `adjustment`, `stockCount` | `kind = 'adjustment'` | El conteo guarda la diferencia como ajuste |
+| Motivo de merma | `wasteReason` | `stock_movements.reason` | `broken` (Rota), `expired` (Vencida), `gift` (Regalo), `other` (Otro) |
+| Motivo de ajuste | — | `stock_movements.reason` | `count` (conteo), `initial` (stock inicial), `undo` (deshacer) |
+| Deshacer | `revertStockChange` | función `revert_stock_change` | Un registro entero (producción, merma o conteo), hasta 10 minutos después |
+| Enlazado a la web | `linkedToWeb` | `products.sanity_id` con valor | Solo lo enlazado se copia a la web |
 | Stock mínimo | `minStock` | `min_stock` | |
 | Sugerencia de producción | `productionSuggestion` | función `production_suggestion` | D16 |
 | Produces cada… días | `productionIntervalDays` | `production_interval_days` | En los ajustes |

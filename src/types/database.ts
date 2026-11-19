@@ -89,6 +89,157 @@ export type Database = {
         };
         Relationships: [];
       };
+      products: {
+        Row: {
+          business_id: string;
+          cost_cents: number | null;
+          created_at: string;
+          id: string;
+          image_url: string | null;
+          is_active: boolean;
+          min_stock: number;
+          name: string;
+          price_cents: number;
+          sanity_id: string | null;
+          show_on_web: boolean;
+          sort_order: number;
+          updated_at: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          business_id: string;
+          cost_cents?: number | null;
+          created_at?: string;
+          id?: string;
+          image_url?: string | null;
+          is_active?: boolean;
+          min_stock?: number;
+          name: string;
+          price_cents: number;
+          sanity_id?: string | null;
+          show_on_web?: boolean;
+          sort_order?: number;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          business_id?: string;
+          cost_cents?: number | null;
+          created_at?: string;
+          id?: string;
+          image_url?: string | null;
+          is_active?: boolean;
+          min_stock?: number;
+          name?: string;
+          price_cents?: number;
+          sanity_id?: string | null;
+          show_on_web?: boolean;
+          sort_order?: number;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "products_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      stock_levels: {
+        Row: {
+          business_id: string;
+          created_at: string;
+          on_hand: number;
+          product_id: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          business_id: string;
+          created_at?: string;
+          on_hand?: number;
+          product_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          business_id?: string;
+          created_at?: string;
+          on_hand?: number;
+          product_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "stock_levels_product_fkey";
+            columns: ["business_id", "product_id"];
+            isOneToOne: true;
+            referencedRelation: "products";
+            referencedColumns: ["business_id", "id"];
+          },
+        ];
+      };
+      stock_movements: {
+        Row: {
+          business_id: string;
+          created_at: string;
+          happened_at: string;
+          id: string;
+          kind: string;
+          product_id: string;
+          quantity: number;
+          reason: string | null;
+          request_id: string | null;
+          reverts_movement_id: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          business_id: string;
+          created_at?: string;
+          happened_at?: string;
+          id?: string;
+          kind: string;
+          product_id: string;
+          quantity: number;
+          reason?: string | null;
+          request_id?: string | null;
+          reverts_movement_id?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          business_id?: string;
+          created_at?: string;
+          happened_at?: string;
+          id?: string;
+          kind?: string;
+          product_id?: string;
+          quantity?: number;
+          reason?: string | null;
+          request_id?: string | null;
+          reverts_movement_id?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_product_fkey";
+            columns: ["business_id", "product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["business_id", "id"];
+          },
+          {
+            foreignKeyName: "stock_movements_reverts_fkey";
+            columns: ["business_id", "reverts_movement_id"];
+            isOneToOne: false;
+            referencedRelation: "stock_movements";
+            referencedColumns: ["business_id", "id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;

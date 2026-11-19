@@ -16,8 +16,8 @@
 
 | Columna | Tipo | Regla |
 |---|---|---|
-| `name` | text | Único en el negocio, sin importar mayúsculas |
-| `price_cents` | int > 0 | |
+| `name` | text | De 1 a 40 letras. Único en el negocio, sin importar mayúsculas |
+| `price_cents` | int > 0 | Hasta S/ 10,000 |
 | `cost_cents` | int > 0, puede ir vacío | Para la ganancia por alfajor |
 | `min_stock` | int ≥ 0 | 0 hasta que el dueño lo ponga |
 | `show_on_web` | bool | Es el `isVisible` de la web; sí por defecto |
@@ -28,6 +28,8 @@
 | `version` | int | Para detectar dos ediciones a la vez |
 
 ### `private.web_sync_outbox` (lo que falta copiar a la web)
+
+Solo para productos enlazados a la web (`sanity_id` con valor): lo que no está en la web no se puede copiar. Al enlazar un producto (fase 8) se anota su estado completo.
 
 | Columna | Tipo | Regla |
 |---|---|---|
@@ -49,13 +51,14 @@
 
 ## 3. Funciones de la base
 
-- **`list_products()`:** los activos, cada uno con su stock (`stock_levels`) y su estado.
+- **`list_products()`:** los activos del negocio, en su orden. El stock llega con `stock_overview` (`stock.md`); si Nuevo pedido lo necesita junto, la fase 4 lo suma.
 - **`save_product(id, expected_version, name, price_cents, cost_cents, min_stock, show_on_web)`:** crea o cambia un producto.
-  - Si cambia el precio o si se ve, deja una fila en el outbox en la misma operación, y el cambio queda en el registro (`private.audit_log`): «¿cuándo subí el precio?».
+  - Si cambia el precio o si se ve, y el producto está enlazado, deja una fila en el outbox en la misma operación. El cambio queda en el registro (`private.audit_log`): «¿cuándo subí el precio?».
+  - Un nombre repetido también responde `conflict`.
   - Con otra versión responde `conflict`.
-- **`set_product_active(id, active)`.**
+- **`set_product_active(id, active)`.** Desactivar un producto enlazado anota `isVisible: false` en el outbox; activarlo, su `show_on_web`. El botón en la app llega más adelante: la maqueta no lo tiene.
 - **La disponibilidad («Agotado»)** cambia cuando el stock cruza el cero. La base deja una fila en el outbox con `isAvailable` dentro de los movimientos de stock (`stock.md`).
-- **El envío a la web:**
+- **El envío a la web (fase 8):**
   - Un trigger llama al momento a la Edge Function `sync-to-web`, por pg_net. Además, pg_cron la llama cada minuto para reintentar lo pendiente.
   - La función manda los cambios a Sanity con su token, que es un secreto de Supabase y nunca está en la app. Después marca `sent_at`.
   - Si falla, suma un intento y guarda el error. Con 10 intentos fallidos avisa al equipo (Sentry).
@@ -76,13 +79,13 @@
 ## 6. Pantallas y estados
 
 - **Productos y precios:**
-  - cada alfajor con su foto o sus iniciales, el precio, «Mínimo 6, cuesta S/ 5.10» y «En la web» u «Oculto»;
-  - el aviso «Se copian solos a la web».
+  - cada alfajor con su foto o sus iniciales, el precio, «Mínimo 6, cuesta S/ 5.10» y, si está enlazado, «En la web» u «Oculto»;
+  - si hay alguno enlazado, el aviso «Se copian solos a la web». Sin enlazar, la app no promete nada de la web.
 - **La hoja del producto:**
   - precio, costo (opcional), stock mínimo e interruptor «Se ve en la web»;
-  - al guardar: «Coqueta guardado: S/ 12.00. En la web se ve en unos segundos.».
+  - al guardar: «Coqueta guardado: S/ 12.00.» y, si está enlazado, «En la web se ve en unos segundos.».
 - **Agregar producto:** nombre y precio. La foto y la descripción se ponen en el panel de la web, y el equipo enlaza el producto.
-- **Vistas:** cargando (skeleton), y sin internet: los cambios esperan a que vuelva la señal.
+- **Vistas:** cargando (skeleton), error, y sin internet: «Guardar» se apaga y la pantalla lo dice. Guardar sin señal falla al momento; no queda en espera (§14.2 de `PROJECT_CONTEXT.md`).
 
 ## 7. Con otros módulos
 
@@ -99,11 +102,11 @@
 - Un precio de cero o menos se rechaza, y también un nombre repetido.
 - Cambiar el precio o si se ve deja una fila en el outbox.
 - Un producto desactivado no aparece en la lista ni en los pedidos nuevos, pero sí en los viejos.
-- Con Sanity simulado, `sync-to-web` marca lo enviado o suma un intento si falla.
+- Con Sanity simulado, `sync-to-web` marca lo enviado o suma un intento si falla (fase 8).
 
 **Cuentas (Jest):** `margin.ts`.
 
-**Recorrido:** cambiar un precio y verlo en el pedido siguiente; los pedidos anteriores mantienen su precio.
+**Recorrido:** cambiar un precio y verlo en el pedido siguiente; los pedidos anteriores mantienen su precio (fase 4, con los pedidos).
 
 ## 9. Fuera de esta versión
 
