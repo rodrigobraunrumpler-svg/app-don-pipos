@@ -939,3 +939,15 @@ Tiene que terminar en «pnpm db:check: todo pasa».
 - `pnpm db:check` es un script propio (`scripts/db-check.mjs`).
 
 **Total de pruebas:** 123 en 11 archivos (el plan sumaba 117 en 9).
+
+## Después de la revisión final (2026-11-19)
+
+Una revisión independiente de toda la rama no encontró nada crítico: con 46 intentos directos, nadie pudo leer ni cambiar los datos de otro negocio. Encontró tres huecos en las herramientas que vigilan, y se cerraron, cada uno con su prueba primero:
+
+- **La protección del proyecto de desarrollo** ahora también ve `--remote <proyecto>` (con espacio), un proyecto escrito suelto, `--project-ref`, `--db-url` y `--workdir`, y la CLI corre sin `SUPABASE_PROJECT_ID` ni `SUPABASE_WORKDIR`. Su aviso nunca repite una URL con contraseña.
+- **El corredor de pruebas** revisa todo lo que envía (migraciones pendientes, ayudas y datos del medidor), marca la transacción y falla fuerte si se cerró antes de tiempo, borra el estado de la sesión entre archivos y, al terminar, comprueba que no quedó el esquema `tests`, pgTAP ni usuarios de prueba.
+- **La prueba de estructura** tiene 11 reglas: también mira los permisos columna por columna, que toda vista lea con los permisos de quien consulta y que toda regla de acceso sea para `authenticated` y filtre por los negocios del usuario.
+
+Lo menor quedó anotado para la fase 3, donde se copia el patrón: que `audit_changes` avise si le pasan una columna que no existe, que `update_settings` compruebe que encontró la fila, y que las reglas de las tablas repitan las de las funciones.
+
+**Total de pruebas de la base:** 131 en 11 archivos.

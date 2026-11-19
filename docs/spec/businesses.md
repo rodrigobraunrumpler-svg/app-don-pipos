@@ -31,7 +31,7 @@
 | Columna | Tipo | Regla |
 |---|---|---|
 | `business_id` | uuid | Llave primaria |
-| `active_payment_methods` | text[] | Por defecto `cash`, `yape`, `plin`, `transfer`; al menos uno |
+| `active_payment_methods` | `payment_method[]` | Por defecto `cash`, `yape`, `plin`, `transfer`; al menos uno |
 | `delivery_fee_cents` | int ≥ 0 | Pendiente con el cliente (§7); 0 hasta que lo diga |
 | `delivery_zone` | text, puede ir vacío | Pendiente con el cliente |
 | `production_interval_days` | int, de 1 a 14 | 7 por defecto |

@@ -105,7 +105,7 @@ El detalle está en `docs/spec/README.md`, «Lo común a todos los módulos» y 
 - **Primero la prueba, después la migración:** se escribe el archivo de `supabase/tests/`, se ve fallar con `pnpm test:db`, se escribe la migración (`pnpm sb migration new <nombre>`), se ve pasar, se envía con `pnpm db:push` y se corre `pnpm db:lint` y `pnpm db:advisors`. Una migración enviada no se edita.
 - **Se lee con reglas de acceso y se escribe solo por funciones.** La lógica que escribe vive en `private.<nombre>` (`security definer`) y en `public.<nombre>` queda una envoltura que la llama.
 - **Toda función** fija `set search_path = ''`, nombra cada cosa con su esquema, usa parámetros con `p_`, recibe y devuelve JSON en camelCase, y avisa los errores con `private.fail('<código>')`.
-- **Toda tabla** lleva las reglas de acceso activadas, `business_id`, `created_at` y `updated_at` con su trigger, y un índice por cada llave foránea. Una función nueva para la app se agrega a la lista de `supabase/tests/900_structure.test.sql`.
+- **Toda tabla** lleva las reglas de acceso activadas y un índice por cada llave foránea; las de `public`, además, `business_id`, `created_at` y `updated_at` con su trigger. Una vista lleva `security_invoker`, y una regla de acceso es para `authenticated` y filtra con `private.owned_business_ids()`. Una función nueva para la app se agrega a la lista de `supabase/tests/900_structure.test.sql`.
 - **Antes de cerrar una fase** pasa `pnpm db:check`.
 
 ## 6. Commits

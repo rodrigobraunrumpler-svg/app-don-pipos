@@ -24,13 +24,13 @@ Si algo cambia, se cambia aquí primero y después en el código.
 
 Esto no se repite en cada archivo.
 
-- **Cada tabla:**
-  - columnas: `id` (uuid), `business_id`, `created_at` y `updated_at` (con un trigger común);
+- **Cada tabla del esquema `public`:**
+  - columnas: `id` (uuid), `business_id`, `created_at` y `updated_at` (con un trigger común). Las de `private` llevan solo lo que necesitan;
   - reglas de acceso activadas (regla 9).
 - **Se lee con RLS; se escribe solo por funciones.**
   - **Lectura:** el dueño lee las filas de su negocio. Las reglas comparan con `= any ((select private.owned_business_ids())::uuid[])`: la lista se calcula una vez por consulta y el índice de la tabla se puede usar.
   - **Escritura:** solo con funciones `security definer`. Cada función comprueba que el negocio sea del usuario (`private.current_business_id()`) y fija su `search_path`.
-  - **Dónde vive cada función que escribe:** la lógica, en `private.<nombre>` (`security definer`); en `public.<nombre>` queda una envoltura sin permisos elevados que la llama. Así el consejero de seguridad de Supabase no avisa por cada función, y una prueba lo vigila.
+  - **Dónde vive cada función que escribe:** la lógica, en `private.<nombre>` (`security definer`); en `public.<nombre>` queda una envoltura sin permisos elevados que la llama. Esto calla el aviso del consejero de seguridad de Supabase, pero no agrega seguridad: `authenticated` ejecuta las dos. Por eso la lista de la regla 8 de la prueba de estructura es el único inventario de lo que la app puede ejecutar.
   - La app no puede insertar ni cambiar filas directo, así ningún total, número o stock queda mal guardado.
 - **Nada se borra.** Lo que se equivoca se anula o se corrige con un movimiento (§6 de `PROJECT_CONTEXT.md`).
 - **Que una señal mala no duplique nada (idempotencia):**
@@ -43,7 +43,7 @@ Esto no se repite en cada archivo.
 - **Permisos cerrados de base,** en la primera migración:
   - se revoca todo a `anon` y a `PUBLIC`, incluido el `EXECUTE` que Postgres da a todas las funciones;
   - `authenticated` solo lee las tablas que la app lee (con RLS) y ejecuta solo las funciones de la app;
-  - los permisos por defecto (`alter default privileges`) quedan igual de cerrados para lo que se cree después.
+  - los permisos por defecto (`alter default privileges`) quedan igual de cerrados para lo que se cree después con el rol `postgres`, que es el de las migraciones. Los del rol `supabase_admin` (el del panel) no se pueden cambiar desde una migración y siguen abiertos: si algo se crea desde el panel, las reglas 6 a 8 de la prueba de estructura lo detectan.
 - **Lo interno, en el esquema `private`,** que la API no expone: `idempotency_keys`, `business_counters`, `pin_credentials`, `web_sync_outbox`, `audit_log` y las funciones internas (revisar el PIN, sumar o quitar un sello, los negocios del usuario).
 - **Llaves foráneas con el negocio:**
   - Cada tabla padre tiene `unique (business_id, id)`.
@@ -99,7 +99,7 @@ Pensada desde el primer día para varios negocios y años de datos.
 - **Espacio libre en las tablas que cambian a cada rato** (`fillfactor`): 70 en `stock_levels` y 85 en `orders`. Postgres actualiza la fila en el mismo bloque sin reescribir sus índices (actualizaciones HOT): es más rápido y la tabla no se hincha.
 - **Funciones en una sola consulta:** cada función arma su respuesta trabajando por conjuntos, sin bucles fila por fila ni una consulta por pedido, y devuelve solo lo que muestra la pantalla.
 - **Cómo se comprueba:**
-  - `pnpm db:perf` carga datos de prueba de muchos negocios dentro de una transacción que se deshace (hoy, 5,000 negocios; cada fase suma los suyos, hasta cientos de miles de pedidos). Con `EXPLAIN` revisa que las funciones principales respondan en menos de 50 ms y que no lean ninguna tabla entera. Corre dentro de `pnpm db:check`, y en GitHub cuando exista el repositorio.
+  - `pnpm db:perf` carga datos de prueba de muchos negocios dentro de una transacción que se deshace (hoy, 5,000 negocios; cada fase suma los suyos, hasta cientos de miles de pedidos). Con `EXPLAIN` revisa que las funciones principales respondan en menos de 50 ms y que no lean enteras las tablas que cada caso nombra. Corre dentro de `pnpm db:check`, y en GitHub cuando exista el repositorio.
   - Cada noche, pg_cron corre `private.check_consistency()`. Compara el stock guardado con sus movimientos, los totales y lo pagado con sus líneas y pagos, y los sellos con sus movimientos. Si algo no coincide, avisa al equipo (Sentry) antes de que el dueño lo note.
   - Una vez al mes, en producción, `supabase inspect db seq-scans` y `supabase inspect db unused-indexes` muestran las lecturas sin índice y los índices que sobran.
 - **Lo que todavía no hace falta:** particionar tablas o guardar resúmenes diarios precalculados. Con estos índices, un negocio con 50 pedidos al día pasa años sin notarlo. Se agregan solo si una función pasa de su tiempo en la prueba de arriba.
@@ -111,7 +111,7 @@ Sin base local, todo corre contra el proyecto de desarrollo, y nada queda guarda
 - **`pnpm test:db`:** corre cada archivo de `supabase/tests/` (pgTAP) en su propia transacción, que siempre se deshace. Antes aplica, dentro de esa misma transacción, las migraciones que todavía no se enviaron: así una migración se prueba antes de llegar a la base.
   - Las pruebas entran como un usuario con `tests.make_user`, `tests.login_as` y `tests.logout` (`supabase/tests/_prelude.sql`).
   - Un archivo de prueba no abre ni cierra transacciones; el corredor lo rechaza.
-- **La prueba de estructura** (`900_structure.test.sql`) revisa el catálogo entero con 9 reglas: reglas de acceso en toda tabla, `created_at` y `updated_at` con su trigger, `business_id`, `search_path` fijo, índice en cada llave foránea, nada para quien no tiene sesión, ninguna escritura directa de la app, la lista de funciones que la app puede ejecutar y ninguna función con permisos elevados en `public`. Cada regla se prueba primero contra un objeto hecho para romperla.
+- **La prueba de estructura** (`900_structure.test.sql`) revisa el catálogo entero con 11 reglas: reglas de acceso en toda tabla, `created_at` y `updated_at` con su trigger, `business_id`, `search_path` fijo, índice en cada llave foránea, nada para quien no tiene sesión (tampoco columna por columna), ninguna escritura directa de la app (tampoco por columna), la lista de funciones que la app puede ejecutar, ninguna función con permisos elevados en `public`, vistas que leen con los permisos de quien consulta, y reglas de acceso solo para `authenticated` que filtran por `private.owned_business_ids()`. Cada regla se prueba primero contra un objeto hecho para romperla.
 - **El revisor de funciones** (`910_plpgsql_check.test.sql`) corre plpgsql_check dentro de la transacción de prueba.
 - **`pnpm db:check`** es la revisión completa: que no haya migraciones sin enviar, el lint y los consejos de Supabase, los tipos al día, las pruebas y el medidor.
 - **Solo en el proyecto de desarrollo:** las herramientas se niegan a probar, medir o confirmar cambios (`--yes`) en cualquier otro proyecto.
