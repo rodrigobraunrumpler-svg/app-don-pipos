@@ -21,6 +21,12 @@ export const EXPECTED = {
   "features/orders/rules/uses-asset.ts": [D],
   "lib/knows-business.ts": [D],
   "outside-structure.ts": ["boundaries/no-unknown-files"],
+
+  // «assets» es solo la carpeta de imágenes y letras de la raíz: una carpeta con ese nombre dentro de src no tiene trato especial
+  "assets/fake-asset.ts": ["boundaries/no-unknown-files"],
+  "app/enters-feature-through-assets.tsx": [D],
+  "features/orders/components/assets/talks-to-supabase.ts": [D],
+  "app/imports-code-from-assets.tsx": [D], // en assets/ solo cuentan las imágenes y las letras
   "lib/cycle-a.ts": ["import-x/no-cycle"],
   "lib/cycle-b.ts": ["import-x/no-cycle"],
 

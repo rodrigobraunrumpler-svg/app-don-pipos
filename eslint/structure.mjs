@@ -1,4 +1,6 @@
 // Quién puede usar a quién (PROJECT_CONTEXT.md §9.1). Gana la última política que coincide.
+import { join } from "node:path";
+
 import boundaries from "eslint-plugin-boundaries";
 
 // Las extensiones del código: las reglas valen para todas, no solo para TypeScript
@@ -17,8 +19,14 @@ const otherFeatureIndex = {
 const anyFeatureIndex = { element: { type: "feature", fileInternalPath: "index.ts" } };
 const libButSupabase = { element: { type: "lib", fileInternalPath: "!supabase.ts" } };
 const of = (...types) => ({ element: { type: types } });
+// Las imágenes y las letras de assets/, la carpeta de la raíz (y su copia para probar las reglas).
+// Una carpeta «assets» dentro de src no cuenta, ni tampoco un archivo de código dentro de assets/
+const ASSET_ROOTS = ["assets", "tools/lint-fixtures/assets"];
+const asset = { file: { categories: "asset" } };
 
 export const structureSettings = {
+  // Los patrones que empiezan en la raíz se leen desde aquí, se corra el lint desde donde se corra
+  "boundaries/root-path": join(import.meta.dirname, ".."),
   "boundaries/elements": [
     { type: "route", pattern: "src/app" },
     ...LAYERS.map((n) => ({ type: `feature-${n}`, pattern: `src/features/*/${n}`, capture: ["feature"] })),
@@ -28,9 +36,11 @@ export const structureSettings = {
     { type: "theme", pattern: "src/theme" },
     { type: "test-utils", pattern: "src/test" },
     { type: "types", pattern: "src/types" },
-    { type: "asset", pattern: "assets" },
   ],
-  "boundaries/files": [{ pattern: `**/*.test.${CODE}`, category: "test" }],
+  "boundaries/files": [
+    { pattern: `**/*.test.${CODE}`, category: "test" },
+    { pattern: ASSET_ROOTS.map((root) => `${root}/**/*.{png,jpg,jpeg,webp,gif,ttf,otf}`), category: "asset" },
+  ],
   "boundaries/legacy-templates": false,
 };
 
@@ -44,7 +54,7 @@ export const structureRules = {
       checkUnknownLocals: true,
       policies: [
         { allow: { to: { module: { origin: ["external", "core"] } } } },
-        { from: of("route"), allow: { to: [anyFeatureIndex, of("ui", "theme", "asset"), libButSupabase] } },
+        { from: of("route"), allow: { to: [anyFeatureIndex, of("ui", "theme"), asset, libButSupabase] } },
         {
           from: of("feature-components"),
           allow: {
@@ -52,7 +62,8 @@ export const structureRules = {
               ...sameLayers("hooks", "queries", "rules", "schema"),
               ownFile("constants.ts"),
               otherFeatureIndex,
-              of("ui", "theme", "asset"),
+              of("ui", "theme"),
+              asset,
               libButSupabase,
             ],
           },
@@ -81,7 +92,7 @@ export const structureRules = {
           },
         },
         { from: of("feature"), allow: { to: sameLayers("components", "hooks", "queries", "rules", "schema") } },
-        { from: of("ui"), allow: { to: [of("theme", "asset"), libButSupabase] } },
+        { from: of("ui"), allow: { to: [of("theme"), asset, libButSupabase] } },
         { from: of("lib"), allow: { to: of("types") } },
         { from: of("test-utils"), allow: { to: [anyFeatureIndex, of("ui", "theme", "lib", "route")] } },
         { from: { file: { categories: "test" } }, allow: { to: of("test-utils") } },
