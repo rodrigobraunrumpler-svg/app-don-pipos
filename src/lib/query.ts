@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import {
+  type DehydrateOptions,
   focusManager,
   MutationCache,
   onlineManager,
@@ -42,7 +43,9 @@ export function createQueryClient(options?: { onError?: (error: AppError) => voi
         gcTime: CACHE_MAX_AGE,
         retry: (failureCount, error) => isRetryable(error) && failureCount < 2,
       },
-      mutations: { retry: false },
+      // «always»: sin señal, un guardado se intenta igual, falla al momento y avisa «sin conexión».
+      // Por defecto quedaría en espera, sin aviso, y saldría solo al volver la señal (guardar sin señal queda para después, §14.2)
+      mutations: { retry: false, networkMode: "always" },
     },
   });
   return client;
@@ -70,7 +73,15 @@ export function setupFocusManager(): void {
   AppState.addEventListener("change", (status) => focusManager.setFocused(status === "active"));
 }
 
-// La caché se guarda en el celular: al abrir se ve lo último, y el skeleton sale solo la primera vez
-export function createPersistOptions(buster: string): { persister: Persister; maxAge: number; buster: string } {
-  return { persister: createAsyncStoragePersister({ storage: AsyncStorage }), maxAge: CACHE_MAX_AGE, buster };
+type PersistOptions = { persister: Persister; maxAge: number; buster: string; dehydrateOptions: DehydrateOptions };
+
+// La caché se guarda en el celular: al abrir se ve lo último, y el skeleton sale solo la primera vez.
+// Solo se guarda lo leído: lo que se estaba guardando (con sus datos) nunca se escribe en el celular
+export function createPersistOptions(buster: string): PersistOptions {
+  return {
+    persister: createAsyncStoragePersister({ storage: AsyncStorage }),
+    maxAge: CACHE_MAX_AGE,
+    buster,
+    dehydrateOptions: { shouldDehydrateMutation: () => false },
+  };
 }

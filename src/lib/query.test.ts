@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { focusManager, MutationObserver, onlineManager, QueryObserver } from "@tanstack/react-query";
+import { persistQueryClientSave } from "@tanstack/react-query-persist-client";
 import * as Network from "expo-network";
 import { AppState } from "react-native";
 
@@ -83,6 +84,49 @@ test("una mutación refresca las claves que declara", async () => {
   await observer.mutate();
   expect(invalidate).toHaveBeenCalledWith({ queryKey: ["orders"] });
   expect(invalidate).toHaveBeenCalledWith({ queryKey: ["stock"] });
+});
+
+// Guardar sin señal y enviar después queda para más adelante (PROJECT_CONTEXT.md §14.2): por ahora falla y avisa
+test("sin señal, un guardado no queda en espera: se intenta, falla al momento y avisa «sin conexión»", async () => {
+  const onError = jest.fn();
+  const client = newClient({ onError });
+  onlineManager.setOnline(false);
+  const mutationFn = jest.fn(() => Promise.reject(new TypeError("Network request failed")));
+  const observer = new MutationObserver(client, { mutationFn });
+  const outcome = await Promise.race([
+    observer.mutate().then(
+      () => "guardado",
+      () => "falló",
+    ),
+    new Promise((resolve) => setTimeout(() => resolve("sigue esperando"), 50)),
+  ]);
+  onlineManager.setOnline(true);
+  expect(outcome).toBe("falló");
+  expect(mutationFn).toHaveBeenCalledTimes(1);
+  expect(observer.getCurrentResult()).toMatchObject({ status: "error", isPaused: false });
+  expect(onError).toHaveBeenCalledWith(expect.objectContaining({ kind: "offline" }));
+  expect(client.getDefaultOptions().mutations?.networkMode).toBe("always");
+});
+
+test("lo que se estaba guardando nunca se escribe en la caché del celular, ni aunque quede en espera", async () => {
+  const client = newClient();
+  const options = createPersistOptions("0.1.0");
+  onlineManager.setOnline(false);
+  // Una mutación que pide esperar la señal, a propósito: es el único caso en que TanStack Query la guardaría
+  const observer = new MutationObserver(client, {
+    networkMode: "online",
+    mutationFn: (customer: { phone: string }) => Promise.resolve(customer),
+  });
+  void observer.mutate({ phone: "DEMO 900 000 001" });
+  await Promise.resolve();
+  expect(observer.getCurrentResult().isPaused).toBe(true);
+
+  await persistQueryClientSave({ queryClient: client, ...options });
+  onlineManager.setOnline(true);
+  const stored = await AsyncStorage.getItem((await AsyncStorage.getAllKeys())[0]!);
+  await options.persister.removeClient();
+  expect(JSON.parse(stored!).clientState.mutations).toEqual([]);
+  expect(stored).not.toContain("DEMO 900 000 001");
 });
 
 test("la señal del celular mueve onlineManager", () => {
