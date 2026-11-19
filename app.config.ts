@@ -19,6 +19,9 @@ const config: ExpoConfig = {
     "expo-router",
     "expo-font",
     ["expo-splash-screen", { image: "./assets/icon.png", imageWidth: 180, backgroundColor: "#354b2e" }],
+    // La sesión cifrada (LargeSecureStore) y la huella; en Expo Go ya vienen, en la APK los agregan estos plugins
+    "expo-secure-store",
+    "expo-local-authentication",
   ],
   experiments: { typedRoutes: true, reactCompiler: true },
 };
