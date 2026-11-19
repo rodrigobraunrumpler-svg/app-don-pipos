@@ -20,13 +20,24 @@ No lleva `business_id`: el PIN es de la persona, no del negocio.
 
 | Columna | Tipo | Regla |
 |---|---|---|
-| `user_id` | uuid | Llave primaria (`auth.users`) |
-| `phone` | text | En formato `+51…`; único |
-| `pin_hash` | text | bcrypt (pgcrypto); nunca sale de la base |
+| `user_id` | uuid | Llave primaria (`auth.users`); se borra con la cuenta |
+| `phone` | `phone_pe` | `+51` y 9 números; único |
+| `pin_hash` | text | bcrypt de costo 10 (pgcrypto); nunca sale de la base |
+| `pin_changed_at` | timestamptz | |
+
+### `private.sign_in_attempts` (una fila por número que intentó entrar)
+
+Los intentos se cuentan por número, en su propia tabla (decidido al planear la fase 2, 2026-11-19). Así un número que no existe se comporta igual que uno que existe, por construcción: mismas respuestas, en el mismo orden.
+
+| Columna | Tipo | Regla |
+|---|---|---|
+| `phone` | `phone_pe` | Llave primaria |
 | `failed_attempts` | int ≥ 0 | Errores seguidos |
 | `locked_until` | timestamptz, puede ir vacío | La espera de 15 minutos |
 | `hard_locked_at` | timestamptz, puede ir vacío | Bloqueada hasta que el equipo la revise |
-| `pin_changed_at` | timestamptz | |
+| `updated_at` | timestamptz | |
+
+Son números que alguien escribió: las filas sin cambios hace más de 30 días se borran cada noche, salvo las bloqueadas de un número que sí tiene PIN (Ley 29733).
 
 **La cuenta de Supabase del dueño:** lleva un correo interno y una contraseña larga que calcula el servidor (un HMAC de su id con un secreto de las funciones). Nadie la escribe ni la ve.
 
@@ -35,6 +46,7 @@ No lleva `business_id`: el PIN es de la persona, no del negocio.
 | Tabla | Índice | Sirve para |
 |---|---|---|
 | `private.pin_credentials` | único `(phone)` | Encontrar al dueño por su número al ingresar |
+| `private.sign_in_attempts` | Llave primaria `(phone)` | Los intentos de un número |
 
 ## 3. Funciones del servidor
 
@@ -52,8 +64,8 @@ No lleva `business_id`: el PIN es de la persona, no del negocio.
 - **Edge Function `change-pin`** (`{ current, next }`):
   - pide sesión;
   - revisa el PIN actual, que cuenta como intento;
-  - rechaza los PIN fáciles, con las mismas reglas que `pinIsObvious`;
-  - guarda el nuevo.
+  - responde `same_pin` si el nuevo es igual al actual, y `obvious_pin` si es fácil, con las mismas reglas que `pinIsObvious` (la base las tiene en `private.pin_is_obvious`);
+  - guarda el nuevo y responde `ok`.
 - **Scripts del equipo** (con la llave secreta, nunca en la app):
   - `owner:create`: crea la cuenta, con su número y su PIN;
   - `owner:reset-pin`: un PIN nuevo y el desbloqueo;
