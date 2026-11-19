@@ -30,6 +30,12 @@ jest.mock("expo-crypto", () => {
 });
 
 // La huella: por defecto el celular tiene sensor, una huella registrada y la confirma; cada prueba lo cambia si necesita
+// La vibración: en Jest no hay motor
+jest.mock("expo-haptics", () => ({
+  NotificationFeedbackType: { Success: "success", Warning: "warning", Error: "error" },
+  notificationAsync: jest.fn(async () => undefined),
+}));
+
 jest.mock("expo-local-authentication", () => {
   const SecurityLevel = { NONE: 0, SECRET: 1, BIOMETRIC_WEAK: 2, BIOMETRIC_STRONG: 3 };
   return {
