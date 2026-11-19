@@ -161,7 +161,7 @@ Todas tomadas el 2026-11-18.
 - **El token de Sanity** se guarda como secreto en Supabase, nunca dentro de la app.
 - **Fase 2:** los pedidos hechos en la web entran solos a la app.
 
-## 9. Estructura de carpetas (acordada; actualizada con la maqueta el 2026-11-18)
+## 9. Estructura de carpetas (acordada; actualizada con la maqueta el 2026-11-18 y con la fase 0 el 2026-11-19)
 
 ```
 app/
@@ -213,8 +213,9 @@ app/
 │   └── config.toml
 ├── e2e/                            Recorridos completos (Playwright sobre la versión web)
 ├── templates/feature/              Plantilla de un módulo nuevo
-├── scripts/                        Crear un módulo · copia diaria de la base
-├── assets/                         Ícono, pantalla de carga y la letra
+├── scripts/                        Crear un módulo · probar las reglas de lint · copia diaria de la base
+├── tools/lint-fixtures/            Archivos hechos para romper cada regla: prueban que el lint las atrapa
+├── assets/                         Ícono y pantalla de carga
 ├── docs/
 │   ├── PROJECT_CONTEXT.md          Este documento
 │   ├── glossary.md                 Un nombre por concepto, en el código y en pantalla
@@ -222,9 +223,11 @@ app/
 │   ├── spec/                       La especificación, un archivo por módulo
 │   └── plan/                       Las fases de la implementación
 ├── .github/workflows/              Lint, tipos y pruebas en cada cambio
-├── eslint.config.js                Las reglas de estructura (§10.2)
+├── eslint.config.mjs               Las reglas del código (§10.2)
+├── eslint/structure.mjs            Quién puede usar a quién (§9.1)
 ├── lefthook.yml                    Lo mismo antes de cada commit
 ├── app.config.ts · eas.json · tsconfig.json · commitlint.config.js · .env.example · package.json
+├── babel.config.js · metro.config.js · tailwind.config.js · jest.config.js · jest.setup.js
 └── CLAUDE.md                       Las reglas de esta estructura
 ```
 
@@ -409,10 +412,10 @@ Versiones vigentes en npm ese día.
 | App | Expo SDK 58 (React Native 0.88) y TypeScript estricto | Se prueba con Expo Go y se entrega como APK |
 | Pantallas | Expo Router | Pantallas por archivos (§9) |
 | Datos en la app | TanStack Query 5 | Guarda lo último cargado y reintenta si falla la señal |
-| Estilos | NativeWind 4 (Tailwind v3) | Colores y tamaños solo en `theme/`; el lint prohíbe `bg-[#…]`. Oficialmente llega a SDK 57: se comprueba en SDK 58 al crear el proyecto |
+| Estilos | NativeWind 4.2.7 (Tailwind 3.4) | Colores y tamaños solo en `theme/`; el lint prohíbe `bg-[#…]`. Oficialmente llega a SDK 57. En SDK 58 (2026-11-19) pasa sus pruebas, compila para Android y en la web se ve igual a la maqueta, en claro y en oscuro. Falta verlo en el celular (`docs/plan/fase-0-proyecto.md`, «Lo que falta»); si ahí fallara, los estilos pasan a `StyleSheet` con el mismo tema |
 | Formularios | React Hook Form y Zod 4 | Zod también valida lo que llega de la base de datos |
 | Gráficos | react-native-gifted-charts | Barras, líneas y tortas. Usa react-native-svg, que Expo Go ya trae |
-| Montos | Dinero.js 2 | Céntimos enteros; el sol (PEN) viene incluido |
+| Montos | Céntimos enteros con `lib/money.ts`, sin librería | Lo guardado lo calcula la base; el celular solo suma enteros para la vista previa. Dinero.js 2 se agrega si aparece un reparto o un porcentaje que lo pida |
 | Fechas | date-fns 4 y @date-fns/tz | Siempre en `America/Lima` (Perú, UTC−5 todo el año) y en español |
 | Listas largas | FlashList v2 | Hecha para la nueva arquitectura, la única desde SDK 55 |
 | Imágenes | expo-image | Caché de las fotos de los alfajores |
@@ -518,7 +521,7 @@ Buenas prácticas de rendimiento 2026–2027: `docs/spec/README.md`.
 3. Decidir el stack completo.
 4. Maqueta de las pantallas (28, en `docs/design/pantallas/`) y aprobación del cliente.
 5. Estructura de carpetas final, especificación (`docs/spec/`) y plan de trabajo por fases (`docs/plan/`).
-6. **Primera versión, en 9 fases: unos 33 días de trabajo completos, alrededor de 6 semanas y media** (`docs/plan/README.md`). El cálculo anterior era de unas 5 semanas; creció con la idempotencia, el registro de cambios, las devoluciones y las correcciones de pedidos entregados. ← aquí estamos, por empezar la fase 0
+6. **Primera versión, en 9 fases: unos 33 días de trabajo completos, alrededor de 6 semanas y media** (`docs/plan/README.md`). El cálculo anterior era de unas 5 semanas; creció con la idempotencia, el registro de cambios, las devoluciones y las correcciones de pedidos entregados. ← aquí estamos: la fase 0 está construida (2026-11-19) y sigue la fase 1
 7. Una o dos semanas de uso real, y ajustes.
 8. Fase 2: pedidos de la web. Después, VarMar.
 

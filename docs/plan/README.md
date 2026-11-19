@@ -45,7 +45,7 @@ Cómo se construye la app de Don Pipos, por fases. Cada fase deja algo que funci
 
 | Riesgo | Dónde se resuelve | Si falla |
 |---|---|---|
-| NativeWind 4 en Expo 58 (oficialmente llega a SDK 57) | Fase 0, tarea 3, con un criterio escrito | Estilos con `StyleSheet` y el tema; no cambia nada más |
+| NativeWind 4 en Expo 58 (oficialmente llega a SDK 57) | Fase 0, tarea 3, con un criterio escrito. Pasó todo lo que se puede revisar sin celular; falta verlo en Expo Go | Estilos con `StyleSheet` y el tema; no cambia nada más |
 | ESLint: Expo 58 solo admite la versión 9, que ya no recibe soporte | Fase 0, tarea 2. Las reglas ya se probaron con ESLint 9.39 | Se sube a la 10 cuando Expo la admita |
 | Los esquemas declarativos de Supabase están en alfa y necesitan una base local | Antes de la fase 1 (ver «Lo que hace falta de tu parte») | Migraciones escritas a mano, ordenadas por módulo |
 | Que la APK compile | Fase 2, al final: primera APK de prueba | Se corrige con el acceso recién hecho, no al final del proyecto |
@@ -57,7 +57,8 @@ Cómo se construye la app de Don Pipos, por fases. Cada fase deja algo que funci
 | Antes de | Qué | Para qué |
 |---|---|---|
 | Fase 0 | Nada. Opcional: crear el repositorio privado en GitHub | Con el repositorio, el CI empieza a correr |
-| Fase 0, tarea 7 | Instalar gitleaks en tu máquina (el plan trae el comando) | Bloquear llaves y secretos antes de cada commit |
+| Fase 0, tarea 7 (**pendiente**) | Instalar gitleaks en tu máquina y activar los hooks: los dos comandos están en `fase-0-proyecto.md`, «Lo que falta» | Bloquear llaves y secretos, y revisar cada commit antes de que entre |
+| Fase 0, tarea 8 (**pendiente**) | Abrir la app en tu celular con Expo Go y mirar cuatro cosas (`fase-0-proyecto.md`, «Lo que falta») | Confirmar los estilos en un Android de verdad |
 | Fase 1 | Un proyecto de Supabase para desarrollo; `supabase login` y `supabase link` en tu terminal; la URL y la llave publicable en `.env.local` | La base de desarrollo |
 | Fase 1 | **Decidir: ¿instalamos Docker Engine dentro de WSL?** Es gratis y no usa Docker Desktop. Con Docker, las pruebas de la base y los esquemas por módulo corren en tu máquina sin tocar la nube. Sin Docker, las migraciones se escriben a mano y las pruebas corren contra el proyecto de desarrollo | Cómo se trabaja la base |
 | Fase 2 | Una cuenta de Expo; la llave secreta de Supabase en tu `.env.local` (nunca en el chat) | La primera APK y los scripts que crean al dueño y su PIN |
@@ -68,5 +69,6 @@ Cómo se construye la app de Don Pipos, por fases. Cada fase deja algo que funci
 
 | Fase | Estado |
 |---|---|
-| 0. El proyecto | Plan listo; sin empezar |
-| 1 a 8 | Su plan se escribe al terminar la fase anterior |
+| 0. El proyecto | Construida el 2026-11-19, en la rama `fase-0`. Faltan dos pasos del dueño del proyecto: gitleaks con los hooks, y la prueba en el celular |
+| 1. Los cimientos de la base | Sigue: su plan se escribe ahora |
+| 2 a 8 | Su plan se escribe al terminar la fase anterior |

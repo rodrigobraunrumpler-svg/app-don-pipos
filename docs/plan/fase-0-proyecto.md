@@ -1293,3 +1293,101 @@ git commit -m "docs: record phase 0 results and the styling decision"
 ```
 
 Con esto, la fase 0 está terminada. Sigue escribir el plan de la fase 1.
+
+---
+
+## Resultado (2026-11-19)
+
+La fase 0 quedó construida en la rama `fase-0`, con un commit por tarea.
+
+| Comprobación | Resultado |
+|---|---|
+| `pnpm lint` | Sin errores ni avisos |
+| `pnpm lint:rules` | Las reglas atrapan lo que deben, en 46 archivos de prueba |
+| `pnpm typecheck` | Sin errores |
+| `pnpm test:coverage` | 98 pruebas; 100 % en `lib/{money,dates,errors}` y `theme/tokens` |
+| `pnpm test:scripts` | 5 pruebas del generador de módulos |
+| CI | Simulado en una copia limpia del repositorio: pasan todos los pasos menos gitleaks, que no se pudo correr |
+| Android | El paquete compila y el servidor de desarrollo entrega la app tal como la pide Expo Go (1,882 módulos, sin errores) |
+| Estilos | En la versión web, los colores de la maqueta en claro y en oscuro, con Manrope |
+
+### Lo que falta
+
+Son dos pasos del dueño del proyecto. Ninguno cambia código.
+
+**1. Instalar gitleaks y activar los hooks.** El sistema de permisos no dejó que el asistente descargara el programa, así que los hooks están escritos y probados uno por uno, pero todavía no revisan los commits.
+
+```bash
+mkdir -p ~/.local/bin && cd /tmp
+curl -sLO https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+tar xzf gitleaks_8.30.1_linux_x64.tar.gz gitleaks && mv gitleaks ~/.local/bin/ && gitleaks version
+cd /home/javier/var-mar/app && pnpm exec lefthook install
+```
+
+Esperado: `8.30.1` y «sync hooks: ✔️(commit-msg, pre-commit)». Para ver que bloquea una llave (es falsa, hecha al momento):
+
+```bash
+printf 'token=ghp_%s\n' "$(openssl rand -hex 18)" > leak.txt && git add leak.txt
+gitleaks git --pre-commit --staged --redact --no-banner; echo "salida: $?"   # distinta de 0
+git rm -q --cached leak.txt && rm leak.txt
+```
+
+**2. Abrir la app en el celular.** Con Expo Go instalado en el Android:
+
+```bash
+cd /home/javier/var-mar/app && pnpm start --tunnel
+```
+
+Escanea el código y comprueba:
+1. La app abre y muestra el logo, «Don Pipos» y «Fase 0 lista», con fondo crema.
+2. La letra es Manrope, no la del sistema.
+3. Con el celular en modo oscuro, la portada cambia a oscuro sin recargar.
+4. Con la letra del celular en grande, los textos crecen y nada se corta.
+
+Si las cuatro pasan, en `PROJECT_CONTEXT.md` §14 la fila «Estilos» queda «comprobado en SDK 58». Si la 1 o la 3 fallan, se aplica el plan B de la tarea 3 (`StyleSheet` con el mismo tema); las pruebas no cambian.
+
+### Lo que cambió respecto de este plan
+
+**Antes de empezar**
+- Se trabajó en la rama `fase-0` del mismo repositorio, no en una copia aparte.
+- Los títulos pasaron de «Tarea N» a «Task N»: los scripts que ejecutan el plan solo reconocen esa palabra.
+
+**Tarea 1**
+- No se copiaron `.claude/settings.json`, `.vscode/`, `AGENTS.md` ni `LICENSE` de la plantilla. Lo útil de `AGENTS.md` está en `CLAUDE.md`.
+- React quedó en 19.3.0, la versión que fija el SDK 58, y no en 19.3.1.
+- Las dependencias de prueba se instalaron con `pnpm expo install … --dev`, y `tsconfig.json` lleva `"types": ["jest"]`.
+
+**Tarea 2**
+- La configuración del lint es `eslint.config.mjs` y `eslint/structure.mjs`, no `.js`: el proyecto es CommonJS y la configuración comprobada es ESM.
+- `.prettierignore` también lista `docs/`, `.superpowers/` y `tools/lint-fixtures/`.
+
+**Tarea 3**
+- Los radios y las letras viven en `src/theme/scales.json`, y `css-vars.ts` arma los nombres de las variables. Una prueba amarra los colores, las letras y los radios de Tailwind al tema.
+- `global.css` vive en `src/theme/`, no en la raíz.
+- Archivos nuevos: `src/theme/theme-context.ts`, `types-env.d.ts` y `nativewind-env.d.ts` (este lo genera NativeWind).
+- Nueva pieza en las reglas del lint: `asset`, la carpeta `assets/`. La pueden usar las pantallas, los componentes de un módulo y `components/ui`. Por eso los archivos de prueba del lint son 46 y no 44.
+- Una imagen toma su tamaño de un `View` que la envuelve: en la web, sus clases perdían contra el tamaño real del archivo.
+- `app.config.ts` lleva `web: { bundler: "metro" }`, que NativeWind pide para la versión web.
+
+**Tarea 4**
+- `errors.test.ts` tiene tres casos más (`constructor`, `toString` y un `P0001` sin mensaje), y los códigos se buscan en un `Map`.
+
+**Tarea 5**
+- `setupOnlineManager` también pregunta el estado de la red al arrancar: si la app abre sin señal, el aviso de cambio puede no llegar nunca.
+- Nuevo `jest.setup.js`, que simula AsyncStorage en todas las pruebas.
+- Las pruebas limpian sus clientes al terminar, y `renderWithProviders` usa `gcTime: Infinity` y tiene su propia prueba: sin eso, Jest no terminaba.
+
+**Tarea 6**
+- `pnpm test:scripts` corre `node --test "scripts/*.test.mjs"`. En Node 24, `node --test scripts/` toma la carpeta por un archivo y falla.
+- Jest ignora `scripts/`: desde la versión 30 también recoge los `.test.mjs`.
+- El generador tiene dos pruebas más: lo que devuelve y el código de salida por la terminal.
+- Un módulo generado trae sus seis carpetas y dos archivos, sin los `.gitkeep` de la plantilla.
+
+**Tarea 7**
+- gitleaks no se instaló y los hooks no se activaron (ver «Lo que falta»).
+- El CI usa `actions/checkout@v7`, `pnpm/action-setup@v6` y `actions/setup-node@v7`, con permiso solo de lectura, y comprueba la suma de la descarga de gitleaks.
+- `CLAUDE.md` suma, en su sección 6, lo útil del `AGENTS.md` de Expo y lo aprendido en esta fase.
+
+**Tarea 8**
+- `@expo/ngrok` quedó instalado. El servidor de desarrollo se probó solo en local; la prueba en el celular sigue pendiente.
+- `PROJECT_CONTEXT.md`: el árbol de carpetas (§9) refleja lo construido, y en §14 los montos van con `lib/money.ts`, sin Dinero.js, que se agrega si un reparto o un porcentaje lo pide.
