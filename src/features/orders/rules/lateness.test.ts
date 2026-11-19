@@ -52,4 +52,6 @@ test("entregado o anulado nunca va tarde", () => {
 });
 
 test("de hoy, con la hora acordada todavía por llegar → no va tarde", () =>
-  expect(lateness(order({ status: "preparing", promisedAt: "2026-11-18T18:00:00.000Z" }), at("2026-11-18T17:30:00Z"))).toBeNull());
+  expect(
+    lateness(order({ status: "preparing", promisedAt: "2026-11-18T18:00:00.000Z" }), at("2026-11-18T17:30:00Z")),
+  ).toBeNull());
