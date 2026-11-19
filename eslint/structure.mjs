@@ -1,4 +1,5 @@
 // Quién puede usar a quién (PROJECT_CONTEXT.md §9.1). Gana la última política que coincide.
+// La misma tabla está, celda por celda, en scripts/lint-matrix.mjs: `pnpm lint:rules` comprueba que estas políticas la cumplan
 import { join } from "node:path";
 
 import boundaries from "eslint-plugin-boundaries";
