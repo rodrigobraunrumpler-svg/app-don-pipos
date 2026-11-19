@@ -621,3 +621,24 @@ Si el PIN de prueba se bloquea, `pnpm owner reset-pin --phone 900000101 --demo` 
 **Tarea 8**
 - La entrada `/` (sin protección) lleva a donde corresponde, e Inicio quedó en `/home`.
 - El «+» de las pestañas se ve apagado hasta la fase 4.
+
+## Después de la revisión final (2026-11-19)
+
+Una revisión independiente de toda la rama encontró sólido el lado del servidor (el PIN, el conteo de intentos, las funciones, los permisos y los scripts) y un hueco en el candado del celular. Se corrigió todo, cada arreglo con su prueba primero:
+
+- **El candado ya no se abre solo.** Sin señal y con la sesión vencida, Supabase no puede renovarla pero la guarda; la app la tomaba por «sin sesión», y cuando la sesión volvía (al recuperar la señal) abría las pestañas sin pedir el PIN. Ahora hay sesión si está guardada en el celular, la app abre siempre bloqueada y solo la abre el dueño: al ingresar, con su PIN o con su huella. Si la sesión se pierde, vuelve a bloquearse.
+- **Sin señal, Entrar con el PIN.** Con la sesión vencida y sin internet, la app pedía Ingresar («Sin conexión»); ahora pide el PIN local y entra.
+- **Al ingresar, directo a la huella.** Mientras se guarda el PIN local la app sigue en Ingresar: ya no se ve Inicio un instante antes de «¿Entrar con tu huella?».
+- **Con el reloj atrasado** también pide huella o PIN.
+- **Cerrar sesión borra todo lo de este celular:** el PIN, el número, los ajustes y la caché guardada (desde la fase 3 tendrá datos de clientes, Ley 29733). Sin señal también termina.
+- **Solo huellas fuertes:** la cara por la cámara de muchos Android se engaña con una foto y no cuenta.
+- **«Tu cuenta está bloqueada» tiene «Volver»,** por si el número estaba mal escrito.
+- **Guardar el dueño DEMO** ya no puede dejar `.env.local` a medias: se escribe en un archivo aparte y después se cambia de nombre.
+
+La sesión ahora se guarda con otro nombre: si ya habías ingresado en tu celular, la app te pide ingresar una vez más.
+
+Queda una decisión tuya: hoy, 10 PIN equivocados bloquean la cuenta hasta que el equipo la revise, y como el número es público, un extraño podría bloquearla a propósito.
+
+Lo menor quedó anotado para después: un despliegue de funciones fallido deja el secreto en un archivo temporal; crear un dueño puede dejar una cuenta huérfana si falla a medias; sin límite de tiempo, «Comprobando…» puede quedarse girando con una conexión colgada; con las huellas borradas del celular, Entrar abre en modo huella y hay que tocar «Usar mi PIN»; un número de más de 9 cifras se corta sin avisar; una caída del servidor de Supabase se lee como «Sin conexión»; el correo interno debería ser más largo; y el costo de cada número nuevo y la limpieza de 30 días quedan para la fase 8.
+
+**Total de pruebas:** 248 de la app (Jest) y 42 de los scripts.

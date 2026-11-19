@@ -79,10 +79,13 @@ Son números que alguien escribió: las filas sin cambios hace más de 30 días 
 ## 5. En el celular
 
 - **La sesión, cifrada.** Usa `LargeSecureStore`, el patrón de la guía de Supabase para Expo: la llave AES va en SecureStore y la sesión cifrada en AsyncStorage. SecureStore no acepta bien valores tan grandes como la sesión.
+- **Hay sesión si está guardada en el celular.** Sin señal y con el token vencido, Supabase no puede renovarla, pero la guarda: la app pide Entrar (PIN o huella), no Ingresar, y la sesión se renueva al volver la señal.
+- **El candado:** la app abre bloqueada, y solo la abre el dueño en ese celular: al ingresar, con su PIN o con su huella. Una sesión que aparece por su cuenta (se renovó, volvió la señal) no la abre; si la sesión se pierde, vuelve a bloquearse. Mientras ingresa, la app sigue en Ingresar hasta guardar el PIN local.
 - **El PIN local, para entrar sin internet.**
   - Al ingresar con éxito se guardan en SecureStore un hash con sal del PIN (expo-crypto, SHA-256 con sal al azar) y el contador de errores.
   - Con 5 errores seguidos: `signOut({ scope: 'local' })`, se borra todo lo local y vuelve a Ingresar.
-- **La huella** usa expo-local-authentication, sin el bloqueo del celular como respaldo (`disableDeviceFallback`). Si falla, se usa el PIN de la app.
+  - «Todo lo local» (también al cerrar sesión en este celular): el PIN, el número, el contador, los ajustes de huella y bloqueo, y la caché guardada de TanStack Query. Sin señal también termina: Supabase borra la sesión del celular antes de avisar al servidor.
+- **La huella** usa expo-local-authentication, sin el bloqueo del celular como respaldo (`disableDeviceFallback`). Si falla, se usa el PIN de la app. Solo cuentan las huellas fuertes (`BIOMETRIC_STRONG`): la cara por la cámara de muchos Android se engaña con una foto.
 - **El bloqueo automático:** al volver de segundo plano, si pasaron los minutos elegidos, pide huella o PIN. Se puede elegir 0, 1, 5 o 15 minutos (5 por defecto). Este ajuste se guarda en el celular.
 
 **Cuentas (`rules/`):**
@@ -92,6 +95,7 @@ Son números que alguien escribió: las filas sin cambios hace más de 30 días 
 - **`lock.ts`:** `shouldAskUnlock(backgroundAt, now, minutes)`.
   - Con 0 minutos, pide siempre.
   - Con 5 minutos: si pasaron 4, no pide; si pasaron 5, pide.
+  - Si el reloj del celular se atrasó (el tiempo sale negativo), pide.
 - **`attempts.ts`:** el texto de los intentos: 4 → «Te quedan 4 intentos»; 1 → «Te queda 1 intento».
 
 ## 6. Pantallas y estados
@@ -101,6 +105,7 @@ Son números que alguien escribió: las filas sin cambios hace más de 30 días 
   - el campo del PIN con 6 puntos y un teclado propio. Al sexto número se comprueba solo («Comprobando…»);
   - «PIN incorrecto» con los intentos que quedan;
   - «Espera 15 minutos», con la hora, y «Pedir un PIN nuevo al equipo» (un enlace al WhatsApp de la agencia);
+  - «Tu cuenta está bloqueada», con «Pedir un PIN nuevo al equipo» y «Volver» (por si el número estaba mal);
   - sin internet, el teclado se apaga;
   - después de ingresar, ofrece usar la huella.
 - **Entrar:**
@@ -140,7 +145,7 @@ El teclado y los puntos son genéricos y viven en `components/ui`.
 - Al sexto número se comprueba solo.
 - 5 errores locales cierran la sesión del celular.
 
-**Recorrido:** ingresar, pasar más de 5 minutos en segundo plano, volver y entrar con el PIN.
+**Recorrido:** ingresar, pasar más de 5 minutos en segundo plano, volver y entrar con el PIN. Mientras se ingresa, la app no pasa por Entrar ni por las pestañas. Una sesión que reaparece sola pide el PIN. Sin señal y con la sesión guardada, el PIN local abre la app.
 
 ## 9. Fuera de esta versión
 

@@ -403,9 +403,9 @@ Precios consultados el 2026-11-18.
   - **Cuenta creada por el equipo:** registro cerrado en Supabase. El equipo da de alta al dueño con su número y un PIN al azar que no sea fácil, y se lo entrega en persona.
   - **El PIN se revisa en el servidor:** una Edge Function lo compara con su hash (bcrypt, con pgcrypto) y, si es correcto, abre la sesión de Supabase y se la entrega a la app. La cuenta lleva un correo interno y una contraseña larga que solo conoce el servidor; el dueño nunca los ve.
   - **Intentos por cuenta, no por celular:** 5 errores seguidos dan 15 minutos de espera; 10 bloquean la cuenta hasta que el equipo la revise. Supabase solo limita por IP, y su número es público: sin este conteo, alguien podría probar los millones de PIN desde internet.
-  - **En el celular:** la sesión queda en expo-secure-store (cifrado con el Keystore de Android). Después entra con huella o PIN, revisado en el celular. 5 errores seguidos borran la sesión de ese celular y vuelve a ingresar con su número y su PIN.
-  - **Bloqueo automático:** tras 5 minutos con la app en segundo plano pide huella o PIN otra vez (lo cambia en Ajustes).
-  - **Cambiar PIN:** desde Ajustes, con el PIN actual; se cambia en el servidor. Se rechazan los fáciles: seguidos (123456), repetidos (111111, 121212, 123123) y el final de su número.
+  - **En el celular:** la sesión queda cifrada: la llave en expo-secure-store (Keystore de Android) y la sesión cifrada en AsyncStorage (`auth.md` §5). Después entra con huella o PIN, revisado en el celular, también sin señal. 5 errores seguidos, o cerrar sesión, borran la sesión de ese celular y lo que la app guardó (PIN, número, ajustes y caché); vuelve a ingresar con su número y su PIN.
+  - **Bloqueo automático:** tras 5 minutos con la app en segundo plano pide huella o PIN otra vez (lo cambia en Más → Cuenta).
+  - **Cambiar PIN:** desde Más → Cuenta, con el PIN actual; se cambia en el servidor. Se rechazan los fáciles: seguidos (123456), repetidos (111111, 121212, 123123) y el final de su número.
   - **Olvidó su PIN o perdió el celular:** escribe al equipo por WhatsApp (un enlace, sin servicio de mensajes). El equipo cierra sus sesiones desde Supabase y le crea un PIN nuevo.
 - **Sin datos personales en los reportes de errores:** Sentry borra teléfonos, nombres y direcciones antes de enviar (`beforeSend`).
 - **De los clientes, solo lo necesario** para el pedido (nombre, teléfono, dirección), cuidado como pide la ley de datos personales (Ley 29733).
