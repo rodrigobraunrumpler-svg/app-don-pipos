@@ -12,6 +12,8 @@
 
 **Decidido con el dueño del proyecto (2026-11-19):** sin cuenta de Expo por ahora. La fase se prueba en Expo Go; la primera APK y Sentry pasan a la fase de entrega. Hasta entonces solo se usan librerías que Expo Go ya trae, o JavaScript puro.
 
+**El WhatsApp del equipo** para «Olvidé mi PIN» y «Pedir un PIN nuevo al equipo» lo dio el dueño del proyecto el 2026-11-19. Está en `.env.local` como `EXPO_PUBLIC_SUPPORT_WHATSAPP` (solo números, con el código del país). La app arma el enlace `https://wa.me/<número>`; si la variable falta, esos botones no se muestran.
+
 ## Lo que ya se comprobó (2026-11-19)
 
 Con una función de prueba en el proyecto de desarrollo, que después se borró:
@@ -40,7 +42,6 @@ Con una función de prueba en el proyecto de desarrollo, que después se borró:
 
 - La APK y Sentry: fase de entrega (decidido el 2026-11-19).
 - El proyecto de producción y los scripts del equipo contra producción: fase 8.
-- **El WhatsApp del equipo** para «Olvidé mi PIN» y «Pedir un PIN nuevo al equipo»: falta el número. La app lo lee de `EXPO_PUBLIC_SUPPORT_WHATSAPP`; sin él, esos botones no se muestran.
 - Lo que va dentro de Inicio, Pedidos, Stock y el botón +: sus fases.
 
 ## Foco de revisión
