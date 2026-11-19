@@ -1,6 +1,7 @@
 import { onlineManager } from "@tanstack/react-query";
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 
+import { AppError } from "@/lib/errors";
 import { renderWithProviders } from "@/test/render";
 import { COQUETA_ID, LIMON_ID } from "@/test/stock-items";
 
@@ -77,4 +78,19 @@ test("sin señal no se puede guardar", async () => {
   onlineManager.setOnline(false);
   expect(await screen.findByText("Sin conexión. Para registrar, espera la señal.")).toBeOnTheScreen();
   expect(screen.getByRole("button", { name: "Guardar producción: 2 alfajores" })).toBeDisabled();
+});
+
+test("si ese código ya se guardó con otros datos, lo dice y el siguiente intento usa otro código", async () => {
+  mockProduction
+    .mockRejectedValueOnce(new AppError("conflict"))
+    .mockResolvedValueOnce({ total: 1, items: [], backOnWeb: [] });
+  await renderWithProviders(<ProductionForm onBack={jest.fn()} onSeeStock={jest.fn()} />);
+  await press("Más Coqueta", 1);
+  await fireEvent.press(screen.getByRole("button", { name: "Guardar producción: 1 alfajor" }));
+  expect(
+    await screen.findByText("Esto ya se había guardado con otros datos. Revisa el stock y vuelve a intentar."),
+  ).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: "Guardar producción: 1 alfajor" }));
+  await waitFor(() => expect(mockProduction).toHaveBeenCalledTimes(2));
+  expect(mockProduction.mock.calls[1][0].requestId).not.toBe(mockProduction.mock.calls[0][0].requestId);
 });

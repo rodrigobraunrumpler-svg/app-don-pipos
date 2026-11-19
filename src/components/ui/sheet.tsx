@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Modal, Pressable, Text, View } from "react-native";
+import { KeyboardAvoidingView, Modal, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Props = { visible: boolean; title: string; onClose: () => void; children: ReactNode };
@@ -10,7 +10,8 @@ export function Sheet({ visible, title, onClose, children }: Props) {
   const insets = useSafeAreaInsets();
   return (
     <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onClose}>
-      <View className="flex-1 justify-end">
+      {/* Con el teclado abierto, la hoja sube: el campo y «Guardar» quedan a la vista */}
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1, justifyContent: "flex-end" }}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Cerrar"
@@ -27,7 +28,7 @@ export function Sheet({ visible, title, onClose, children }: Props) {
           </Text>
           {children}
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

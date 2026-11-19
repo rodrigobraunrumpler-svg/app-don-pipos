@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { LoadError } from "@/components/ui/load-error";
 import { SkeletonRows } from "@/components/ui/skeleton";
-import { ProductAvatar, productsQuery } from "@/features/products";
+import { Notice } from "@/components/ui/notice";
+import { ProductAvatar } from "@/features/products";
+import { formatTime } from "@/lib/dates";
 import { formatCents } from "@/lib/money";
 import { useOnline } from "@/lib/use-online";
 
@@ -20,18 +22,14 @@ import { StateChip } from "./state-chip";
 import { StockToast } from "./stock-toast";
 import { WasteSheet } from "./waste-sheet";
 
-type Props = { productId: string; onBack: () => void };
+type Props = { productId: string; price: number | undefined; onBack: () => void };
 
 // Un alfajor: su estado, su stock y su mínimo, sus movimientos por páginas, «Contar stock» y «Anotar merma».
-// «Cómo se vende» llega en la fase 4, con las ventas
-export function ProductStock({ productId, onBack }: Props) {
+// «Cómo se vende» llega en la fase 4, con las ventas. El precio lo trae la pantalla (une productos y stock)
+export function ProductStock({ productId, price, onBack }: Props) {
   const online = useOnline();
   const overview = useQuery(stockOverviewQuery);
   const item = overview.data?.find((candidate) => candidate.productId === productId);
-  const { data: price } = useQuery({
-    ...productsQuery,
-    select: (products) => products.find((product) => product.id === productId)?.priceCents,
-  });
   const movements = useInfiniteQuery(productMovementsQuery(productId));
   const [sheet, setSheet] = useState<"waste" | "count" | null>(null);
   const undoToast = useUndoToast();
@@ -119,7 +117,18 @@ export function ProductStock({ productId, onBack }: Props) {
           <Text className="text-[13px] text-text-secondary">{`Mostrando ${rows.length} de ${total}`}</Text>
         ) : null}
       </View>
-      {movements.isPending ? <SkeletonRows rows={3} /> : null}
+      {online ? null : (
+        <Notice>
+          {movements.data
+            ? `Sin conexión. Ves los movimientos de las ${formatTime(new Date(movements.dataUpdatedAt))}.`
+            : "Sin conexión. Los movimientos se ven cuando vuelva la señal."}
+        </Notice>
+      )}
+      {/* Sin datos: la carga mientras se piden (también al reintentar), y el error si no llegaron */}
+      {!movements.data && movements.isFetching ? <SkeletonRows rows={3} /> : null}
+      {!movements.data && !movements.isFetching && movements.isError ? (
+        <LoadError what="los movimientos" onRetry={() => void movements.refetch()} />
+      ) : null}
       {movements.data && rows.length === 0 ? (
         <Text className="py-3 text-sm text-text-secondary">Todavía no hay movimientos.</Text>
       ) : null}

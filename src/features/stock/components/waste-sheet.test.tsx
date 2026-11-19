@@ -62,3 +62,18 @@ test("el stock baja al instante y vuelve si falla; el reintento manda el mismo c
   await waitFor(() => expect(mockWaste).toHaveBeenCalledTimes(2));
   expect(mockWaste.mock.calls[1][0].requestId).toBe(mockWaste.mock.calls[0][0].requestId);
 });
+
+test("si ese código ya se guardó con otros datos, lo dice y el siguiente intento usa otro código", async () => {
+  mockWaste
+    .mockRejectedValueOnce(new AppError("conflict"))
+    .mockResolvedValueOnce({ productId: COQUETA_ID, onHand: 12, outOnWeb: false });
+  await open();
+  await fireEvent.press(screen.getByRole("button", { name: "Rota" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Guardar merma" }));
+  expect(
+    await screen.findByText("Esto ya se había guardado con otros datos. Revisa el stock y vuelve a intentar."),
+  ).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: "Guardar merma" }));
+  await waitFor(() => expect(mockWaste).toHaveBeenCalledTimes(2));
+  expect(mockWaste.mock.calls[1][0].requestId).not.toBe(mockWaste.mock.calls[0][0].requestId);
+});

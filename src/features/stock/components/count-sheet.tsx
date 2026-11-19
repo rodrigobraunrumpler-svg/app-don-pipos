@@ -7,10 +7,11 @@ import { Notice } from "@/components/ui/notice";
 import { Sheet } from "@/components/ui/sheet";
 import { Stepper } from "@/components/ui/stepper";
 import { ProductAvatar } from "@/features/products";
-import { errorMessage } from "@/lib/errors";
+import { errorMessage, toAppError } from "@/lib/errors";
 import { confirmTap } from "@/lib/haptics";
 import { useOnline } from "@/lib/use-online";
 
+import { STOCK_CONFLICT_TEXT } from "../constants";
 import { useRequestId } from "../hooks/use-request-id";
 import { useRegisterStockCount } from "../hooks/use-stock-changes";
 import { stockOverviewQuery } from "../queries/stock";
@@ -44,7 +45,9 @@ export function CountSheet({ productIds, onClose, onDone }: Props) {
       const label = result.adjustments === 1 ? "ajuste" : "ajustes";
       onDone({ requestId, message: `Conteo guardado: ${result.adjustments} ${label}.` });
     } catch (error) {
-      setProblem(errorMessage(error));
+      // El mismo código ya se guardó con otros datos: se explica y el siguiente intento es otro registro
+      if (toAppError(error).kind === "conflict") renew();
+      setProblem(toAppError(error).kind === "conflict" ? STOCK_CONFLICT_TEXT : errorMessage(error));
     }
   }
 

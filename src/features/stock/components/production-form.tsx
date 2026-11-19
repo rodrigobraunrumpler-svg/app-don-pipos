@@ -11,10 +11,11 @@ import { Stepper } from "@/components/ui/stepper";
 import { Toast } from "@/components/ui/toast";
 import { ProductAvatar } from "@/features/products";
 import { formatLongDate } from "@/lib/dates";
-import { errorMessage } from "@/lib/errors";
+import { errorMessage, toAppError } from "@/lib/errors";
 import { confirmTap } from "@/lib/haptics";
 import { useOnline } from "@/lib/use-online";
 
+import { STOCK_CONFLICT_TEXT } from "../constants";
 import { useRequestId } from "../hooks/use-request-id";
 import { registerProductionMutation, revertStockChangeMutation } from "../queries/mutations";
 import { stockOverviewQuery } from "../queries/stock";
@@ -49,7 +50,9 @@ export function ProductionForm({ onBack, onSeeStock }: Props) {
       renew();
       confirmTap();
     } catch (error) {
-      setProblem(errorMessage(error));
+      // El mismo código ya se guardó con otros datos: se explica y el siguiente intento es otro registro
+      if (toAppError(error).kind === "conflict") renew();
+      setProblem(toAppError(error).kind === "conflict" ? STOCK_CONFLICT_TEXT : errorMessage(error));
     }
   }
 

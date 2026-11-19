@@ -54,13 +54,14 @@ export const productionResultSchema = z.object({
 export type ProductionResult = z.infer<typeof productionResultSchema>;
 export type ProductionInput = { requestId: string; items: { productId: string; quantity: number }[] };
 
-// Un movimiento del historial de un alfajor (list_product_movements)
+// Un movimiento del historial de un alfajor (list_product_movements). La fecha queda como texto ISO («…Z»):
+// la caché se guarda en el celular como JSON, y una fecha (Date) volvería como texto al reabrir la app
 export const movementSchema = z.object({
   id: z.string(),
   kind: movementKindSchema,
   quantity: z.number().int(),
   reason: z.string().nullable(),
-  happenedAt: z.coerce.date(),
+  happenedAt: z.string(),
 });
 export type Movement = z.infer<typeof movementSchema>;
 

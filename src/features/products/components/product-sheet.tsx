@@ -8,7 +8,7 @@ import { MoneyInput } from "@/components/ui/money-input";
 import { Notice } from "@/components/ui/notice";
 import { Sheet } from "@/components/ui/sheet";
 import { Stepper } from "@/components/ui/stepper";
-import { errorMessage } from "@/lib/errors";
+import { errorMessage, toAppError } from "@/lib/errors";
 import { formatCents } from "@/lib/money";
 import { useOnline } from "@/lib/use-online";
 import { useTheme } from "@/theme";
@@ -20,10 +20,10 @@ import type { Product } from "../schema/product";
 
 const toText = (cents: number | null): string => (cents === null ? "" : (cents / 100).toFixed(2));
 
-type Props = { product: Product; onClose: () => void; onSaved: (message: string) => void };
+type Props = { product: Product; onClose: () => void; onSaved: (message: string) => void; onConflict: () => void };
 
 // La hoja de un producto: precio, costo, stock mínimo y, si está enlazado, si se ve en la web
-export function ProductSheet({ product, onClose, onSaved }: Props) {
+export function ProductSheet({ product, onClose, onSaved, onConflict }: Props) {
   const online = useOnline();
   const { colors } = useTheme();
   const save = useMutation(saveProductMutation);
@@ -61,7 +61,9 @@ export function ProductSheet({ product, onClose, onSaved }: Props) {
       const web = saved.linkedToWeb ? " En la web se ve en unos segundos." : "";
       onSaved(`${saved.name} guardado: ${formatCents(saved.priceCents)}.${web}`);
     } catch (error) {
-      setProblem(errorMessage(error));
+      // Otra versión: un cambio ya se había guardado (con un solo dueño, casi siempre una respuesta que se perdió)
+      if (toAppError(error).kind === "conflict") onConflict();
+      else setProblem(errorMessage(error));
     }
   }
 

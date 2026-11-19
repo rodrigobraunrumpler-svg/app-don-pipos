@@ -1,5 +1,5 @@
 import { onlineManager } from "@tanstack/react-query";
-import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 
 import { AppError } from "@/lib/errors";
 import { renderWithProviders } from "@/test/render";
@@ -127,4 +127,25 @@ test("si no se pudo cargar, lo dice y vuelve a intentar", async () => {
   expect(await screen.findByText("No se pudo cargar tus productos")).toBeOnTheScreen();
   await fireEvent.press(screen.getByRole("button", { name: "Reintentar" }));
   expect(await screen.findByText("Coqueta")).toBeOnTheScreen();
+});
+
+test("si el producto ya tenía otro cambio guardado, cierra la hoja, lo dice y vuelve a cargar la lista", async () => {
+  mockSave.mockRejectedValue(new AppError("conflict"));
+  await renderWithProviders(<ProductList onBack={jest.fn()} />);
+  await fireEvent.press(await screen.findByRole("button", { name: /^Coqueta/ }));
+  await fireEvent.changeText(screen.getByLabelText("Precio en soles"), "13");
+  await fireEvent.press(screen.getByRole("button", { name: "Guardar" }));
+  expect(
+    await screen.findByText("Coqueta ya tenía otro cambio guardado: revisa sus datos y vuelve a guardar."),
+  ).toBeOnTheScreen();
+  expect(screen.queryByLabelText("Precio en soles")).toBeNull();
+  await waitFor(() => expect(mockList).toHaveBeenCalledTimes(2));
+});
+
+test("al tirar hacia abajo, vuelve a cargar la lista", async () => {
+  await renderWithProviders(<ProductList onBack={jest.fn()} />);
+  await screen.findByText("Coqueta");
+  // En Jest, el control de tirar hacia abajo queda como propiedad de la lista
+  await act(() => screen.getByTestId("products-scroll").props.refreshControl.props.onRefresh());
+  await waitFor(() => expect(mockList).toHaveBeenCalledTimes(2));
 });

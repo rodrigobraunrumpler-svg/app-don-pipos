@@ -89,6 +89,17 @@ test("una mutación refresca las claves que declara", async () => {
   expect(invalidate).toHaveBeenCalledWith({ queryKey: ["stock"] });
 });
 
+test("si el guardado falla, también refresca lo que declara: la respuesta pudo perderse con el cambio ya hecho", async () => {
+  const client = newClient();
+  const invalidate = jest.spyOn(client, "invalidateQueries");
+  const observer = new MutationObserver(client, {
+    mutationFn: () => Promise.reject(new TypeError("Network request failed")),
+    meta: { invalidates: [["stock"]] },
+  });
+  await observer.mutate().catch(() => undefined);
+  expect(invalidate).toHaveBeenCalledWith({ queryKey: ["stock"] });
+});
+
 // Guardar sin señal y enviar después queda para más adelante (PROJECT_CONTEXT.md §14.2): por ahora falla y avisa
 test("sin señal, un guardado no queda en espera: se intenta, falla al momento y avisa «sin conexión»", async () => {
   const onError = jest.fn();

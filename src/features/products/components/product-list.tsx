@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
@@ -10,6 +10,7 @@ import { SkeletonRows } from "@/components/ui/skeleton";
 import { Toast } from "@/components/ui/toast";
 import { confirmTap } from "@/lib/haptics";
 import { useOnline } from "@/lib/use-online";
+import { useTheme } from "@/theme";
 
 import { productsQuery } from "../queries/products";
 import type { Product } from "../schema/product";
@@ -20,7 +21,8 @@ import { ProductSheet } from "./product-sheet";
 // Más → Productos y precios: la lista, la hoja de cada uno y «Agregar producto»
 export function ProductList({ onBack }: { onBack: () => void }) {
   const online = useOnline();
-  const { data, isError, refetch } = useQuery(productsQuery);
+  const { colors } = useTheme();
+  const { data, isError, isRefetching, refetch } = useQuery(productsQuery);
   const [editing, setEditing] = useState<Product | null>(null);
   const [adding, setAdding] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -47,7 +49,18 @@ export function ProductList({ onBack }: { onBack: () => void }) {
         </View>
       </View>
       {data ? (
-        <ScrollView contentContainerClassName="px-5 pb-24">
+        <ScrollView
+          testID="products-scroll"
+          contentContainerClassName="px-5 pb-24"
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefetching}
+              onRefresh={() => void refetch()}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
+            />
+          }
+        >
           {online || editing || adding ? null : <Notice>Sin conexión. Para cambiar precios, espera la señal.</Notice>}
           {linked ? (
             <View className="mt-3 flex-row gap-2.5 rounded-sm bg-olive-soft px-3 py-3">
@@ -79,7 +92,18 @@ export function ProductList({ onBack }: { onBack: () => void }) {
           <SkeletonRows rows={5} />
         </View>
       )}
-      {editing ? <ProductSheet product={editing} onClose={() => setEditing(null)} onSaved={saved} /> : null}
+      {editing ? (
+        <ProductSheet
+          product={editing}
+          onClose={() => setEditing(null)}
+          onSaved={saved}
+          onConflict={() => {
+            // La lista ya se vuelve a cargar (lo que refresca cada guardado, también si falla): al abrirlo otra vez, trae lo último
+            setToast(`${editing.name} ya tenía otro cambio guardado: revisa sus datos y vuelve a guardar.`);
+            setEditing(null);
+          }}
+        />
+      ) : null}
       {adding ? <NewProductSheet onClose={() => setAdding(false)} onSaved={saved} /> : null}
       {toast ? <Toast message={toast} onHide={() => setToast(null)} /> : null}
     </View>

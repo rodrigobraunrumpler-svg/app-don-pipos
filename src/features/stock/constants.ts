@@ -15,5 +15,8 @@ export const WASTE_REASONS = [
   ["other", "Otro"],
 ] as const;
 
+// Cuando el mismo código ya se guardó con otros datos (la respuesta se perdió y el dueño cambió el formulario)
+export const STOCK_CONFLICT_TEXT = "Esto ya se había guardado con otros datos. Revisa el stock y vuelve a intentar.";
+
 // Los motivos de un ajuste
 export const ADJUSTMENT_LABELS = { count: "Conteo", initial: "Stock inicial", undo: "Deshacer" } as const;

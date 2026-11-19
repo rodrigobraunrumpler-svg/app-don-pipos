@@ -25,7 +25,7 @@ export function MovementRow({ movement, now }: { movement: Movement; now: Date }
       </View>
       <View className="flex-1">
         <Text className="font-bold text-base text-text">{movementLabel(movement.kind, movement.reason)}</Text>
-        <Text className="text-[13px] text-text-secondary">{movementTime(movement.happenedAt, now)}</Text>
+        <Text className="text-[13px] text-text-secondary">{movementTime(new Date(movement.happenedAt), now)}</Text>
       </View>
       <Text className={`font-extrabold text-base ${adds ? "text-olive" : "text-danger"}`}>
         {adds ? `+${movement.quantity}` : `${MINUS}${-movement.quantity}`}

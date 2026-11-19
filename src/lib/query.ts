@@ -22,7 +22,7 @@ export const STALE_TIME = { catalog: 30 * 60_000, live: 30_000, reports: 5 * 60_
 export const CACHE_MAX_AGE = 24 * 60 * 60_000;
 // Sube en 1 cada vez que cambia la forma de lo que devuelve una consulta: al abrir la app, lo guardado con la forma
 // anterior se descarta. La versión de la app sola no alcanza: no cambia durante el desarrollo ni con EAS Update
-export const CACHE_SCHEMA = 1;
+export const CACHE_SCHEMA = 2;
 // Dónde se guarda la caché en el celular
 export const CACHE_STORAGE_KEY = "donpipos.cache";
 
@@ -41,8 +41,9 @@ export function createQueryClient(options?: { onError?: (error: AppError) => voi
     queryCache: new QueryCache({ onError: report }),
     mutationCache: new MutationCache({
       onError: report,
-      // Cada mutación declara qué refresca en `meta.invalidates`; aquí se hace una sola vez para todas
-      onSuccess: (_data, _variables, _context, mutation) => {
+      // Cada mutación declara qué refresca en `meta.invalidates`; aquí se hace una sola vez para todas.
+      // También si falla: la respuesta pudo perderse con el cambio ya hecho en la base
+      onSettled: (_data, _error, _variables, _context, mutation) => {
         for (const queryKey of mutation.meta?.invalidates ?? []) void client.invalidateQueries({ queryKey });
       },
     }),
