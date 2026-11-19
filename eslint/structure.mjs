@@ -1,6 +1,8 @@
 // Quién puede usar a quién (PROJECT_CONTEXT.md §9.1). Gana la última política que coincide.
 import boundaries from "eslint-plugin-boundaries";
 
+// Las extensiones del código: las reglas valen para todas, no solo para TypeScript
+export const CODE = "{ts,tsx,js,jsx,mjs,cjs}";
 const LAYERS = ["api", "queries", "schema", "rules", "hooks", "components"];
 const same = { feature: "{{ from.element.captured.feature }}" };
 const sameLayers = (...names) => names.map((n) => ({ element: { type: `feature-${n}`, captured: same } }));
@@ -28,7 +30,7 @@ export const structureSettings = {
     { type: "types", pattern: "src/types" },
     { type: "asset", pattern: "assets" },
   ],
-  "boundaries/files": [{ pattern: "**/*.test.{ts,tsx}", category: "test" }],
+  "boundaries/files": [{ pattern: `**/*.test.${CODE}`, category: "test" }],
   "boundaries/legacy-templates": false,
 };
 

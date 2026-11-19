@@ -47,6 +47,14 @@ export const EXPECTED = {
   // El comentario no apaga la regla: se avisa el comentario y la falta sigue ahí
   "lib/disables-lint.ts": ["comentario-sin-efecto", "no-console"],
 
+  // Las reglas valen igual para los archivos .js, .jsx, .mjs y .cjs
+  "features/orders/components/legacy-widget.jsx": [D],
+  "features/orders/components/two-in-one.jsx": ["react/no-multi-comp"],
+  "lib/disables-lint.js": ["comentario-sin-efecto", "no-console"],
+  "lib/knows-business.cjs": [D],
+  "lib/logs.mjs": ["no-console"],
+  "misc/loose.js": ["boundaries/no-unknown-files"],
+
   // Accesibilidad
   "components/ui/no-a11y.tsx": ["react-native-a11y/has-valid-accessibility-descriptors"],
 };

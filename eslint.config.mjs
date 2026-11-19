@@ -9,7 +9,7 @@ import { createTypeScriptImportResolver } from "eslint-import-resolver-typescrip
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
-import { boundaries, structureRules, structureSettings } from "./eslint/structure.mjs";
+import { boundaries, CODE, structureRules, structureSettings } from "./eslint/structure.mjs";
 
 // Un color completo (#rgb, #rrggbb, #rrggbbaa), un valor suelto de Tailwind ([#fff]) o rgb()/hsl(). «#0042» no coincide: es un número de pedido
 const RAW_COLOR = "/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$|\\[#[0-9a-fA-F]{3,8}\\]|\\b(?:rgba?|hsla?)\\(/";
@@ -31,7 +31,8 @@ export default tseslint.config(
   ...expo,
   ...pluginQuery.configs["flat/recommended"],
   {
-    files: ["**/src/**/*.{ts,tsx}"],
+    // Todo el código de src, también el que no es TypeScript: un .js o un .jsx no queda fuera de las reglas
+    files: [`**/src/**/*.${CODE}`],
     linterOptions: { noInlineConfig: true, reportUnusedDisableDirectives: "error" },
     plugins: {
       boundaries,
@@ -51,12 +52,10 @@ export default tseslint.config(
       "max-lines": [2, { max: 250, skipBlankLines: true, skipComments: true }],
       "react/no-multi-comp": 2,
       "no-console": 2,
-      "@typescript-eslint/no-explicit-any": 2,
-      "@typescript-eslint/ban-ts-comment": 2,
       "react-native-a11y/has-valid-accessibility-descriptors": 2,
       "check-file/filename-naming-convention": [
         2,
-        { "**/src/!(app)/**/*.{ts,tsx}": "KEBAB_CASE" },
+        { [`**/src/!(app)/**/*.${CODE}`]: "KEBAB_CASE" },
         { ignoreMiddleExtensions: true },
       ],
       "check-file/folder-naming-convention": [2, { "**/src/!(app)/**": "KEBAB_CASE" }],
@@ -66,6 +65,11 @@ export default tseslint.config(
         { selector: `TemplateElement[value.raw=${RAW_COLOR}]`, message: "Los colores van en src/theme" },
       ],
     },
+  },
+  {
+    // Reglas que solo existen en TypeScript
+    files: ["**/src/**/*.{ts,tsx}"],
+    rules: { "@typescript-eslint/no-explicit-any": 2, "@typescript-eslint/ban-ts-comment": 2 },
   },
   { files: ["**/src/theme/**"], rules: { "no-restricted-syntax": 0 } },
   {
@@ -77,6 +81,6 @@ export default tseslint.config(
       ],
     },
   },
-  { files: ["**/*.test.{ts,tsx}", "jest.setup.js"], languageOptions: { globals: globals.jest } },
+  { files: [`**/*.test.${CODE}`, "jest.setup.js"], languageOptions: { globals: globals.jest } },
   prettier,
 );
