@@ -1,0 +1,6 @@
+pnpm-lock.yaml
+docs/
+coverage/
+.expo/
+.superpowers/
+tools/lint-fixtures/
