@@ -134,3 +134,22 @@ test("cerrar la sesión en este celular borra lo guardado", async () => {
   expect(await SecureStore.getItemAsync("auth.phone")).toBeNull();
   expect(result.current.phone).toBeNull();
 });
+
+test("después de ingresar ofrece la huella si el celular la tiene", async () => {
+  const { result } = await setup("signed-out");
+  await call(() => result.current.rememberSignIn(PHONE, "197346"));
+  expect(result.current.offerBiometrics).toBe(true);
+  await call(() => result.current.answerBiometricsOffer(false));
+  expect(result.current.offerBiometrics).toBe(false);
+  expect(result.current.biometricsEnabled).toBe(false);
+  await call(() => result.current.rememberSignIn(PHONE, "197346"));
+  await call(() => result.current.answerBiometricsOffer(true));
+  expect(result.current.biometricsEnabled).toBe(true);
+});
+
+test("sin huella registrada no la ofrece", async () => {
+  jest.mocked(LocalAuthentication.isEnrolledAsync).mockResolvedValue(false);
+  const { result } = await setup("signed-out");
+  await call(() => result.current.rememberSignIn(PHONE, "197346"));
+  expect(result.current.offerBiometrics).toBe(false);
+});

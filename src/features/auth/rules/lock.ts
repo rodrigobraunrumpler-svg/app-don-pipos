@@ -1,4 +1,6 @@
-export type AutoLockMinutes = 0 | 1 | 5 | 15;
+import type { AutoLockMinutes } from "../constants";
+
+export type { AutoLockMinutes };
 
 // ¿Pedir huella o PIN al volver a la app? Con 0 minutos, siempre; si no, cuando pasaron los minutos elegidos
 export function shouldAskUnlock(backgroundAt: Date | null, now: Date, minutes: AutoLockMinutes): boolean {

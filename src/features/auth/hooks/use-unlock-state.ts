@@ -6,8 +6,8 @@ import { useEffect, useState } from "react";
 import { biometricsAvailable, confirmWithBiometrics } from "@/lib/biometrics";
 import { hashPin, pinMatches, type StoredPin } from "@/lib/local-pin";
 
+import { AUTO_LOCK_CHOICES, DEFAULT_AUTO_LOCK, MAX_LOCAL_ERRORS, type AutoLockMinutes } from "../constants";
 import { signOutMutation } from "../queries/mutations";
-import type { AutoLockMinutes } from "../rules/lock";
 
 export type SessionStatus = "loading" | "signed-in" | "signed-out";
 export type UnlockAnswer = { ok: true } | { ok: false; attemptsLeft: number };
@@ -15,9 +15,6 @@ export type UnlockAnswer = { ok: true } | { ok: false; attemptsLeft: number };
 // En SecureStore, lo que identifica al dueño en este celular; en AsyncStorage, sus preferencias (no son secretas)
 const SECRET = { pin: "auth.local-pin", phone: "auth.phone", errors: "auth.pin-errors" } as const;
 const PREFERENCE = { biometrics: "auth.biometrics", autoLock: "auth.auto-lock" } as const;
-const MAX_LOCAL_ERRORS = 5;
-const AUTO_LOCK_CHOICES: readonly AutoLockMinutes[] = [0, 1, 5, 15];
-const DEFAULT_AUTO_LOCK: AutoLockMinutes = 5;
 
 const readPin = async (): Promise<StoredPin | null> =>
   JSON.parse((await SecureStore.getItemAsync(SECRET.pin)) ?? "null");
@@ -40,6 +37,7 @@ export function useUnlockState({ sessionStatus }: { sessionStatus: SessionStatus
   const [phone, setPhone] = useState<string | null>(null);
   const [biometricsEnabled, setBiometrics] = useState(false);
   const [autoLockMinutes, setAutoLock] = useState<AutoLockMinutes>(DEFAULT_AUTO_LOCK);
+  const [offerBiometrics, setOfferBiometrics] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -72,9 +70,16 @@ export function useUnlockState({ sessionStatus }: { sessionStatus: SessionStatus
   async function rememberSignIn(signedInPhone: string, pin: string): Promise<void> {
     await rememberPin(pin);
     await SecureStore.setItemAsync(SECRET.phone, signedInPhone);
+    // Antes de desbloquear: así la app va directo a ofrecer la huella, si el celular la tiene
+    setOfferBiometrics(!biometricsEnabled && (await biometricsAvailable()));
     setPhone(signedInPhone);
     setLockedOut(false);
     setLocked(false);
+  }
+
+  async function answerBiometricsOffer(accept: boolean): Promise<void> {
+    if (accept) await setBiometricsEnabled(true);
+    setOfferBiometrics(false);
   }
 
   async function signOutHere(): Promise<void> {
@@ -130,7 +135,9 @@ export function useUnlockState({ sessionStatus }: { sessionStatus: SessionStatus
     phone,
     biometricsEnabled,
     autoLockMinutes,
+    offerBiometrics,
     rememberSignIn,
+    answerBiometricsOffer,
     rememberPin,
     unlockWithPin,
     unlockWithBiometrics,

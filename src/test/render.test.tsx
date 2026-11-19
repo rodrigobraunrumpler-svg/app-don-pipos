@@ -24,12 +24,12 @@ test("cada llamada crea un cliente nuevo: las pruebas no comparten caché", asyn
   expect(first.queryClient).not.toBe(second.queryClient);
 });
 
-test("el cliente de las pruebas es el de la app: solo cambian los reintentos y el temporizador de la caché", async () => {
+test("el cliente de las pruebas es el de la app: solo cambian los reintentos y los temporizadores de la caché", async () => {
   const { queryClient } = await renderWithProviders(<Probe />);
   const app = createQueryClient().getDefaultOptions();
   const defaults = queryClient.getDefaultOptions();
   expect(defaults.queries?.staleTime).toBe(STALE_TIME.live);
   expect(defaults.queries).toEqual({ ...app.queries, retry: false, gcTime: Infinity });
-  expect(defaults.mutations).toEqual(app.mutations);
+  expect(defaults.mutations).toEqual({ ...app.mutations, gcTime: Infinity });
   expect(defaults.mutations?.networkMode).toBe("always");
 });

@@ -11,7 +11,11 @@ import { ThemeProvider, type Scheme } from "@/theme";
 export async function renderWithProviders(ui: ReactElement, options?: { scheme?: Scheme }) {
   const queryClient = createQueryClient();
   const defaults = queryClient.getDefaultOptions();
-  queryClient.setDefaultOptions({ ...defaults, queries: { ...defaults.queries, retry: false, gcTime: Infinity } });
+  queryClient.setDefaultOptions({
+    ...defaults,
+    queries: { ...defaults.queries, retry: false, gcTime: Infinity },
+    mutations: { ...defaults.mutations, gcTime: Infinity },
+  });
   const result = await render(
     <QueryClientProvider client={queryClient}>
       <ThemeProvider forcedScheme={options?.scheme}>{ui}</ThemeProvider>
