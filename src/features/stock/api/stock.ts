@@ -1,16 +1,19 @@
 import type { z } from "zod";
 
 import { AppError, toAppError } from "@/lib/errors";
+import { pageSchema, type Page } from "@/lib/page";
 import { supabase } from "@/lib/supabase";
 
 import {
   countResultSchema,
+  movementSchema,
   productionResultSchema,
   revertResultSchema,
   stockOverviewSchema,
   wasteResultSchema,
   type CountInput,
   type CountResult,
+  type Movement,
   type ProductionInput,
   type ProductionResult,
   type RevertResult,
@@ -29,6 +32,19 @@ export async function getStockOverview(): Promise<StockItem[]> {
   const { data, error } = await supabase().rpc("stock_overview");
   if (error) throw toAppError(error);
   return parse(stockOverviewSchema, data);
+}
+
+// Una página del historial de un alfajor, del más nuevo al más viejo. El cursor lo da la página anterior
+export async function listProductMovements(input: {
+  productId: string;
+  cursor: string | null;
+}): Promise<Page<Movement>> {
+  const { data, error } = await supabase().rpc("list_product_movements", {
+    p_product_id: input.productId,
+    p_cursor: input.cursor ?? undefined,
+  });
+  if (error) throw toAppError(error);
+  return parse(pageSchema(movementSchema), data);
 }
 
 export async function registerProduction(input: ProductionInput): Promise<ProductionResult> {

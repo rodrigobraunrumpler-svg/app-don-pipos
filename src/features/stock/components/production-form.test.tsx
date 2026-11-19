@@ -27,9 +27,9 @@ async function press(name: string, times: number) {
   for (let count = 0; count < times; count += 1) await fireEvent.press(await screen.findByRole("button", { name }));
 }
 
-test("10 Coqueta y 5 Limon Kiss: guarda solo esos dos y dice qué vuelve a la web", async () => {
+test("3 Coqueta y 2 Limon Kiss: guarda solo esos dos y dice qué vuelve a la web", async () => {
   mockProduction.mockResolvedValue({
-    total: 15,
+    total: 5,
     items: [],
     backOnWeb: [{ productId: COQUETA_ID, name: "Coqueta" }],
   });
@@ -41,21 +41,21 @@ test("10 Coqueta y 5 Limon Kiss: guarda solo esos dos y dice qué vuelve a la we
   ).toBeOnTheScreen();
   expect(screen.getAllByText("Anota cuántos hiciste")).toHaveLength(2);
   expect(screen.getByRole("button", { name: "Guardar producción" })).toBeDisabled();
-  await press("Más Coqueta", 10);
-  await press("Más Limon Kiss", 5);
-  await fireEvent.press(screen.getByRole("button", { name: "Guardar producción: 15 alfajores" }));
+  await press("Más Coqueta", 3);
+  await press("Más Limon Kiss", 2);
+  await fireEvent.press(screen.getByRole("button", { name: "Guardar producción: 5 alfajores" }));
   await waitFor(() =>
     expect(mockProduction).toHaveBeenCalledWith({
       requestId: expect.any(String),
       items: [
-        { productId: COQUETA_ID, quantity: 10 },
-        { productId: LIMON_ID, quantity: 5 },
+        { productId: COQUETA_ID, quantity: 3 },
+        { productId: LIMON_ID, quantity: 2 },
       ],
     }),
   );
   expect(await screen.findByText("Producción guardada")).toBeOnTheScreen();
   expect(
-    screen.getByText("Sumaste 15 alfajores y el stock ya está al día. Coqueta vuelve a aparecer disponible en la web."),
+    screen.getByText("Sumaste 5 alfajores y el stock ya está al día. Coqueta vuelve a aparecer disponible en la web."),
   ).toBeOnTheScreen();
 });
 

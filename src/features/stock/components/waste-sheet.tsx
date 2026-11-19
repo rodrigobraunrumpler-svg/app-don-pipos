@@ -16,9 +16,8 @@ import { WASTE_REASONS } from "../constants";
 import { useRequestId } from "../hooks/use-request-id";
 import { useRegisterWaste } from "../hooks/use-stock-changes";
 import { stockOverviewQuery } from "../queries/stock";
-import type { WasteReason } from "../schema/stock";
+import type { StockChangeDone, WasteReason } from "../schema/stock";
 
-export type StockChangeDone = { requestId: string; message: string };
 type Props = { productId: string | null; onClose: () => void; onDone: (done: StockChangeDone) => void };
 
 // Anotar merma: el alfajor (desde Stock se elige; desde Un alfajor ya viene), cuántos y el motivo, que es obligatorio

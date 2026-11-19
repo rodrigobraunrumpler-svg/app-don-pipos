@@ -29,7 +29,9 @@ jest.mock("@/features/stock/api/stock", () => ({
   registerWaste: (input: unknown) => mockWaste(input),
   registerStockCount: (input: unknown) => mockCount(input),
   revertStockChange: (requestId: string) => mockRevert(requestId),
+  listProductMovements: async () => ({ items: [], meta: { limit: 20, total: 0, hasMore: false, nextCursor: null } }),
 }));
+jest.mock("@/features/products/api/products", () => ({ listProducts: async () => [], saveProduct: jest.fn() }));
 
 function Providers({ children }: { children: ReactNode }) {
   const client = createQueryClient();
@@ -48,6 +50,7 @@ test("tocar un alfajor abre su pantalla", async () => {
   );
   await fireEvent.press(await screen.findByRole("button", { name: "Coqueta: 13 en stock. Alcanza. Ver detalle" }));
   expect(screen).toHavePathname("/stock/00000000-0000-4000-8000-000000000a01");
+  expect(await screen.findByText("Todavía no hay movimientos.")).toBeOnTheScreen();
 });
 
 const open = () =>

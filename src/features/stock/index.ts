@@ -8,3 +8,4 @@ export { StockOverview } from "./components/stock-overview";
 export { stockOverviewQuery } from "./queries/stock";
 export type { StockItem } from "./schema/stock";
 export { ProductionForm } from "./components/production-form";
+export { ProductStock } from "./components/product-stock";

@@ -15,8 +15,7 @@ import { useRequestId } from "../hooks/use-request-id";
 import { useRegisterStockCount } from "../hooks/use-stock-changes";
 import { stockOverviewQuery } from "../queries/stock";
 import { countSaveLabel, differenceLabel, expectedLabel } from "../rules/count";
-import type { StockItem } from "../schema/stock";
-import type { StockChangeDone } from "./waste-sheet";
+import type { StockChangeDone, StockItem } from "../schema/stock";
 
 type Props = { productIds: string[] | null; onClose: () => void; onDone: (done: StockChangeDone) => void };
 

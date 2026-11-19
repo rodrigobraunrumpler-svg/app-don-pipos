@@ -30,6 +30,10 @@ jest.mock("expo-crypto", () => {
 });
 
 // La huella: por defecto el celular tiene sensor, una huella registrada y la confirma; cada prueba lo cambia si necesita
+// FlashList viene como módulo ES que Jest no transforma, y necesita medir la pantalla, que en Jest no existe.
+// En las pruebas, la lista de React Native hace lo mismo: pinta las filas y avisa al llegar al final
+jest.mock("@shopify/flash-list", () => ({ FlashList: require("react-native").FlatList }));
+
 // La vibración: en Jest no hay motor
 jest.mock("expo-haptics", () => ({
   NotificationFeedbackType: { Success: "success", Warning: "warning", Error: "error" },

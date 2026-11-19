@@ -1,8 +1,8 @@
-import { queryOptions } from "@tanstack/react-query";
+import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 
 import { STALE_TIME } from "@/lib/query";
 
-import { getStockOverview } from "../api/stock";
+import { getStockOverview, listProductMovements } from "../api/stock";
 import { stockKeys } from "./keys";
 
 // El stock cambia a cada rato: fresco por 30 segundos
@@ -11,3 +11,14 @@ export const stockOverviewQuery = queryOptions({
   queryFn: getStockOverview,
   staleTime: STALE_TIME.live,
 });
+
+// El historial de un alfajor, por páginas: pide la siguiente con el cursor de la anterior (§14.3).
+// Sin maxPages: sin getPreviousPageParam, la primera página que se suelte desaparecería de la lista al bajar
+export const productMovementsQuery = (productId: string) =>
+  infiniteQueryOptions({
+    queryKey: stockKeys.movements(productId),
+    queryFn: ({ pageParam }) => listProductMovements({ productId, cursor: pageParam }),
+    initialPageParam: null as string | null,
+    getNextPageParam: (last) => (last.meta.hasMore ? last.meta.nextCursor : undefined),
+    staleTime: STALE_TIME.live,
+  });

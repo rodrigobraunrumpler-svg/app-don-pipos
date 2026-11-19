@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 
@@ -7,17 +7,17 @@ import { Icon } from "@/components/ui/icon";
 import { LoadError } from "@/components/ui/load-error";
 import { Notice } from "@/components/ui/notice";
 import { SkeletonRows } from "@/components/ui/skeleton";
-import { Toast } from "@/components/ui/toast";
 import { formatTime } from "@/lib/dates";
-import { errorMessage } from "@/lib/errors";
 import { useOnline } from "@/lib/use-online";
 import { useTheme } from "@/theme";
 
-import { revertStockChangeMutation } from "../queries/mutations";
+import { useUndoToast } from "../hooks/use-undo-toast";
 import { stockOverviewQuery } from "../queries/stock";
+import type { StockChangeDone } from "../schema/stock";
 import { CountSheet } from "./count-sheet";
 import { StockRow } from "./stock-row";
-import { WasteSheet, type StockChangeDone } from "./waste-sheet";
+import { StockToast } from "./stock-toast";
+import { WasteSheet } from "./waste-sheet";
 
 type Props = {
   onOpenProduct: (productId: string) => void;
@@ -31,26 +31,14 @@ export function StockOverview({ onOpenProduct, onRegisterProduction, onGoToProdu
   const { colors } = useTheme();
   const { data, isError, isRefetching, refetch, dataUpdatedAt } = useQuery(stockOverviewQuery);
   const [sheet, setSheet] = useState<"waste" | "count" | null>(null);
-  const [toast, setToast] = useState<{ message: string; undoId: string | null } | null>(null);
-  const revert = useMutation(revertStockChangeMutation);
+  const undoToast = useUndoToast();
   const hasProducts = (data?.length ?? 0) > 0;
   const canRegister = online && hasProducts;
   const updatedAt = formatTime(new Date(dataUpdatedAt));
 
-  function done({ requestId, message }: StockChangeDone) {
+  function done(result: StockChangeDone) {
     setSheet(null);
-    setToast({ message, undoId: requestId });
-  }
-
-  // «Deshacer» del aviso: la base deshace el registro entero (todos sus movimientos)
-  async function undo(requestId: string) {
-    setToast(null);
-    try {
-      await revert.mutateAsync(requestId);
-      setToast({ message: "Listo, se deshizo.", undoId: null });
-    } catch (error) {
-      setToast({ message: errorMessage(error), undoId: null });
-    }
+    undoToast.show(result);
   }
 
   return (
@@ -133,14 +121,11 @@ export function StockOverview({ onOpenProduct, onRegisterProduction, onGoToProdu
       ) : null}
       {sheet === "waste" ? <WasteSheet productId={null} onClose={() => setSheet(null)} onDone={done} /> : null}
       {sheet === "count" ? <CountSheet productIds={null} onClose={() => setSheet(null)} onDone={done} /> : null}
-      {toast ? (
-        <Toast
-          message={toast.message}
-          actionLabel={toast.undoId ? "Deshacer" : undefined}
-          onAction={toast.undoId ? () => void undo(toast.undoId as string) : undefined}
-          onHide={() => setToast(null)}
-        />
-      ) : null}
+      <StockToast
+        toast={undoToast.toast}
+        onUndo={(requestId) => void undoToast.undo(requestId)}
+        onHide={undoToast.hide}
+      />
     </View>
   );
 }

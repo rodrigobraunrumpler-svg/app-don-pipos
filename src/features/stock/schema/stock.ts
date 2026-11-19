@@ -53,3 +53,16 @@ export const productionResultSchema = z.object({
 });
 export type ProductionResult = z.infer<typeof productionResultSchema>;
 export type ProductionInput = { requestId: string; items: { productId: string; quantity: number }[] };
+
+// Un movimiento del historial de un alfajor (list_product_movements)
+export const movementSchema = z.object({
+  id: z.string(),
+  kind: movementKindSchema,
+  quantity: z.number().int(),
+  reason: z.string().nullable(),
+  happenedAt: z.coerce.date(),
+});
+export type Movement = z.infer<typeof movementSchema>;
+
+// Lo que avisa una hoja al guardar: el código del registro (para «Deshacer») y el texto del aviso
+export type StockChangeDone = { requestId: string; message: string };
