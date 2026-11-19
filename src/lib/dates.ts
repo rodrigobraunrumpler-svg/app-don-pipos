@@ -37,3 +37,14 @@ export function formatLongDate(instant: Date): string {
 export function formatTime(instant: Date): string {
   return format(inLima(instant), "HH:mm");
 }
+
+// «Lunes», con mayúscula
+export function formatWeekday(instant: Date): string {
+  const text = format(inLima(instant), "EEEE", { locale: es });
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+// «11 nov»
+export function formatShortDate(instant: Date): string {
+  return format(inLima(instant), "d MMM", { locale: es });
+}

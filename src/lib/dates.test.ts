@@ -1,5 +1,13 @@
 import * as dates from "@/lib/dates";
-import { businessDate, businessDayRange, formatLongDate, formatTime, TIME_ZONE } from "@/lib/dates";
+import {
+  businessDate,
+  businessDayRange,
+  formatLongDate,
+  formatShortDate,
+  formatTime,
+  formatWeekday,
+  TIME_ZONE,
+} from "@/lib/dates";
 
 test("la zona es la de Lima", () => {
   expect(TIME_ZONE).toBe("America/Lima");
@@ -110,4 +118,20 @@ describe("en el motor del celular, donde Intl no sabe de zonas horarias", () => 
     expect(phone.formatLongDate(instant)).toBe("Miércoles 18 de noviembre");
     expect(phone.formatTime(instant)).toBe("11:40");
   });
+
+  test("el día de la semana y la fecha corta también", () => {
+    expect(phone.formatWeekday(new Date("2026-11-16T23:00:00Z"))).toBe("Lunes");
+    expect(phone.formatShortDate(new Date("2026-11-11T22:30:00Z"))).toBe("11 nov");
+  });
+});
+
+test("el día de la semana, con mayúscula, en hora de Lima", () => {
+  expect(formatWeekday(new Date("2026-11-16T23:00:00Z"))).toBe("Lunes");
+  // 04:59 UTC del martes 17 todavía es lunes en Lima
+  expect(formatWeekday(new Date("2026-11-17T04:59:00Z"))).toBe("Lunes");
+});
+
+test("la fecha corta, en hora de Lima", () => {
+  expect(formatShortDate(new Date("2026-11-11T22:30:00Z"))).toBe("11 nov");
+  expect(formatShortDate(new Date("2026-12-01T04:59:00Z"))).toBe("30 nov");
 });
