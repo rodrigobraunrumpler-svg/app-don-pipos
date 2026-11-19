@@ -13,7 +13,11 @@ import Constants from "expo-constants";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
+import { View } from "react-native";
 
+import { MissingConfig } from "@/components/ui/missing-config";
+import { UnlockConsumer, UnlockProvider } from "@/features/auth";
+import { appEnv } from "@/lib/env";
 import { createPersistOptions, createQueryClient, setupFocusManager, setupOnlineManager } from "@/lib/query";
 import { ThemeProvider } from "@/theme";
 
@@ -45,7 +49,37 @@ export default function RootLayout() {
   return (
     <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
       <ThemeProvider>
-        <Stack screenOptions={{ headerShown: false }} />
+        {appEnv.ok ? (
+          <UnlockProvider>
+            <UnlockConsumer>
+              {({ sessionStatus, locked, offerBiometrics, ready: unlockReady }) => {
+                // Mientras se sabe si hay sesión: el fondo, unos milisegundos
+                if (sessionStatus === "loading" || !unlockReady) return <View className="flex-1 bg-background" />;
+                const signedIn = sessionStatus === "signed-in";
+                // Sin sesión, Ingresar; con sesión bloqueada, Entrar; recién ingresado, la huella; si no, las pestañas
+                return (
+                  <Stack screenOptions={{ headerShown: false }}>
+                    <Stack.Screen name="index" />
+                    <Stack.Protected guard={signedIn && !locked && !offerBiometrics}>
+                      <Stack.Screen name="(main)" />
+                    </Stack.Protected>
+                    <Stack.Protected guard={signedIn && locked}>
+                      <Stack.Screen name="unlock" />
+                    </Stack.Protected>
+                    <Stack.Protected guard={signedIn && !locked && offerBiometrics}>
+                      <Stack.Screen name="biometrics" />
+                    </Stack.Protected>
+                    <Stack.Protected guard={!signedIn}>
+                      <Stack.Screen name="(auth)" />
+                    </Stack.Protected>
+                  </Stack>
+                );
+              }}
+            </UnlockConsumer>
+          </UnlockProvider>
+        ) : (
+          <MissingConfig problems={appEnv.problems} />
+        )}
       </ThemeProvider>
     </PersistQueryClientProvider>
   );

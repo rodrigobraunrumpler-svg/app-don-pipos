@@ -35,3 +35,6 @@ jest.mock("expo-local-authentication", () => ({
   isEnrolledAsync: jest.fn(async () => true),
   authenticateAsync: jest.fn(async () => ({ success: true })),
 }));
+
+// Las áreas seguras de la pantalla (muesca, barra del sistema): en las pruebas, todas en cero
+jest.mock("react-native-safe-area-context", () => require("react-native-safe-area-context/jest/mock").default);

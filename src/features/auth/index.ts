@@ -11,3 +11,4 @@ export { ChangePinFlow } from "./components/change-pin-flow";
 export { OfferBiometrics } from "./components/offer-biometrics";
 export { SignInView } from "./components/sign-in-view";
 export { UnlockView } from "./components/unlock-view";
+export { UnlockConsumer } from "./components/unlock-consumer";

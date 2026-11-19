@@ -1,7 +1,8 @@
 module.exports = {
   preset: "jest-expo",
   setupFiles: ["<rootDir>/jest.setup.js"],
-  moduleNameMapper: { "^@/(.*)$": "<rootDir>/src/$1" },
+  // Las hojas de estilo (global.css) no son JavaScript: en las pruebas se cambian por un módulo vacío
+  moduleNameMapper: { "\\.css$": "<rootDir>/jest.css-stub.js", "^@/(.*)$": "<rootDir>/src/$1" },
   testPathIgnorePatterns: [
     "/node_modules/",
     "/tools/lint-fixtures/",
