@@ -47,3 +47,7 @@ coverage/
 
 # espacio de trabajo de los planes
 .superpowers/
+
+# Supabase: estado local del enlace y cachés de la CLI
+.supabase/
+supabase/.temp/
