@@ -1,17 +1,20 @@
 // Las funciones del acceso, subidas al proyecto de desarrollo: pnpm test:auth (después de pnpm functions:deploy).
 // Crea un dueño temporal y lo borra al terminar, pase lo que pase.
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { after, before, test } from "node:test";
 
 import { connect } from "../../scripts/lib/db.mjs";
-import { loadEnv } from "../../scripts/lib/guard.mjs";
+import { loadEnv, ROOT } from "../../scripts/lib/guard.mjs";
 import { createOwner, deleteOwner } from "../../scripts/lib/owners.mjs";
 
 loadEnv();
 const URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
-const PHONE = "+51900000150";
-const UNKNOWN = "+51900000151";
+const PHONE = "+51900000950";
+const UNKNOWN = "+51900000951";
 const PIN = "197346";
 const NEW_PIN = "582039";
 const responses = [];
@@ -46,8 +49,31 @@ after(async () => {
   }
 });
 
+// Un intento real de registro no sirve para probarlo: Supabase limita los correos por hora y responde con ese límite
+// antes de mirar si el registro está cerrado. Se prueba lo que cambia: la configuración del proyecto.
+test("el registro público está cerrado: las cuentas las crea el equipo", () => {
+  assert.match(
+    readFileSync(join(ROOT, "supabase", "config.toml"), "utf8"),
+    /^\[auth\]\s*\n(?:#[^\n]*\n)*enable_signup = false$/m,
+  );
+  const run = spawnSync(
+    process.execPath,
+    [join(ROOT, "scripts", "supabase.mjs"), "config", "diff", "--output-format", "json"],
+    {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    },
+  );
+  const report = JSON.parse(run.stdout.slice(run.stdout.indexOf("{")));
+  assert.deepEqual(
+    report.changes.filter((change) => change.path.join(".") === "auth.enable_signup"),
+    [],
+    "el proyecto todavía tiene el registro abierto: corre pnpm auth:config",
+  );
+});
+
 test("con el PIN correcto abre la sesión, y con ella se lee el negocio", async () => {
-  const { status, json } = await call("sign-in-with-pin", { body: { phone: "900 000 150", pin: PIN } });
+  const { status, json } = await call("sign-in-with-pin", { body: { phone: "900 000 950", pin: PIN } });
   assert.equal(status, 200);
   assert.equal(json.status, "ok");
   assert.ok(json.session.accessToken && json.session.refreshToken && json.session.expiresAt);

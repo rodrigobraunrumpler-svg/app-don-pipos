@@ -52,6 +52,6 @@ select throws_ok($$update public.business_settings set reminders = '{"scheduled"
 -- updated_at
 update public.business_settings set delivery_zone = 'Centro', updated_at = '2020-01-01' where business_id = '00000000-0000-4000-8000-0000000000a1';
 select ok((select updated_at > '2020-01-02' from public.business_settings where business_id = '00000000-0000-4000-8000-0000000000a1'), 'updated_at lo pone la base, no quien escribe');
-select is((select count(*)::integer from public.business_settings), 2, 'cada negocio tiene una sola fila de ajustes');
+select is((select count(*)::integer from public.business_settings where business_id in ('00000000-0000-4000-8000-0000000000a1', '00000000-0000-4000-8000-0000000000b1')), 2, 'cada negocio tiene una sola fila de ajustes');
 
 select * from finish();

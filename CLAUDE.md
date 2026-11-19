@@ -90,6 +90,12 @@ pnpm test:db [texto]       # las pruebas de la base (pgTAP); no dejan nada guard
 pnpm db:push               # envía las migraciones pendientes al proyecto de desarrollo
 pnpm db:types              # vuelve a generar src/types/database.ts
 pnpm db:check              # la revisión completa de la base: lint, consejos, tipos, pruebas y medidor
+pnpm functions:deploy      # sube las funciones del acceso y su secreto al proyecto de desarrollo
+pnpm test:auth             # prueba las funciones subidas con un dueño temporal, que se borra al terminar
+pnpm owner create --phone <9 números> --business "<nombre>" [--modules a,b] [--demo]
+pnpm owner reset-pin --phone <9 números> [--demo]     # PIN nuevo y desbloqueo
+pnpm owner sign-out-everywhere --phone <9 números>   # cierra todas sus sesiones
+pnpm auth:config           # envía supabase/config.toml (hoy: el registro cerrado)
 ```
 
 Antes de dar algo por terminado pasan `pnpm lint`, `pnpm lint:rules`, `pnpm typecheck` y `pnpm test`.
@@ -107,6 +113,8 @@ El detalle está en `docs/spec/README.md`, «Lo común a todos los módulos» y 
 - **Toda función** fija `set search_path = ''`, nombra cada cosa con su esquema, usa parámetros con `p_`, recibe y devuelve JSON en camelCase, y avisa los errores con `private.fail('<código>')`.
 - **Toda tabla** lleva las reglas de acceso activadas y un índice por cada llave foránea; las de `public`, además, `business_id`, `created_at` y `updated_at` con su trigger. Una vista lleva `security_invoker`, y una regla de acceso es para `authenticated` y filtra con `private.owned_business_ids()`. Una función nueva para la app se agrega a la lista de `supabase/tests/900_structure.test.sql`.
 - **Antes de cerrar una fase** pasa `pnpm db:check`.
+- **El acceso:** `AUTH_PASSWORD_SECRET` (en `.env.local` y en los secretos de las funciones) calcula la contraseña interna de cada dueño. Cambiarlo deja a todos sin entrar hasta un `pnpm owner reset-pin`. El PIN DEMO de desarrollo está en `.env.local` (`DEMO_OWNER_PIN`); no se imprime ni se pega en el chat.
+- **Números de teléfono de prueba:** 900 000 1xx para los datos DEMO y 900 000 9xx para las pruebas. Ninguna prueba cuenta filas de toda una tabla: la base de desarrollo tiene datos DEMO.
 
 ## 6. Commits
 

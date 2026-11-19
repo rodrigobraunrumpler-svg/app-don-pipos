@@ -1,6 +1,6 @@
 // Crear y borrar dueños en el proyecto de desarrollo: la cuenta (API de administración), su PIN y su negocio.
 // Lo usan la prueba de las funciones (pnpm test:auth) y los scripts del equipo (pnpm owner).
-import { randomBytes } from "node:crypto";
+import { randomBytes, randomInt } from "node:crypto";
 
 import { createClient } from "@supabase/supabase-js";
 
@@ -81,4 +81,54 @@ export async function deleteOwner(userId) {
   }
   const { error } = await admin.auth.admin.deleteUser(userId);
   if (error) throw new Error(`No se pudo borrar la cuenta: ${error.message}`);
+}
+
+/** Un PIN al azar de 6 números que la base no considera fácil para ese número. */
+export async function randomPin(phone) {
+  const client = await connect();
+  try {
+    for (;;) {
+      const pin = String(randomInt(0, 1_000_000)).padStart(6, "0");
+      const { rows } = await client.query("select private.pin_is_obvious($1, $2) as obvious", [pin, phone]);
+      if (!rows[0].obvious) return pin;
+    }
+  } finally {
+    await client.end();
+  }
+}
+
+async function ownerByPhone(client, phone) {
+  const { rows } = await client.query("select user_id from private.pin_credentials where phone = $1", [phone]);
+  if (!rows[0]) throw new Error(`No hay ningún dueño con el número ${phone}`);
+  return rows[0].user_id;
+}
+
+/** PIN nuevo, desbloqueo y la contraseña interna calculada otra vez (por si cambió AUTH_PASSWORD_SECRET). */
+export async function resetOwnerPin(phone, pin) {
+  const { admin, passwordSecret } = settings();
+  const client = await connect();
+  try {
+    const userId = await ownerByPhone(client, phone);
+    await client.query("select private.set_pin($1, $2, $3)", [userId, phone, pin]);
+    const updated = await admin.auth.admin.updateUserById(userId, {
+      password: await ownerPassword(userId, passwordSecret),
+    });
+    if (updated.error) throw new Error(`No se pudo poner la contraseña interna: ${updated.error.message}`);
+    return userId;
+  } finally {
+    await client.end();
+  }
+}
+
+/** Cierra todas sus sesiones. Lo que ya tenga abierto dura hasta que venza su token (1 hora). */
+export async function signOutEverywhere(phone) {
+  settings();
+  const client = await connect();
+  try {
+    const userId = await ownerByPhone(client, phone);
+    const { rowCount } = await client.query("delete from auth.sessions where user_id = $1", [userId]);
+    return rowCount;
+  } finally {
+    await client.end();
+  }
 }

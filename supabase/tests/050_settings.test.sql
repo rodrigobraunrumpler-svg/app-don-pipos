@@ -22,7 +22,7 @@ select is(
 select is(public.get_business() -> 'settings' ->> 'deliveryFeeCents', '500', 'y get_business ya los muestra');
 -- La app no lee el registro: se sale, se mira como postgres y se vuelve a entrar
 select tests.logout();
-select is((select changed_by from private.audit_log order by id desc limit 1), '00000000-0000-4000-8000-00000000000a'::uuid, 'el cambio queda en el registro con su autor');
+select is((select changed_by from private.audit_log where business_id = '00000000-0000-4000-8000-0000000000a1' order by id desc limit 1), '00000000-0000-4000-8000-00000000000a'::uuid, 'el cambio queda en el registro con su autor');
 select tests.login_as('00000000-0000-4000-8000-00000000000a');
 
 select throws_ok($$select public.update_settings(1, '{"deliveryFeeCents": 700}')$$, 'P0001', 'conflict', 'con una versión vieja responde conflict');

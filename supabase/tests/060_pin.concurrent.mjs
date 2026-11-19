@@ -1,6 +1,6 @@
 // Dos intentos a la vez con el mismo número: el segundo espera al primero, así el contador no se salta ninguno.
 // Usa dos conexiones; las dos terminan deshaciendo, así que no queda nada guardado.
-const PHONE = "+51900000188";
+const PHONE = "+51900000988";
 const CHECK = "select private.check_pin($1, '000001') as result";
 
 export default async function attemptsUnderConcurrency({ openSession, assert }) {
