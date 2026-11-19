@@ -199,7 +199,7 @@ app/
 │   ├── components/ui/              Piezas sin nada del negocio: botón, chip, hoja, aviso
 │   │                               con Deshacer, skeleton, teclado del PIN, contador +/−
 │   ├── lib/                        supabase · query · env · errors · money · dates · haptics · whatsapp · images
-│   ├── test/                       Ayudas de prueba: render con proveedores y datos de ejemplo
+│   ├── test/                       Ayudas de prueba (render con proveedores, datos de ejemplo) y, en routes/, las pruebas de las pantallas
 │   ├── theme/                      Colores claro y oscuro, Manrope y tamaños
 │   └── types/database.ts           Generado desde Supabase; no se edita a mano
 ├── supabase/
@@ -269,12 +269,17 @@ features/orders/
 
 | Carpeta | Puede usar | No puede usar |
 |---|---|---|
-| `components/` | hooks, queries, rules, schema, constants, `components/ui`, `theme` | api ni Supabase |
-| `hooks/` | queries, rules, schema, constants | components, api |
-| `queries/` | api, schema | components, hooks |
-| `api/` | schema, `lib/supabase` | React, queries, components |
+| `components/` | hooks, queries, rules, schema, constants, `components/ui`, `theme`, `lib` (menos `supabase`) y el `index.ts` de otro módulo | api ni Supabase |
+| `hooks/` | queries, rules, schema, constants, `lib` (menos `supabase`) y el `index.ts` de otro módulo | components, api |
+| `queries/` | api, schema, `lib` (menos `supabase`) | components, hooks |
+| `api/` | schema, `lib` (con `supabase`), `types` | React, queries, components |
 | `rules/` | schema, constants, `lib/money`, `lib/dates` | React, Supabase, api, queries |
 | `schema/`, `constants.ts` | Zod | nada más |
+| `index.ts` del módulo | components, hooks, queries, rules y schema de su módulo | api |
+| `components/ui` | `theme`, `lib` (menos `supabase`) | cualquier módulo |
+| `lib` | `types` | cualquier módulo, `components/ui`, `theme` |
+| `src/app` (pantallas) | el `index.ts` de los módulos, `components/ui`, `theme`, `lib` (menos `supabase`) | las carpetas de un módulo por dentro, Supabase |
+| Una prueba (`*.test.ts`) | lo mismo que su carpeta, más `src/test` | |
 | Otro módulo | solo el `index.ts` | sus carpetas por dentro |
 
 **Las pantallas juntan módulos:** si una pantalla necesita dos (la ficha del cliente con su historial de pedidos), los une la pantalla en `src/app/`; un módulo no importa a otro para eso. Así no se forman ciclos.
@@ -327,6 +332,8 @@ Si algo se sale, el lint, las pruebas o GitHub bloquean el cambio:
 - **Accesibilidad:** eslint-plugin-react-native-a11y; cada botón con su nombre para el lector de pantalla.
 - **Commits:** commitlint (Conventional Commits en inglés, máximo 100 caracteres) y gitleaks, que bloquea cualquier llave o secreto antes de que entre.
 - **Antes de cada commit (lefthook) y en GitHub Actions:** lint, tipos y pruebas.
+
+Estas reglas se probaron el 2026-11-19 con ESLint 9.39, la versión que admite la configuración de Expo 58; cuando Expo admita la 10, se sube. Los comentarios `eslint-disable` no tienen efecto (`noInlineConfig`), y `pnpm lint:rules` comprueba las propias reglas contra archivos hechos para romperlas (`docs/plan/fase-0-proyecto.md`, tarea 2).
 
 Las herramientas existen y están vigentes (consultado el 2026-11-18: eslint-plugin-boundaries 7, eslint-plugin-check-file 3, eslint-plugin-import-x 4, eslint-config-expo 58, eslint-plugin-react-native-a11y 3.5, commitlint 21, gitleaks 8.30). Las versiones exactas se fijan al crear el proyecto.
 
@@ -438,7 +445,7 @@ Buenas prácticas de rendimiento 2026–2027: `docs/spec/README.md`.
 ### 14.2 Datos en la app: TanStack Query
 
 **La base**
-- **Consultas definidas una vez:** `queryOptions`, `infiniteQueryOptions` y `mutationOptions` en `features/<módulo>/queries.ts`, con claves ordenadas (`['orders', 'list', filtros]`, `['orders', 'detail', id]`).
+- **Consultas definidas una vez:** `queryOptions`, `infiniteQueryOptions` y `mutationOptions` en `features/<módulo>/queries/`, con claves ordenadas (`['orders', 'list', filtros]`, `['orders', 'detail', id]`).
 - **Tiempo de vida por tipo de dato (`staleTime`):** catálogo y ajustes, 30 minutos; stock y pedidos de hoy, 30 segundos; reportes, 5 minutos.
 - **Celular:** `onlineManager` con expo-network, `focusManager` con AppState, recarga al volver a una pantalla (`useFocusEffect`) y `subscribed: false` en las pantallas que no se ven.
 - **Caché guardada en el celular:** `PersistQueryClientProvider` con `createAsyncStoragePersister`, con `buster` y `maxAge`. Por eso el skeleton sale solo la primera vez.
@@ -510,8 +517,8 @@ Buenas prácticas de rendimiento 2026–2027: `docs/spec/README.md`.
 2. Acordar este documento.
 3. Decidir el stack completo.
 4. Maqueta de las pantallas (28, en `docs/design/pantallas/`) y aprobación del cliente.
-5. **Estructura de carpetas final, especificación y plan de trabajo por fases.** ← aquí estamos
-6. Primera versión: unas 4 a 5 semanas con pruebas y ajustes (cálculo inicial; eran 3 a 4 antes de sumar clientes y fidelidad; la venta rápida, el cuadre de caja y los pedidos demorados suman unos 3 días y medio).
+5. Estructura de carpetas final, especificación (`docs/spec/`) y plan de trabajo por fases (`docs/plan/`).
+6. **Primera versión, en 9 fases: unos 33 días de trabajo completos, alrededor de 6 semanas y media** (`docs/plan/README.md`). El cálculo anterior era de unas 5 semanas; creció con la idempotencia, el registro de cambios, las devoluciones y las correcciones de pedidos entregados. ← aquí estamos, por empezar la fase 0
 7. Una o dos semanas de uso real, y ajustes.
 8. Fase 2: pedidos de la web. Después, VarMar.
 

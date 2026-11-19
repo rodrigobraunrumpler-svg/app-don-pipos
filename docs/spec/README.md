@@ -70,8 +70,8 @@ Esto no se repite en cada archivo.
 - **Fechas:** en `timestamptz`. El día del negocio es el de `America/Lima`.
 - **Listas largas:** funciones con página por cursor que devuelven `{ items, meta: { limit, total, hasMore, nextCursor } }`. `limit` es 20 por defecto y 50 como máximo (§14.3).
 - **Errores:**
-  - las funciones de la base avisan con un código propio: `invalid`, `not_found`, `forbidden` o `conflict`;
-  - `api/` los convierte en `AppError`, y una red caída es `offline` (regla 16).
+  - las funciones de la base avisan con `raise exception using errcode = 'P0001', message = '<código>'`, donde el código es `invalid`, `not_found`, `forbidden` o `conflict`;
+  - `api/` los convierte en `AppError`; una red caída es `offline` y cualquier otra falla es `unexpected` (regla 16).
 - **Respuesta al instante:**
   - las ediciones se ven en el momento y vuelven atrás si fallan;
   - lo que crea un número espera con «Guardando…» (§14.2).

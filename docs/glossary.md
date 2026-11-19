@@ -138,7 +138,7 @@ Un concepto nuevo se agrega aquí antes de usarlo en el código.
 | Fecha del negocio | `businessDate` | — | El día en `America/Lima` |
 | Copia de seguridad | `backup` | `private.backup_runs` | La anota el VPS; el dueño ve la última en Más |
 | Página de una lista | `Page<T>` | — | `{ items, meta: { limit, total, hasMore, nextCursor } }` (§14.3) |
-| Error | `AppError` | — | Tipos: `offline`, `notFound`, `forbidden`, `invalid`, `conflict` |
+| Error | `AppError` | — | Tipos: `offline`, `notFound`, `forbidden`, `invalid`, `conflict` y `unexpected` (cualquier otra cosa) |
 | Código de la operación | `requestId` | `request_id`, en `private.idempotency_keys` | Evita que un reintento duplique un pedido, un pago o un gasto |
 | Versión de una fila | `version` | `version` | Detecta dos ediciones a la vez (`conflict`) |
 | Registro de cambios | `auditLog` | `private.audit_log` | Precios, ajustes y anulaciones, con lo de antes y lo de después |
