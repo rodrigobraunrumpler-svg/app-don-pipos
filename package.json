@@ -22,7 +22,8 @@
     "test:db": "node scripts/db-test.mjs",
     "db:push": "node scripts/supabase.mjs db push --remote --yes",
     "db:lint": "node scripts/supabase.mjs db lint --remote --fail-on warning",
-    "db:advisors": "node scripts/supabase.mjs db advisors --remote --fail-on warn"
+    "db:advisors": "node scripts/supabase.mjs db advisors --remote --fail-on warn",
+    "db:perf": "node scripts/db-perf.mjs"
   },
   "dependencies": {
     "@date-fns/tz": "^1.5.0",
