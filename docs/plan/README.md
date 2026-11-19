@@ -73,7 +73,7 @@ Cómo se construye la app de Don Pipos, por fases. Cada fase deja algo que funci
 | 0. El proyecto | Construida y revisada el 2026-11-19, en la rama `fase-0`; las correcciones de la revisión final están en `fase-0-proyecto.md`, «Después de la revisión final». En el celular, junto con la fase 2 (2026-11-19), se vieron los estilos, la letra y la fecha; quedan por mirar el modo oscuro y la letra grande. Gitleaks y los hooks quedaron postergados por el dueño del proyecto hasta antes de la fase 2 |
 | 1. Los cimientos de la base | Construida y revisada el 2026-11-19, en la rama `fase-1`; las correcciones están en `fase-1-base.md`, «Después de la revisión final». Las pruebas de la base salen en verde con `pnpm db:check` |
 | 2. El acceso | Construida y revisada el 2026-11-19, en la rama `fase-2`; las correcciones están en `fase-2-acceso.md`, «Después de la revisión final». Probada en tu celular el 2026-11-19. Tu decisión sobre el bloqueo con 10 intentos queda para antes de producción (fase 8) |
-| 3. Productos y stock | En construcción desde el 2026-11-19, en la rama `fase-3` |
+| 3. Productos y stock | Construida el 2026-11-19, en la rama `fase-3`. Falta tu prueba en el celular (`fase-3-productos-stock.md`, «Lo que falta») |
 | 4 a 8 | Su plan se escribe al terminar la fase anterior |
 
 Las fases 0, 1 y 2 se juntaron en `main` el 2026-11-19, con todas sus pruebas en verde.

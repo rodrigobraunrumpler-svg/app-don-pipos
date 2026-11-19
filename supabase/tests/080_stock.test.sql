@@ -59,7 +59,7 @@ select tests.logout();
 select is(
   (select array_agg((payload ->> 'isAvailable')::boolean order by id) from private.web_sync_outbox where product_id = '00000000-0000-4000-8000-000000000a01'),
   array[true, false, true, false], 'una fila para la web en cada cruce del cero, y ninguna si queda del mismo lado');
-select is((select count(*)::integer from private.web_sync_outbox where product_id <> '00000000-0000-4000-8000-000000000a01'), 0, 'nada para lo que no está enlazado');
+select is((select count(*)::integer from private.web_sync_outbox where business_id = '00000000-0000-4000-8000-0000000009b1' and product_id <> '00000000-0000-4000-8000-000000000a01'), 0, 'nada para lo que no está enlazado');
 select tests.login_as('00000000-0000-4000-8000-0000000009a1');
 
 -- Conteo (Limon Kiss, sin enlazar)

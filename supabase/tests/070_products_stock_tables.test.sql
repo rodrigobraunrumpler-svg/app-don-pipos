@@ -29,7 +29,7 @@ select throws_ok($$insert into public.products (business_id, name, price_cents, 
 select throws_ok($$insert into public.products (business_id, name, price_cents, image_url) values ('00000000-0000-4000-8000-0000000009b1', 'Uno', 1200, 'http://cdn.sanity.io/a.jpg')$$, '23514', null, 'la foto va por https');
 select throws_ok($$insert into public.products (business_id, name, price_cents, sanity_id) values ('00000000-0000-4000-8000-0000000009b1', 'Uno', 1200, '')$$, '23514', null, 'un enlace a la web en blanco no se guarda');
 select throws_ok($$insert into public.products (business_id, name, price_cents) values ('00000000-0000-4000-8000-0000000009b1', 'coqueta', 1300)$$, '23505', null, 'el nombre no se repite en el negocio, sin importar mayúsculas');
-select is((select count(*)::integer from public.products where lower(name) = 'coqueta'), 2, 'en otro negocio sí puede haber una Coqueta');
+select is((select count(*)::integer from public.products where lower(name) = 'coqueta' and business_id in ('00000000-0000-4000-8000-0000000009b1', '00000000-0000-4000-8000-0000000009b2')), 2, 'en otro negocio sí puede haber una Coqueta');
 
 -- Movimientos
 select throws_ok($$insert into public.stock_movements (business_id, product_id, kind, quantity, reason) values ('00000000-0000-4000-8000-0000000009b1', '00000000-0000-4000-8000-0000000009c1', 'waste', 1, 'broken')$$, '23514', null, 'una merma suma: no');

@@ -32,7 +32,9 @@ from generate_series(1, 5000) as n, generate_series(1, 5) as k;
 
 insert into public.stock_movements (business_id, product_id, kind, quantity, happened_at)
 select p.business_id, p.id, 'production', 1 + m % 10, now() - m * interval '1 day'
-from public.products p, generate_series(1, 4) as m;
+from public.products p, generate_series(1, 4) as m
+-- solo los productos de este seed: la base de desarrollo también tiene los datos DEMO
+where p.id between '00000000-0000-4000-b000-000000000000' and '00000000-0000-4000-b000-ffffffffffff';
 
 insert into public.stock_movements (business_id, product_id, kind, quantity, reason, happened_at)
 select p.business_id, p.id,
@@ -46,6 +48,7 @@ where p.business_id = '00000000-0000-4000-a000-0000000009c4';
 insert into public.stock_levels (business_id, product_id, on_hand)
 select m.business_id, m.product_id, sum(m.quantity)::integer
 from public.stock_movements m
+where m.product_id between '00000000-0000-4000-b000-000000000000' and '00000000-0000-4000-b000-ffffffffffff'
 group by m.business_id, m.product_id;
 
 analyze public.products;

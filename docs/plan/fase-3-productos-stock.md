@@ -690,3 +690,77 @@ git commit -m "docs: record phase 3 results, the demo catalog and the phone test
 5. Contar stock: cambia un número; el botón dice «Guardar 1 ajuste».
 6. Toca Coqueta: sus movimientos, del más nuevo al más viejo.
 7. Con el modo avión: Stock dice «Sin conexión…» con la hora, y los botones se apagan.
+
+## Resultado (2026-11-19)
+
+La fase 3 quedó construida en la rama `fase-3`, con un commit por tarea (y dos correcciones del medidor).
+
+| Comprobación | Resultado |
+|---|---|
+| `pnpm test:coverage` | 353 pruebas; 100 % en `lib/{money,dates,errors}`, `theme/tokens` y las cuentas de `features/*/rules` |
+| `pnpm db:check` | Pasa entera: 312 pruebas de la base en 17 archivos (incluidas 300 operaciones al azar), consejos de Supabase y tipos al día |
+| `pnpm db:perf` | 12 casos, todos con índice; el más lento, registrar la producción de 5 alfajores: 10 ms |
+| `pnpm lint`, `pnpm lint:rules`, `pnpm typecheck`, `pnpm test:scripts` | Pasan |
+
+En el proyecto de desarrollo quedaron las tres migraciones de la fase y los 5 alfajores DEMO del dueño DEMO, con su stock (`pnpm demo:data`).
+
+### Lo que falta: probar en el celular
+
+```bash
+cd /home/javier/var-mar/app && pnpm start --tunnel
+```
+
+Ingresa con el dueño DEMO (900 000 101, el PIN de tu `.env.local`):
+
+1. Más → Productos y precios: cambia Coqueta a S/ 12.50 y guarda; la lista muestra el precio nuevo.
+2. Stock: cada alfajor con su estado; Limon Kiss, «Agotado».
+3. Registrar producción: pon 10 en Limon Kiss y guarda; mira «Producción guardada» y toca «Deshacer».
+4. Anotar merma: 1 Morenita, «Rota»; en el aviso, toca «Deshacer».
+5. Contar stock: cambia un número; el botón dice «Guardar 1 ajuste».
+6. Toca Coqueta: sus movimientos, del más nuevo al más viejo.
+7. Con el modo avión: Stock dice «Sin conexión…» con la hora, y los botones se apagan.
+
+### Lo que cambió respecto de este plan
+
+**Tarea 1**
+- `zod` se usaba desde la fase 0 sin estar en `package.json` (llegaba de otra librería); ahora es una dependencia directa, con la misma versión.
+- Las cuentas dicen el singular («1 vendido de más», «Falta 1 para pedidos», «Sumaste 1 alfajor»), y lo que debería haber en la nevera nunca baja de 0.
+
+**Tarea 2**
+- La regla del «deshacer» usa `is not distinct from`: con `=`, un motivo vacío daría null y la regla dejaría pasar cualquier cosa.
+
+**Tarea 3**
+- Las funciones que leen eligen el negocio como `get_business` (con las reglas de acceso), sin abrir a la app la función interna `private.current_business_id()`: una prueba de la fase 1 lo prohíbe.
+- Una sola función anota el estado para la web (`private.queue_web_sync`), y la usan productos y stock. Desactivar un producto también sube su versión.
+
+**Tarea 4**
+- Un validador común (`private.stock_items`) revisa las listas de producción y conteo y las ordena por producto: así dos operaciones a la vez bloquean las filas en el mismo orden.
+
+**Tarea 5**
+- El medidor usa 4 movimientos por producto en los demás negocios (con 20, el seed pasaba del tiempo máximo de la base), y solo suma sus propios datos: la base de desarrollo ya tiene los DEMO.
+
+**Tarea 6**
+- La hoja aparece con un fundido: con el `Modal` de React Native, el fondo oscuro subiría junto con la hoja. El fondo es un botón «Cerrar» que el lector de pantalla de Android alcanza.
+
+**Tarea 7**
+- Pieza nueva: `MoneyInput` (el campo «S/»), que usarán también los gastos.
+- «Mostrar en la web» sale solo en los productos enlazados.
+
+**Tarea 8**
+- Pieza nueva: `useRefreshOnFocus`, que recarga el stock al volver a la pestaña (las pestañas no se desmontan).
+- Las filas dicen «Agotado en la web»; «vuelve a aparecer disponible en la web» lo dice el resumen de la producción.
+
+**Tarea 9**
+- El estado del alfajor se calcula también en el celular (`rules/state.ts`), solo para mostrar el cambio al instante hasta que responde la base.
+- Las hojas esperan la respuesta con «Guardando…» (la lista de atrás ya cambió): si falla, el error se ve en la hoja y el reintento usa el mismo código.
+
+**Tarea 10**
+- La producción espera la respuesta: el resumen necesita saber qué vuelve a la web.
+
+**Tarea 11**
+- En las pruebas, FlashList se simula con la lista de React Native (Jest no puede medir la pantalla). El historial no suelta páginas viejas (`maxPages`): sin `getPreviousPageParam`, desaparecerían de la lista al bajar.
+- Jest corre con la mitad de los núcleos y 15 s por prueba: con la máquina ocupada por otros proyectos, las pruebas de la app entera pasaban solas pero no en la corrida completa.
+
+**Tarea 12**
+- Dos pruebas de la base contaban filas de toda la tabla; con los datos DEMO, ahora cuentan solo las suyas.
+

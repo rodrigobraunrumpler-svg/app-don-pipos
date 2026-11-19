@@ -95,6 +95,7 @@ pnpm test:auth             # prueba las funciones subidas con un dueño temporal
 pnpm owner create --phone <9 números> --business "<nombre>" [--modules a,b] [--demo]
 pnpm owner reset-pin --phone <9 números> [--demo]     # PIN nuevo y desbloqueo
 pnpm owner sign-out-everywhere --phone <9 números>   # cierra todas sus sesiones
+pnpm demo:data            # los 5 alfajores DEMO y su stock en el negocio del dueño DEMO (no duplica)
 pnpm auth:config           # envía supabase/config.toml (hoy: el registro cerrado)
 ```
 
