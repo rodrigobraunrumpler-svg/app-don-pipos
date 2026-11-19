@@ -23,7 +23,10 @@
     "db:push": "node scripts/supabase.mjs db push --remote --yes",
     "db:lint": "node scripts/supabase.mjs db lint --remote --fail-on warning",
     "db:advisors": "node scripts/supabase.mjs db advisors --remote --fail-on warn",
-    "db:perf": "node scripts/db-perf.mjs"
+    "db:perf": "node scripts/db-perf.mjs",
+    "db:types": "node scripts/db-types.mjs write",
+    "db:types:check": "node scripts/db-types.mjs check",
+    "db:check": "node scripts/db-check.mjs"
   },
   "dependencies": {
     "@date-fns/tz": "^1.5.0",
