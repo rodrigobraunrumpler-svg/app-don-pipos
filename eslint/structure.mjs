@@ -26,8 +26,10 @@ const sameLayers = (...names) => names.map((n) => ({ element: { type: `feature-$
 const ownConstants = file("feature-constants", fromFolder);
 const otherFeatureIndex = file("feature-index", { feature: "!{{ from.element.captured.feature }}" });
 const anyFeatureIndex = file("feature-index");
-const libButSupabase = { element: { type: "lib", fileInternalPath: "!supabase.ts" } };
 const asset = file("asset");
+// El cliente de Supabase es un archivo de lib con su propia regla: solo lo importan api/ y su propia prueba
+const supabaseClient = file("supabase-client");
+const supabaseClientTest = { file: { path: at("lib/supabase.test.ts") } };
 
 export const structureSettings = {
   // Los patrones se leen desde la raíz del repositorio, se corra el lint desde donde se corra
@@ -46,6 +48,7 @@ export const structureSettings = {
   "boundaries/files": [
     { pattern: at("features/*/index.ts"), category: "feature-index", capture: ["feature"] },
     { pattern: at("features/*/constants.ts"), category: "feature-constants", capture: ["feature"] },
+    { pattern: at("lib/supabase.ts"), category: "supabase-client" },
     { pattern: TESTABLE.flatMap((dir) => at(`${dir}/**/*.test.${CODE}`)), category: "test" },
     // Solo las imágenes y las letras de assets/, la carpeta de la raíz: ni una carpeta «assets» dentro de src, ni código
     { pattern: ASSET_ROOTS.map((root) => `${root}/**/*.{png,jpg,jpeg,webp,gif,ttf,otf}`), category: "asset" },
@@ -61,9 +64,12 @@ export const structureRules = {
       default: "disallow",
       checkAllOrigins: true,
       checkUnknownLocals: true,
+      // También se revisa lo que se importa dentro de una misma carpeta: lib/supabase.ts vive en lib
+      checkInternals: true,
       policies: [
+        { allow: { dependency: { relationship: { to: "internal" } } } },
         { allow: { to: { module: { origin: ["external", "core"] } } } },
-        { from: of("route"), allow: { to: [anyFeatureIndex, of("ui", "theme"), asset, libButSupabase] } },
+        { from: of("route"), allow: { to: [anyFeatureIndex, of("ui", "theme", "lib"), asset] } },
         {
           from: of("feature-components"),
           allow: {
@@ -71,17 +77,16 @@ export const structureRules = {
               ...sameLayers("hooks", "queries", "rules", "schema"),
               ownConstants,
               otherFeatureIndex,
-              of("ui", "theme"),
+              of("ui", "theme", "lib"),
               asset,
-              libButSupabase,
             ],
           },
         },
         {
           from: of("feature-hooks"),
-          allow: { to: [...sameLayers("queries", "rules", "schema"), ownConstants, otherFeatureIndex, libButSupabase] },
+          allow: { to: [...sameLayers("queries", "rules", "schema"), ownConstants, otherFeatureIndex, of("lib")] },
         },
-        { from: of("feature-queries"), allow: { to: [...sameLayers("api", "schema"), libButSupabase] } },
+        { from: of("feature-queries"), allow: { to: [...sameLayers("api", "schema"), of("lib")] } },
         { from: of("feature-api"), allow: { to: [...sameLayers("schema"), of("lib", "types")] } },
         {
           from: of("feature-rules"),
@@ -102,10 +107,16 @@ export const structureRules = {
             })),
           },
         },
-        { from: of("ui"), allow: { to: [of("theme"), asset, libButSupabase] } },
+        { from: of("ui"), allow: { to: [of("theme", "lib"), asset] } },
         { from: of("lib"), allow: { to: of("types") } },
         { from: of("test-utils"), allow: { to: [anyFeatureIndex, of("ui", "theme", "lib", "route")] } },
         { from: file("test"), allow: { to: of("test-utils") } },
+        // Un solo punto de contacto con Supabase: el cliente lo importa api/, nadie más (tampoco otro archivo de lib)
+        {
+          disallow: { to: supabaseClient },
+          message: "Solo api/ importa el cliente de Supabase (src/lib/supabase.ts)",
+        },
+        { from: [of("feature-api"), supabaseClientTest], allow: { to: supabaseClient } },
         {
           from: [of("feature-api", "feature-rules", "feature-schema"), file("feature-constants")],
           disallow: {

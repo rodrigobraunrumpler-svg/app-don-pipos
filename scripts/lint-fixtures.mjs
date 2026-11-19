@@ -33,6 +33,12 @@ export const EXPECTED = {
   // Una ruta repetida más adentro no da los permisos de la verdadera: esto es components/ui, no un api/
   "components/ui/src/features/fake/api/talks-to-supabase.ts": [D],
 
+  // El cliente de Supabase (lib/supabase.ts) solo lo importa api/: ni otro archivo de lib ni las ayudas de prueba.
+  // Su propia prueba (lib/supabase.test.ts) sí puede, y pasa limpia
+  "lib/barrel.ts": [D],
+  "lib/db.ts": [D],
+  "test/uses-supabase.ts": [D],
+
   // «assets» es solo la carpeta de imágenes y letras de la raíz: una carpeta con ese nombre dentro de src no tiene trato especial
   "assets/fake-asset.ts": ["boundaries/no-unknown-files"],
   "app/enters-feature-through-assets.tsx": [D],
