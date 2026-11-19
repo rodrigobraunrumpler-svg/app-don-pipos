@@ -20,8 +20,9 @@ analyze public.businesses;
 analyze public.business_settings;
 analyze private.business_counters;
 
--- Fase 3: 5 productos por negocio, 20 movimientos por producto, y el negocio medido (el 2,500) con 3 años de
--- movimientos: una producción y una merma cada día por producto
+-- Fase 3: 5 productos por negocio, 4 movimientos por producto, y el negocio medido (el 2,500) con 3 años de
+-- movimientos: una producción y una merma cada día por producto. Con 20 por producto (500,000 filas), el seed pasaba
+-- del tiempo máximo por sentencia de la base
 insert into public.products (id, business_id, name, price_cents, min_stock, sort_order)
 select
   ('00000000-0000-4000-b000-' || lpad(to_hex(n * 10 + k), 12, '0'))::uuid,
@@ -31,7 +32,7 @@ from generate_series(1, 5000) as n, generate_series(1, 5) as k;
 
 insert into public.stock_movements (business_id, product_id, kind, quantity, happened_at)
 select p.business_id, p.id, 'production', 1 + m % 10, now() - m * interval '1 day'
-from public.products p, generate_series(1, 20) as m;
+from public.products p, generate_series(1, 4) as m;
 
 insert into public.stock_movements (business_id, product_id, kind, quantity, reason, happened_at)
 select p.business_id, p.id,
