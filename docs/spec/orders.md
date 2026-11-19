@@ -20,7 +20,7 @@
 | Columna | Tipo | Regla |
 |---|---|---|
 | `number` | int | Correlativo por negocio, sin huecos; único con `business_id`. Lo asigna la base |
-| `customer_id` | uuid, puede ir vacío | Vacío = cliente de mostrador |
+| `customer_id` | uuid, puede ir vacío | Vacío = cliente de mostrador. Delivery y recoge llevan cliente: el mensaje de confirmación necesita a quién escribirle (D14) |
 | `channel` | text | `whatsapp`, `local` o `web` |
 | `fulfillment` | text | `delivery`, `pickup` o `counter` |
 | `status` | text | `new`, `preparing`, `on_the_way`, `ready`, `delivered` o `cancelled` |
@@ -62,7 +62,7 @@
 
 ### `order_status_events`
 
-Una fila por cambio de estado: `order_id`, `status` y `at`. Es la línea de tiempo del pedido.
+Una fila por cambio de estado: `order_id`, `status`, `at` y `reverted_at`. Es la línea de tiempo del pedido. El «Deshacer» de un estado no borra la fila: la marca deshecha (`reverted_at`) y la línea de tiempo la oculta.
 
 ### `payments`
 
@@ -100,8 +100,8 @@ Todas comprueban que el negocio sea del usuario y devuelven el pedido con sus to
 - **`create_order(request_id, draft)`:** crea el pedido entero en un solo paso. Si ese `request_id` ya llegó, devuelve el pedido que creó (README, idempotencia).
   - Le asigna su número desde el contador del negocio (`business_counters`, en businesses). El contador se bloquea dentro de la misma operación, así no quedan huecos aunque se creen dos pedidos a la vez.
   - Congela precios, costos y el nombre de cada alfajor, y guarda el nombre del cliente, el resumen y la cantidad.
-  - Resta el stock: un movimiento `sale` por línea.
-  - Registra los pagos que vengan.
+  - Resta el stock: un movimiento `sale` por línea, con su `order_id` y sin `request_id` (así «Deshacer» del stock nunca lo toca).
+  - Registra el pago que venga: uno solo al anotar (todo, una parte o nada), como la maqueta; después, los que hagan falta con `add_payment`.
   - Anota el estado inicial.
   - Si no hay stock, avisa pero no bloquea (D12).
 - **`create_counter_sale(request_id, items, method)`:** la venta de mostrador. Es como `create_order`, pero sin cliente, `counter`, entregada y con un pago por el total.
@@ -136,7 +136,7 @@ Todas comprueban que el negocio sea del usuario y devuelven el pedido con sus to
     - `to_deliver`: sin entregar ni anular, de hoy o atrasados. Es el mismo número que muestra Inicio;
     - `upcoming`: de días que vienen, sin anular;
     - `to_collect` y `all`.
-  - Busca por nombre del cliente o por número.
+  - Busca por nombre del cliente o por número, sin importar mayúsculas. Sin tildes, cuando se active `unaccent` (fase 7, con la búsqueda de clientes).
   - Ordena del número mayor al menor.
   - Devuelve `{ items, meta }` (§14.3).
 - **`order_counts()`:** cuántos pedidos hay en cada filtro, para los chips.

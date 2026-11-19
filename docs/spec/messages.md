@@ -18,7 +18,7 @@ Los textos que la app arma para avisar al cliente por WhatsApp (D17). El dueño 
 | `body` | text | El texto, con marcadores: `{nombre}`, `{numero}`, `{detalle}`, `{total}`, `{adelanto}`, `{entrega}`, `{pago}`, `{falta}`, `{sellos}` |
 | `version` | int | Para detectar dos ediciones a la vez |
 
-Al crear el negocio se cargan los textos por defecto, los mismos de la maqueta.
+Al crear el negocio se cargan los textos por defecto, los mismos de la maqueta (`private.default_templates`). `{sellos}` queda vacío hasta la fidelidad (fase 7).
 
 ### Índices
 

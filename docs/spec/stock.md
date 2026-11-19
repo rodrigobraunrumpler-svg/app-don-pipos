@@ -73,8 +73,8 @@ Si algún día `stock_movements` pasa de millones de filas, un índice BRIN en `
   - Devuelve también el porqué, para «Por qué 36»: las ventas de lunes a viernes, las de sábado y domingo, el mínimo y el stock.
 - **`register_production(request_id, items)`:** suma al stock. Devuelve los alfajores enlazados que vuelven a estar disponibles en la web.
 - **`register_waste(request_id, product_id, quantity, reason)`.**
-- **`register_stock_count(request_id, counts)`:** el dueño cuenta todo lo que hay en la nevera, incluido lo apartado para pedidos. Por cada alfajor, el ajuste es lo contado menos lo que debería haber en la nevera (libre + apartado), y solo se crea si hay diferencia. Así un conteo nunca borra lo comprometido.
-- **`revert_stock_change(request_id)`:** el «Deshacer» de una producción, una merma o un conteo, entero (una producción tiene un movimiento por alfajor). Por cada movimiento de ese registro crea uno contrario, un `adjustment` con motivo `undo` que apunta al original. Solo vale para lo creado en los últimos 10 minutos; la segunda vez no deshace nada más.
+- **`register_stock_count(request_id, counts)`:** el dueño cuenta todo lo que hay en la nevera, incluido lo apartado para pedidos. Desde la fase 4a, la app manda solo los alfajores con diferencia: con pedidos entrando, mandar todos con el número que había en pantalla podía pisar una venta. Por cada alfajor, el ajuste es lo contado menos lo que debería haber en la nevera (libre + apartado), y solo se crea si hay diferencia. Así un conteo nunca borra lo comprometido.
+- **`revert_stock_change(request_id)`:** el «Deshacer» de una producción, una merma o un conteo (nunca de una venta o una anulación), entero (una producción tiene un movimiento por alfajor). Por cada movimiento de ese registro crea uno contrario, un `adjustment` con motivo `undo` que apunta al original. Solo vale para lo creado en los últimos 10 minutos; la segunda vez no deshace nada más.
 - **`list_product_movements(product_id, limit, cursor)`:** el historial, por páginas.
 - **`product_sales_by_weekday(product_id)` (fase 4):** el gráfico «Cómo se vende», de las últimas 4 semanas.
 

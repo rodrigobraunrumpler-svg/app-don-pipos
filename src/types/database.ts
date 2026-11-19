@@ -89,6 +89,356 @@ export type Database = {
         };
         Relationships: [];
       };
+      customers: {
+        Row: {
+          accepts_promotions: boolean;
+          address: string | null;
+          anonymized_at: string | null;
+          business_id: string;
+          created_at: string;
+          id: string;
+          last_order_at: string | null;
+          name: string;
+          note: string | null;
+          orders_count: number;
+          phone: string | null;
+          spent_cents: number;
+          stamps: number;
+          updated_at: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          accepts_promotions?: boolean;
+          address?: string | null;
+          anonymized_at?: string | null;
+          business_id: string;
+          created_at?: string;
+          id?: string;
+          last_order_at?: string | null;
+          name: string;
+          note?: string | null;
+          orders_count?: number;
+          phone?: string | null;
+          spent_cents?: number;
+          stamps?: number;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          accepts_promotions?: boolean;
+          address?: string | null;
+          anonymized_at?: string | null;
+          business_id?: string;
+          created_at?: string;
+          id?: string;
+          last_order_at?: string | null;
+          name?: string;
+          note?: string | null;
+          orders_count?: number;
+          phone?: string | null;
+          spent_cents?: number;
+          stamps?: number;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "customers_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      message_templates: {
+        Row: {
+          body: string;
+          business_id: string;
+          created_at: string;
+          key: string;
+          updated_at: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          body: string;
+          business_id: string;
+          created_at?: string;
+          key: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          body?: string;
+          business_id?: string;
+          created_at?: string;
+          key?: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "message_templates_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      order_lines: {
+        Row: {
+          business_id: string;
+          created_at: string;
+          id: string;
+          order_id: string;
+          product_id: string;
+          product_name: string;
+          quantity: number;
+          unit_cost_cents: number | null;
+          unit_price_cents: number;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          business_id: string;
+          created_at?: string;
+          id?: string;
+          order_id: string;
+          product_id: string;
+          product_name: string;
+          quantity: number;
+          unit_cost_cents?: number | null;
+          unit_price_cents: number;
+          updated_at?: string;
+        };
+        Update: {
+          business_id?: string;
+          created_at?: string;
+          id?: string;
+          order_id?: string;
+          product_id?: string;
+          product_name?: string;
+          quantity?: number;
+          unit_cost_cents?: number | null;
+          unit_price_cents?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "order_lines_order_fkey";
+            columns: ["business_id", "order_id"];
+            isOneToOne: false;
+            referencedRelation: "orders";
+            referencedColumns: ["business_id", "id"];
+          },
+          {
+            foreignKeyName: "order_lines_product_fkey";
+            columns: ["business_id", "product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["business_id", "id"];
+          },
+        ];
+      };
+      order_status_events: {
+        Row: {
+          at: string;
+          business_id: string;
+          created_at: string;
+          id: string;
+          order_id: string;
+          reverted_at: string | null;
+          status: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          at?: string;
+          business_id: string;
+          created_at?: string;
+          id?: string;
+          order_id: string;
+          reverted_at?: string | null;
+          status: string;
+          updated_at?: string;
+        };
+        Update: {
+          at?: string;
+          business_id?: string;
+          created_at?: string;
+          id?: string;
+          order_id?: string;
+          reverted_at?: string | null;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "order_status_events_order_fkey";
+            columns: ["business_id", "order_id"];
+            isOneToOne: false;
+            referencedRelation: "orders";
+            referencedColumns: ["business_id", "id"];
+          },
+        ];
+      };
+      orders: {
+        Row: {
+          business_id: string;
+          cancel_reason: string | null;
+          channel: string;
+          created_at: string;
+          customer_id: string | null;
+          customer_name: string | null;
+          delivered_at: string | null;
+          delivery_address: string | null;
+          delivery_fee_cents: number;
+          discount_cents: number;
+          discount_reason: string | null;
+          due_date: string;
+          fulfillment: string;
+          id: string;
+          items_count: number;
+          items_summary: string;
+          note: string | null;
+          number: number;
+          paid_cents: number;
+          promised_at: string | null;
+          scheduled_for: string | null;
+          status: string;
+          subtotal_cents: number;
+          total_cents: number;
+          updated_at: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          business_id: string;
+          cancel_reason?: string | null;
+          channel: string;
+          created_at?: string;
+          customer_id?: string | null;
+          customer_name?: string | null;
+          delivered_at?: string | null;
+          delivery_address?: string | null;
+          delivery_fee_cents?: number;
+          discount_cents?: number;
+          discount_reason?: string | null;
+          due_date: string;
+          fulfillment: string;
+          id?: string;
+          items_count: number;
+          items_summary: string;
+          note?: string | null;
+          number: number;
+          paid_cents?: number;
+          promised_at?: string | null;
+          scheduled_for?: string | null;
+          status: string;
+          subtotal_cents: number;
+          total_cents: number;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          business_id?: string;
+          cancel_reason?: string | null;
+          channel?: string;
+          created_at?: string;
+          customer_id?: string | null;
+          customer_name?: string | null;
+          delivered_at?: string | null;
+          delivery_address?: string | null;
+          delivery_fee_cents?: number;
+          discount_cents?: number;
+          discount_reason?: string | null;
+          due_date?: string;
+          fulfillment?: string;
+          id?: string;
+          items_count?: number;
+          items_summary?: string;
+          note?: string | null;
+          number?: number;
+          paid_cents?: number;
+          promised_at?: string | null;
+          scheduled_for?: string | null;
+          status?: string;
+          subtotal_cents?: number;
+          total_cents?: number;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "orders_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "orders_customer_fkey";
+            columns: ["business_id", "customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["business_id", "id"];
+          },
+        ];
+      };
+      payments: {
+        Row: {
+          amount_cents: number;
+          business_id: string;
+          created_at: string;
+          id: string;
+          kind: string;
+          method: string;
+          order_id: string;
+          paid_at: string;
+          updated_at: string;
+          void_reason: string | null;
+          voided_at: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          amount_cents: number;
+          business_id: string;
+          created_at?: string;
+          id?: string;
+          kind: string;
+          method: string;
+          order_id: string;
+          paid_at?: string;
+          updated_at?: string;
+          void_reason?: string | null;
+          voided_at?: string | null;
+        };
+        Update: {
+          amount_cents?: number;
+          business_id?: string;
+          created_at?: string;
+          id?: string;
+          kind?: string;
+          method?: string;
+          order_id?: string;
+          paid_at?: string;
+          updated_at?: string;
+          void_reason?: string | null;
+          voided_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payments_order_fkey";
+            columns: ["business_id", "order_id"];
+            isOneToOne: false;
+            referencedRelation: "orders";
+            referencedColumns: ["business_id", "id"];
+          },
+        ];
+      };
       products: {
         Row: {
           business_id: string;
@@ -189,6 +539,7 @@ export type Database = {
           happened_at: string;
           id: string;
           kind: string;
+          order_id: string | null;
           product_id: string;
           quantity: number;
           reason: string | null;
@@ -203,6 +554,7 @@ export type Database = {
           happened_at?: string;
           id?: string;
           kind: string;
+          order_id?: string | null;
           product_id: string;
           quantity: number;
           reason?: string | null;
@@ -216,6 +568,7 @@ export type Database = {
           happened_at?: string;
           id?: string;
           kind?: string;
+          order_id?: string | null;
           product_id?: string;
           quantity?: number;
           reason?: string | null;
@@ -224,6 +577,13 @@ export type Database = {
           updated_at?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: "stock_movements_order_fkey";
+            columns: ["business_id", "order_id"];
+            isOneToOne: false;
+            referencedRelation: "orders";
+            referencedColumns: ["business_id", "id"];
+          },
           {
             foreignKeyName: "stock_movements_product_fkey";
             columns: ["business_id", "product_id"];
