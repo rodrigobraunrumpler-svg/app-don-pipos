@@ -1,0 +1,169 @@
+-- La prueba que vigila la estructura de toda la base. Las fases siguientes la heredan.
+-- Cada regla se comprueba dos veces: contra un objeto hecho para romperla, que tiene que ser detectado,
+-- y contra la base real, que tiene que salir limpia.
+select plan(18);
+
+-- 1. Toda tabla tiene las reglas de acceso activadas
+create function pg_temp.tables_without_rls() returns setof text language sql as $$
+  select c.oid::regclass::text
+  from pg_catalog.pg_class c
+  join pg_catalog.pg_namespace n on n.oid = c.relnamespace
+  where n.nspname in ('public', 'private') and c.relkind in ('r', 'p') and not c.relrowsecurity
+$$;
+
+create table public.zz_canary (id integer);
+select isnt_empty('select * from pg_temp.tables_without_rls()', 'detecta una tabla sin reglas de acceso');
+drop table public.zz_canary;
+select is_empty('select * from pg_temp.tables_without_rls()', 'toda tabla tiene las reglas de acceso activadas');
+
+-- 2. Toda tabla de public tiene created_at, updated_at y el trigger común
+create function pg_temp.tables_without_timestamps() returns setof text language sql as $$
+  select c.oid::regclass::text
+  from pg_catalog.pg_class c
+  join pg_catalog.pg_namespace n on n.oid = c.relnamespace
+  where n.nspname = 'public' and c.relkind in ('r', 'p')
+    and (
+      not exists (select 1 from pg_catalog.pg_attribute a where a.attrelid = c.oid and a.attname = 'created_at' and not a.attisdropped)
+      or not exists (select 1 from pg_catalog.pg_attribute a where a.attrelid = c.oid and a.attname = 'updated_at' and not a.attisdropped)
+      or not exists (
+        select 1 from pg_catalog.pg_trigger t
+        where t.tgrelid = c.oid and t.tgfoid = 'private.set_updated_at()'::regprocedure and not t.tgisinternal
+      )
+    )
+$$;
+
+create table public.zz_canary (id integer, business_id uuid, created_at timestamptz, updated_at timestamptz);
+select isnt_empty('select * from pg_temp.tables_without_timestamps()', 'detecta una tabla sin el trigger de updated_at');
+drop table public.zz_canary;
+select is_empty('select * from pg_temp.tables_without_timestamps()', 'toda tabla de public tiene created_at, updated_at y su trigger');
+
+-- 3. Toda tabla de public pertenece a un negocio
+create function pg_temp.tables_without_business() returns setof text language sql as $$
+  select c.oid::regclass::text
+  from pg_catalog.pg_class c
+  join pg_catalog.pg_namespace n on n.oid = c.relnamespace
+  where n.nspname = 'public' and c.relkind in ('r', 'p') and c.relname <> 'businesses'
+    and not exists (select 1 from pg_catalog.pg_attribute a where a.attrelid = c.oid and a.attname = 'business_id' and not a.attisdropped)
+$$;
+
+create table public.zz_canary (id integer);
+select isnt_empty('select * from pg_temp.tables_without_business()', 'detecta una tabla sin business_id');
+drop table public.zz_canary;
+select is_empty('select * from pg_temp.tables_without_business()', 'toda tabla de public tiene business_id o es businesses');
+
+-- 4. Toda función fija su search_path vacío
+create function pg_temp.functions_with_open_search_path() returns setof text language sql as $$
+  select n.nspname || '.' || p.proname || '(' || oidvectortypes(p.proargtypes) || ')'
+  from pg_catalog.pg_proc p
+  join pg_catalog.pg_namespace n on n.oid = p.pronamespace
+  where n.nspname in ('public', 'private')
+    and not coalesce(p.proconfig, '{}') @> array['search_path=""']
+$$;
+
+create function public.zz_canary_fn() returns integer language sql as 'select 1';
+select isnt_empty('select * from pg_temp.functions_with_open_search_path()', 'detecta una función sin search_path fijo');
+drop function public.zz_canary_fn();
+select is_empty('select * from pg_temp.functions_with_open_search_path()', 'toda función fija su search_path vacío');
+
+-- 5. Toda llave foránea tiene un índice que empieza por sus columnas
+create function pg_temp.foreign_keys_without_index() returns setof text language sql as $$
+  select c.conrelid::regclass::text || ' (' || c.conname || ')'
+  from pg_catalog.pg_constraint c
+  join pg_catalog.pg_namespace n on n.oid = c.connamespace
+  where c.contype = 'f' and n.nspname in ('public', 'private')
+    and not exists (
+      select 1 from pg_catalog.pg_index i
+      where i.indrelid = c.conrelid and i.indpred is null
+        and (i.indkey::smallint[])[0:cardinality(c.conkey) - 1] @> c.conkey
+        and c.conkey @> (i.indkey::smallint[])[0:cardinality(c.conkey) - 1]
+    )
+$$;
+
+create table public.zz_parent (id uuid primary key);
+create table public.zz_canary (id uuid primary key, parent_id uuid references public.zz_parent (id));
+select isnt_empty('select * from pg_temp.foreign_keys_without_index()', 'detecta una llave foránea sin índice');
+drop table public.zz_canary;
+drop table public.zz_parent;
+select is_empty('select * from pg_temp.foreign_keys_without_index()', 'toda llave foránea tiene su índice');
+
+-- 6. Nada es accesible sin sesión
+create function pg_temp.open_to_anon() returns setof text language sql as $$
+  select 'tabla ' || c.oid::regclass::text
+  from pg_catalog.pg_class c
+  join pg_catalog.pg_namespace n on n.oid = c.relnamespace
+  where n.nspname in ('public', 'private') and c.relkind in ('r', 'p', 'v', 'm', 'f')
+    and has_table_privilege('anon', c.oid, 'select, insert, update, delete, truncate, references, trigger')
+  union all
+  select 'secuencia ' || c.oid::regclass::text
+  from pg_catalog.pg_class c
+  join pg_catalog.pg_namespace n on n.oid = c.relnamespace
+  where n.nspname in ('public', 'private')
+    -- el «case» obliga a mirar el tipo antes: has_sequence_privilege falla con lo que no es una secuencia
+    and case when c.relkind = 'S' then has_sequence_privilege('anon', c.oid, 'usage, select, update') else false end
+  union all
+  select 'función ' || n.nspname || '.' || p.proname
+  from pg_catalog.pg_proc p
+  join pg_catalog.pg_namespace n on n.oid = p.pronamespace
+  where n.nspname in ('public', 'private') and has_function_privilege('anon', p.oid, 'execute')
+$$;
+
+create table public.zz_canary (id integer);
+grant select on public.zz_canary to anon;
+select isnt_empty('select * from pg_temp.open_to_anon()', 'detecta una tabla abierta sin sesión');
+drop table public.zz_canary;
+select is_empty('select * from pg_temp.open_to_anon()', 'nada es accesible sin sesión');
+
+-- 7. La app no escribe directo en ninguna tabla
+create function pg_temp.tables_writable_by_app() returns setof text language sql as $$
+  select c.oid::regclass::text
+  from pg_catalog.pg_class c
+  join pg_catalog.pg_namespace n on n.oid = c.relnamespace
+  where n.nspname in ('public', 'private') and c.relkind in ('r', 'p', 'v', 'm', 'f')
+    and has_table_privilege('authenticated', c.oid, 'insert, update, delete, truncate')
+$$;
+
+create table public.zz_canary (id integer);
+grant insert on public.zz_canary to authenticated;
+select isnt_empty('select * from pg_temp.tables_writable_by_app()', 'detecta una tabla donde la app puede escribir directo');
+drop table public.zz_canary;
+select is_empty('select * from pg_temp.tables_writable_by_app()', 'la app no escribe directo en ninguna tabla');
+
+-- 8. La app ejecuta solo las funciones de esta lista. Una función nueva para la app se agrega aquí a conciencia.
+create function pg_temp.unlisted_functions_for_app() returns setof text language sql as $$
+  select n.nspname || '.' || p.proname || '(' || oidvectortypes(p.proargtypes) || ')'
+  from pg_catalog.pg_proc p
+  join pg_catalog.pg_namespace n on n.oid = p.pronamespace
+  where n.nspname in ('public', 'private') and has_function_privilege('authenticated', p.oid, 'execute')
+    and n.nspname || '.' || p.proname || '(' || oidvectortypes(p.proargtypes) || ')' not in (
+      -- lo que llama la app
+      'public.get_business()',
+      'public.update_settings(integer, jsonb)',
+      -- lo que usan por dentro las reglas de acceso y las funciones de arriba
+      'private.owned_business_ids()',
+      'private.fail(text)',
+      'private.settings_json(business_settings)',
+      'private.update_settings(integer, jsonb)'
+    )
+$$;
+
+create function public.zz_canary_fn() returns integer language sql set search_path = '' as 'select 1';
+grant execute on function public.zz_canary_fn() to authenticated;
+select isnt_empty('select * from pg_temp.unlisted_functions_for_app()', 'detecta una función que la app ejecuta y no está en la lista');
+drop function public.zz_canary_fn();
+select is_empty('select * from pg_temp.unlisted_functions_for_app()', 'la app ejecuta solo las funciones de la lista');
+
+-- 9. En public no hay funciones con permisos elevados al alcance de la app: la lógica que escribe vive en private
+create function pg_temp.definer_functions_in_public() returns setof text language sql as $$
+  select p.proname::text
+  from pg_catalog.pg_proc p
+  join pg_catalog.pg_namespace n on n.oid = p.pronamespace
+  where n.nspname = 'public' and p.prosecdef and has_function_privilege('authenticated', p.oid, 'execute')
+$$;
+
+create function public.zz_canary_fn() returns integer language sql security definer set search_path = '' as 'select 1';
+grant execute on function public.zz_canary_fn() to authenticated;
+select isnt_empty('select * from pg_temp.definer_functions_in_public()', 'detecta una función security definer de public al alcance de la app');
+drop function public.zz_canary_fn();
+select is_empty('select * from pg_temp.definer_functions_in_public()', 'ninguna función security definer de public está al alcance de la app');
+
+select * from finish();
