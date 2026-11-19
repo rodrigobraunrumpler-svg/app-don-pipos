@@ -5,6 +5,7 @@ import {
   focusManager,
   MutationCache,
   onlineManager,
+  type Query,
   QueryCache,
   QueryClient,
   type QueryKey,
@@ -18,11 +19,16 @@ import { type AppError, isRetryable, toAppError } from "./errors";
 // Cuánto se considera fresco cada tipo de dato (PROJECT_CONTEXT.md §14.2)
 export const STALE_TIME = { catalog: 30 * 60_000, live: 30_000, reports: 5 * 60_000 } as const;
 export const CACHE_MAX_AGE = 24 * 60 * 60_000;
+// Sube en 1 cada vez que cambia la forma de lo que devuelve una consulta: al abrir la app, lo guardado con la forma
+// anterior se descarta. La versión de la app sola no alcanza: no cambia durante el desarrollo ni con EAS Update
+export const CACHE_SCHEMA = 1;
 
 declare module "@tanstack/react-query" {
   interface Register {
     defaultError: AppError;
     mutationMeta: { invalidates?: QueryKey[] };
+    // Con `persist: false`, la consulta no se guarda en el celular
+    queryMeta: { persist?: boolean };
   }
 }
 
@@ -75,13 +81,20 @@ export function setupFocusManager(): void {
 
 type PersistOptions = { persister: Persister; maxAge: number; buster: string; dehydrateOptions: DehydrateOptions };
 
+// Una consulta se guarda si cargó bien, no pidió quedar fuera y su dato tiene menos de un día.
+// La librería solo mira cuándo se guardó la caché entera: sin esto, un dato que nadie vuelve a pedir se guardaría para siempre
+const shouldPersistQuery = (query: Query): boolean =>
+  query.state.status === "success" &&
+  query.meta?.persist !== false &&
+  Date.now() - query.state.dataUpdatedAt <= CACHE_MAX_AGE;
+
 // La caché se guarda en el celular: al abrir se ve lo último, y el skeleton sale solo la primera vez.
 // Solo se guarda lo leído: lo que se estaba guardando (con sus datos) nunca se escribe en el celular
-export function createPersistOptions(buster: string): PersistOptions {
+export function createPersistOptions(appVersion: string): PersistOptions {
   return {
     persister: createAsyncStoragePersister({ storage: AsyncStorage }),
     maxAge: CACHE_MAX_AGE,
-    buster,
-    dehydrateOptions: { shouldDehydrateMutation: () => false },
+    buster: `${appVersion}-${CACHE_SCHEMA}`,
+    dehydrateOptions: { shouldDehydrateMutation: () => false, shouldDehydrateQuery: shouldPersistQuery },
   };
 }

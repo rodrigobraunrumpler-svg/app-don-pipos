@@ -1,12 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { focusManager, MutationObserver, onlineManager, QueryObserver } from "@tanstack/react-query";
-import { persistQueryClientSave } from "@tanstack/react-query-persist-client";
+import { dehydrate, focusManager, MutationObserver, onlineManager, QueryObserver } from "@tanstack/react-query";
+import { persistQueryClientRestore, persistQueryClientSave } from "@tanstack/react-query-persist-client";
 import * as Network from "expo-network";
 import { AppState } from "react-native";
 
 import { AppError } from "@/lib/errors";
 import {
   CACHE_MAX_AGE,
+  CACHE_SCHEMA,
   createPersistOptions,
   createQueryClient,
   setupFocusManager,
@@ -194,10 +195,57 @@ test("la caché guardada se escribe en el almacenamiento del celular y de ahí s
   expect(await AsyncStorage.getAllKeys()).toHaveLength(0);
 });
 
-test("la caché guardada dura un día y se descarta al cambiar la versión de la app", () => {
+test("la caché guardada dura un día y se descarta al cambiar la versión de la app o el número de esquema", () => {
   const options = createPersistOptions("0.1.0");
   expect(options.maxAge).toBe(CACHE_MAX_AGE);
-  expect(options.buster).toBe("0.1.0");
+  expect(Number.isInteger(CACHE_SCHEMA) && CACHE_SCHEMA >= 1).toBe(true);
+  expect(options.buster).toBe(`0.1.0-${CACHE_SCHEMA}`);
+  expect(createPersistOptions("0.2.0").buster).toBe(`0.2.0-${CACHE_SCHEMA}`);
   expect(typeof options.persister.persistClient).toBe("function");
   expect(typeof options.persister.restoreClient).toBe("function");
+});
+
+test("lo guardado con otro número de esquema no se vuelve a cargar: se borra", async () => {
+  const options = createPersistOptions("0.1.0");
+  const writer = newClient();
+  writer.setQueryData(["orders", "list"], [{ id: "1", totalCents: 4100 }]);
+  // La misma versión de la app (así pasa durante el desarrollo y con EAS Update), pero con el esquema anterior
+  await persistQueryClientSave({ queryClient: writer, ...options, buster: `0.1.0-${CACHE_SCHEMA - 1}` });
+  expect(await AsyncStorage.getAllKeys()).toHaveLength(1);
+
+  const reader = newClient();
+  await persistQueryClientRestore({ queryClient: reader, ...options });
+  expect(reader.getQueryData(["orders", "list"])).toBeUndefined();
+  expect(await AsyncStorage.getAllKeys()).toHaveLength(0);
+});
+
+test("con el mismo esquema, lo guardado se vuelve a cargar al abrir", async () => {
+  const options = createPersistOptions("0.1.0");
+  const writer = newClient();
+  writer.setQueryData(["orders", "list"], [{ id: "1", totalCents: 4100 }]);
+  await persistQueryClientSave({ queryClient: writer, ...options });
+
+  const reader = newClient();
+  await persistQueryClientRestore({ queryClient: reader, ...options });
+  await options.persister.removeClient();
+  expect(reader.getQueryData(["orders", "list"])).toEqual([{ id: "1", totalCents: 4100 }]);
+});
+
+test("solo se guarda lo que cargó bien, no pasó de un día y no pidió quedar fuera", async () => {
+  const { dehydrateOptions } = createPersistOptions("0.1.0");
+  const client = newClient();
+  const now = Date.now();
+  client.setQueryData(["fresh"], "ok");
+  client.setQueryData(["almost-a-day-old"], "ok", { updatedAt: now - CACHE_MAX_AGE + 60_000 });
+  client.setQueryData(["older-than-a-day"], "ok", { updatedAt: now - CACHE_MAX_AGE - 60_000 });
+  await client.prefetchQuery({ queryKey: ["failed"], queryFn: () => Promise.reject(new AppError("forbidden")) });
+  client.getQueryCache().build(client, { queryKey: ["loading"] }); // todavía sin datos
+  await client.prefetchQuery({ queryKey: ["opted-out"], queryFn: () => "secreto", meta: { persist: false } });
+  await client.prefetchQuery({ queryKey: ["opted-in"], queryFn: () => "ok", meta: { persist: true } });
+  expect(client.getQueryState(["failed"])?.status).toBe("error");
+  expect(client.getQueryState(["loading"])?.status).toBe("pending");
+  expect(client.getQueryData(["opted-out"])).toBe("secreto");
+
+  const saved = dehydrate(client, dehydrateOptions).queries.map((query) => query.queryKey.join());
+  expect(saved.sort()).toEqual(["almost-a-day-old", "fresh", "opted-in"]);
 });
