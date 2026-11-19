@@ -30,11 +30,16 @@ jest.mock("expo-crypto", () => {
 });
 
 // La huella: por defecto el celular tiene sensor, una huella registrada y la confirma; cada prueba lo cambia si necesita
-jest.mock("expo-local-authentication", () => ({
-  hasHardwareAsync: jest.fn(async () => true),
-  isEnrolledAsync: jest.fn(async () => true),
-  authenticateAsync: jest.fn(async () => ({ success: true })),
-}));
+jest.mock("expo-local-authentication", () => {
+  const SecurityLevel = { NONE: 0, SECRET: 1, BIOMETRIC_WEAK: 2, BIOMETRIC_STRONG: 3 };
+  return {
+    SecurityLevel,
+    hasHardwareAsync: jest.fn(async () => true),
+    isEnrolledAsync: jest.fn(async () => true),
+    getEnrolledLevelAsync: jest.fn(async () => SecurityLevel.BIOMETRIC_STRONG),
+    authenticateAsync: jest.fn(async () => ({ success: true })),
+  };
+});
 
 // Las áreas seguras de la pantalla (muesca, barra del sistema): en las pruebas, todas en cero
 jest.mock("react-native-safe-area-context", () => require("react-native-safe-area-context/jest/mock").default);

@@ -25,7 +25,7 @@ type Blocked = { kind: "locked"; retryAt: Date } | { kind: "hard" };
 
 // Ingresar en un celular, en una sola pantalla: el número y el PIN; al sexto número se comprueba solo
 export function SignInForm() {
-  const { phone: knownPhone, rememberSignIn } = useUnlock();
+  const { phone: knownPhone, rememberSignIn, beginSignIn, endSignIn } = useUnlock();
   const { colors } = useTheme();
   const online = useOnline();
   const signIn = useMutation(signInMutation);
@@ -36,6 +36,8 @@ export function SignInForm() {
   const digits = phoneDigits(phone);
 
   async function submit(fullPin: string) {
+    // Marcado mientras tanto: la sesión queda guardada antes que el PIN local, y la app sigue aquí hasta guardarlo
+    beginSignIn();
     try {
       const result = await signIn.mutateAsync({ phone: digits, pin: fullPin });
       if (result.status === "ok") {
@@ -50,6 +52,8 @@ export function SignInForm() {
       setProblem(
         toAppError(error).kind === "offline" ? { kind: "offline" } : { kind: "other", text: errorMessage(error) },
       );
+    } finally {
+      endSignIn();
     }
   }
 
@@ -68,7 +72,7 @@ export function SignInForm() {
   }
 
   if (blocked?.kind === "locked") return <WaitNotice retryAt={blocked.retryAt} onBack={() => setBlocked(null)} />;
-  if (blocked?.kind === "hard") return <AccountLocked />;
+  if (blocked?.kind === "hard") return <AccountLocked onBack={() => setBlocked(null)} />;
 
   const offline = !online || problem?.kind === "offline";
   const status = signIn.isPending ? (

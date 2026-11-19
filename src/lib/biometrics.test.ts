@@ -8,6 +8,11 @@ test("con sensor y una huella registrada, está disponible", async () => {
   expect(await biometricsAvailable()).toBe(true);
 });
 
+test("una huella débil (como la cara por la cámara) no cuenta", async () => {
+  auth.getEnrolledLevelAsync.mockResolvedValueOnce(auth.SecurityLevel.BIOMETRIC_WEAK);
+  expect(await biometricsAvailable()).toBe(false);
+});
+
 test("sin sensor o sin huella registrada, no", async () => {
   auth.hasHardwareAsync.mockResolvedValueOnce(false);
   expect(await biometricsAvailable()).toBe(false);
@@ -21,6 +26,7 @@ test("confirma sin el bloqueo del celular como respaldo", async () => {
     promptMessage: "Entra a Don Pipos",
     cancelLabel: "Usar mi PIN",
     disableDeviceFallback: true,
+    biometricsSecurityLevel: "strong",
   });
 });
 

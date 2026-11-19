@@ -88,7 +88,7 @@ export function ChangePinFlow({ onDone }: { onDone: () => void }) {
   }
 
   if (blocked?.kind === "locked") return <WaitNotice retryAt={blocked.retryAt} onBack={onDone} />;
-  if (blocked?.kind === "hard") return <AccountLocked />;
+  if (blocked?.kind === "hard") return <AccountLocked onBack={onDone} />;
   if (step === "done") {
     return (
       <View className="flex-1 bg-background px-5 pt-[60px]">

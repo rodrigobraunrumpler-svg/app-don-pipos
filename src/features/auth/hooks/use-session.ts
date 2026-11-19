@@ -10,5 +10,6 @@ export function useSession(): { status: SessionStatus } {
   const { data, isPending } = useQuery(sessionQuery);
   useEffect(() => followSessionChanges(queryClient), [queryClient]);
   if (isPending) return { status: "loading" };
-  return { status: data ? "signed-in" : "signed-out" };
+  // Si no se pudo leer, se pide ingresar: al ingresar se guarda una sesión nueva
+  return { status: data ?? "signed-out" };
 }

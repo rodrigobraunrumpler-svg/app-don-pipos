@@ -9,6 +9,7 @@ import {
   QueryCache,
   QueryClient,
   type QueryKey,
+  hashKey,
 } from "@tanstack/react-query";
 import type { Persister } from "@tanstack/react-query-persist-client";
 import * as Network from "expo-network";
@@ -22,6 +23,8 @@ export const CACHE_MAX_AGE = 24 * 60 * 60_000;
 // Sube en 1 cada vez que cambia la forma de lo que devuelve una consulta: al abrir la app, lo guardado con la forma
 // anterior se descarta. La versión de la app sola no alcanza: no cambia durante el desarrollo ni con EAS Update
 export const CACHE_SCHEMA = 1;
+// Dónde se guarda la caché en el celular
+export const CACHE_STORAGE_KEY = "donpipos.cache";
 
 declare module "@tanstack/react-query" {
   interface Register {
@@ -92,9 +95,17 @@ const shouldPersistQuery = (query: Query): boolean =>
 // Solo se guarda lo leído: lo que se estaba guardando (con sus datos) nunca se escribe en el celular
 export function createPersistOptions(appVersion: string): PersistOptions {
   return {
-    persister: createAsyncStoragePersister({ storage: AsyncStorage }),
+    persister: createAsyncStoragePersister({ storage: AsyncStorage, key: CACHE_STORAGE_KEY }),
     maxAge: CACHE_MAX_AGE,
     buster: `${appVersion}-${CACHE_SCHEMA}`,
     dehydrateOptions: { shouldDehydrateMutation: () => false, shouldDehydrateQuery: shouldPersistQuery },
   };
+}
+
+// Al cerrar la sesión se borra lo leído del negocio, en memoria y en el celular. `keep` es la consulta de la sesión,
+// que la app sigue mirando para saber a dónde ir
+export async function forgetCachedData(queryClient: QueryClient, keep: QueryKey): Promise<void> {
+  const kept = hashKey(keep);
+  queryClient.removeQueries({ predicate: (query) => query.queryHash !== kept });
+  await AsyncStorage.removeItem(CACHE_STORAGE_KEY);
 }

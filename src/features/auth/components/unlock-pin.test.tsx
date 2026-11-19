@@ -39,6 +39,9 @@ function access(overrides: Partial<AccessState> = {}): AccessState {
     signOutHere: jest.fn(async () => undefined),
     lock: jest.fn(),
     dismissLockedOut: jest.fn(),
+    signingIn: false,
+    beginSignIn: jest.fn(),
+    endSignIn: jest.fn(),
     ...overrides,
   };
 }

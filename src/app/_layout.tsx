@@ -52,10 +52,11 @@ export default function RootLayout() {
         {appEnv.ok ? (
           <UnlockProvider>
             <UnlockConsumer>
-              {({ sessionStatus, locked, offerBiometrics, ready: unlockReady }) => {
+              {({ sessionStatus, signingIn, locked, offerBiometrics, ready: unlockReady }) => {
                 // Mientras se sabe si hay sesión: el fondo, unos milisegundos
                 if (sessionStatus === "loading" || !unlockReady) return <View className="flex-1 bg-background" />;
-                const signedIn = sessionStatus === "signed-in";
+                // Un ingreso en curso sigue en Ingresar hasta guardar el PIN local
+                const signedIn = sessionStatus === "signed-in" && !signingIn;
                 // Sin sesión, Ingresar; con sesión bloqueada, Entrar; recién ingresado, la huella; si no, las pestañas
                 return (
                   <Stack screenOptions={{ headerShown: false }}>

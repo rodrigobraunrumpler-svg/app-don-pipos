@@ -6,9 +6,9 @@ import { renderWithProviders } from "@/test/render";
 import { useUnlock } from "../hooks/use-unlock";
 import { UnlockProvider } from "./unlock-provider";
 
-const mockGetSession = jest.fn();
+const mockGetSessionState = jest.fn();
 jest.mock("../api/session", () => ({
-  getSession: () => mockGetSession(),
+  getSessionState: () => mockGetSessionState(),
   onSessionChange: () => () => undefined,
   signOutHere: jest.fn(),
 }));
@@ -19,7 +19,7 @@ function Probe() {
 }
 
 test("con una sesión guardada, la app abre bloqueada", async () => {
-  mockGetSession.mockResolvedValueOnce({ access_token: "token" });
+  mockGetSessionState.mockResolvedValueOnce("signed-in");
   await renderWithProviders(
     <UnlockProvider>
       <Probe />
@@ -28,14 +28,14 @@ test("con una sesión guardada, la app abre bloqueada", async () => {
   await waitFor(() => expect(screen.getByText("signed-in bloqueada")).toBeOnTheScreen());
 });
 
-test("sin sesión, no hay nada que desbloquear", async () => {
-  mockGetSession.mockResolvedValueOnce(null);
+test("sin sesión, la app queda bloqueada hasta ingresar", async () => {
+  mockGetSessionState.mockResolvedValueOnce("signed-out");
   await renderWithProviders(
     <UnlockProvider>
       <Probe />
     </UnlockProvider>,
   );
-  await waitFor(() => expect(screen.getByText("signed-out abierta")).toBeOnTheScreen());
+  await waitFor(() => expect(screen.getByText("signed-out bloqueada")).toBeOnTheScreen());
 });
 
 test("useUnlock fuera del proveedor avisa qué falta", async () => {

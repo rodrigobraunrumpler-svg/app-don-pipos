@@ -5,12 +5,14 @@ import * as LocalAuthentication from "expo-local-authentication";
 import * as SecureStore from "expo-secure-store";
 import type { ReactNode } from "react";
 
+import { CACHE_STORAGE_KEY } from "@/lib/query";
+
 import { useUnlockState, type SessionStatus } from "./use-unlock-state";
 
 const mockSignOut = jest.fn(async () => undefined);
 jest.mock("../api/session", () => ({
   signOutHere: () => mockSignOut(),
-  getSession: jest.fn(),
+  getSessionState: jest.fn(),
   onSessionChange: jest.fn(),
 }));
 
@@ -89,11 +91,42 @@ test("al abrir la app con sesión empieza bloqueada, y reabrirla no reinicia el 
   expect(await call(() => second.result.current.unlockWithPin("000001"))).toEqual({ ok: false, attemptsLeft: 1 });
 });
 
-test("mientras se sabe si hay sesión sigue bloqueada; sin sesión, no hay nada que desbloquear", async () => {
+test("una sesión que aparece sin ingresar en este celular no abre la app", async () => {
   const hook = await setup("loading");
   expect(hook.result.current.locked).toBe(true);
   await hook.rerender("signed-out");
+  expect(hook.result.current.locked).toBe(true);
+  await hook.rerender("signed-in");
+  expect(hook.result.current.locked).toBe(true);
+});
+
+test("si la sesión se pierde, la app vuelve a bloquearse, y sigue así si la sesión reaparece", async () => {
+  const hook = await setup("signed-in");
+  await call(() => hook.result.current.rememberSignIn(PHONE, "197346"));
   expect(hook.result.current.locked).toBe(false);
+  await hook.rerender("signed-out");
+  await hook.rerender("signed-in");
+  expect(hook.result.current.locked).toBe(true);
+});
+
+test("el ingreso en este celular queda marcado hasta guardar el PIN, o hasta que falle", async () => {
+  const hook = await setup("signed-out");
+  await act(() => hook.result.current.beginSignIn());
+  expect(hook.result.current.signingIn).toBe(true);
+  await act(() => hook.result.current.endSignIn());
+  expect(hook.result.current.signingIn).toBe(false);
+
+  await act(() => hook.result.current.beginSignIn());
+  await hook.rerender("signed-in");
+  expect(hook.result.current.locked).toBe(true);
+  await call(() => hook.result.current.rememberSignIn(PHONE, "197346"));
+  expect(hook.result.current).toMatchObject({ signingIn: false, locked: false });
+});
+
+test("si lo guardado en el celular no se puede leer, la app abre igual con lo de siempre", async () => {
+  jest.mocked(SecureStore.getItemAsync).mockRejectedValueOnce(new Error("Keystore"));
+  const { result } = await setup("signed-in");
+  expect(result.current).toMatchObject({ phone: null, biometricsEnabled: false, autoLockMinutes: 5 });
 });
 
 test("sin un PIN guardado no hay cómo entrar sin internet: se pide ingresar de nuevo", async () => {
@@ -126,13 +159,19 @@ test("los ajustes se guardan en el celular: 5 minutos por defecto", async () => 
   expect(second.result.current.autoLockMinutes).toBe(1);
 });
 
-test("cerrar la sesión en este celular borra lo guardado", async () => {
+test("cerrar la sesión en este celular borra lo guardado: PIN, número, ajustes y caché", async () => {
   const { result } = await setup("signed-in");
   await call(() => result.current.rememberSignIn(PHONE, "197346"));
+  await call(() => result.current.setAutoLockMinutes(1));
+  await call(() => result.current.setBiometricsEnabled(true));
+  await AsyncStorage.setItem(CACHE_STORAGE_KEY, "{}");
   await call(() => result.current.signOutHere());
   expect(mockSignOut).toHaveBeenCalledTimes(1);
-  expect(await SecureStore.getItemAsync("auth.phone")).toBeNull();
-  expect(result.current.phone).toBeNull();
+  for (const key of ["auth.local-pin", "auth.phone", "auth.pin-errors"])
+    expect(await SecureStore.getItemAsync(key)).toBeNull();
+  for (const key of ["auth.auto-lock", "auth.biometrics", CACHE_STORAGE_KEY])
+    expect(await AsyncStorage.getItem(key)).toBeNull();
+  expect(result.current).toMatchObject({ phone: null, biometricsEnabled: false, autoLockMinutes: 5, locked: true });
 });
 
 test("después de ingresar ofrece la huella si el celular la tiene", async () => {

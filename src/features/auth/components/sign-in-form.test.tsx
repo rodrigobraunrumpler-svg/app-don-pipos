@@ -42,6 +42,9 @@ function access(overrides: Partial<AccessState> = {}): AccessState {
     signOutHere: jest.fn(async () => undefined),
     lock: jest.fn(),
     dismissLockedOut: jest.fn(),
+    signingIn: false,
+    beginSignIn: jest.fn(),
+    endSignIn: jest.fn(),
     ...overrides,
   };
 }
@@ -100,11 +103,22 @@ test("con la espera, muestra la hora de Lima", async () => {
   ).toBeOnTheScreen();
 });
 
-test("con la cuenta bloqueada lo dice", async () => {
+test("con la cuenta bloqueada lo dice, y «Volver» regresa al formulario (por si el número estaba mal)", async () => {
   mockSignIn.mockResolvedValueOnce({ status: "hard_locked" });
   await setup();
   await type("000001");
   expect(await screen.findByText("Tu cuenta está bloqueada")).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: "Volver" }));
+  expect(screen.getByText("Ingresa a tu app")).toBeOnTheScreen();
+});
+
+test("mientras se comprueba, el ingreso queda marcado; si no termina, se desmarca", async () => {
+  mockSignIn.mockResolvedValueOnce({ status: "wrong_pin", attemptsLeft: 4 });
+  const value = await setup();
+  await type("000001");
+  await screen.findByText("PIN incorrecto. Te quedan 4 intentos.");
+  expect(value.beginSignIn).toHaveBeenCalledTimes(1);
+  expect(value.endSignIn).toHaveBeenCalledTimes(1);
 });
 
 test("sin señal, avisa y apaga el teclado", async () => {

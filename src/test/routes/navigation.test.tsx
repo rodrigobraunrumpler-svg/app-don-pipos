@@ -1,5 +1,5 @@
 // El recorrido completo con las rutas de verdad: ingresar, ofrecer la huella, las pestañas, el bloqueo al volver,
-// entrar con el PIN y volver a Ingresar cuando la sesión se cierra desde el servidor.
+// entrar con el PIN, volver a Ingresar cuando la sesión se cierra desde el servidor, y una sesión que reaparece sola.
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { renderRouter } from "expo-router/testing-library";
@@ -7,25 +7,31 @@ import { AppState, type AppStateStatus } from "react-native";
 
 import { formatLongDate } from "@/lib/dates";
 
-let mockSession: unknown = null;
-let mockListener: ((session: unknown) => void) | undefined;
-const mockSetSession = (session: unknown) => {
-  mockSession = session;
-  mockListener?.(session);
+// ¿Hay una sesión guardada en el celular? Cada cambio avisa, como Supabase
+let mockStored = false;
+let mockListener: (() => void) | undefined;
+const mockStore = (stored: boolean) => {
+  mockStored = stored;
+  mockListener?.();
 };
 jest.mock("@/features/auth/api/session", () => ({
-  getSession: async () => mockSession,
-  onSessionChange: (listener: (session: unknown) => void) => {
+  getSessionState: async () => (mockStored ? "signed-in" : "signed-out"),
+  onSessionChange: (listener: () => void) => {
     mockListener = listener;
     return () => undefined;
   },
-  signOutHere: async () => mockSetSession(null),
+  signOutHere: async () => mockStore(false),
 }));
+// Como el servidor: con el PIN correcto guarda la sesión. La respuesta espera a la prueba: así se ve qué pasa entre
+// que la sesión queda guardada y el PIN local también
+let mockRelease: () => void = () => undefined;
 jest.mock("@/features/auth/api/pin", () => ({
-  // Como el servidor: con el PIN correcto abre la sesión
   signInWithPin: async (_phone: string, pin: string) => {
     if (pin !== "197346") return { status: "wrong_pin", attemptsLeft: 4 };
-    mockSetSession({ access_token: "token" });
+    mockStore(true);
+    await new Promise<void>((resolve) => {
+      mockRelease = resolve;
+    });
     return { status: "ok" };
   },
   changePin: jest.fn(),
@@ -80,6 +86,12 @@ test("ingresar, la huella, las pestañas, el bloqueo al volver y la sesión que 
   expect(await screen.findByText("Ingresa a tu app")).toBeOnTheScreen();
   await fireEvent.changeText(screen.getByLabelText("Número de celular"), "900000901");
   await type("197346");
+  // La sesión ya está guardada y el PIN local todavía no: sigue en Ingresar, sin pasar por Entrar ni por las pestañas
+  // renderRouter usa un reloj falso: se avanza a mano para que la sesión se vuelva a leer
+  await act(() => jest.advanceTimersByTimeAsync(100));
+  expect(screen.getByText("Ingresa a tu app")).toBeOnTheScreen();
+  expect(screen.queryByText("Escribe tu PIN")).toBeNull();
+  await act(async () => mockRelease());
 
   expect(await screen.findByText("¿Entrar con tu huella?")).toBeOnTheScreen();
   await fireEvent.press(screen.getByRole("button", { name: "Ahora no" }));
@@ -93,6 +105,11 @@ test("ingresar, la huella, las pestañas, el bloqueo al volver y la sesión que 
   await type("197346");
   expect(await screen.findByText("Don Pipos")).toBeOnTheScreen();
 
-  await act(() => mockSetSession(null));
+  await act(() => mockStore(false));
   expect(await screen.findByText("Ingresa a tu app")).toBeOnTheScreen();
+
+  // Una sesión que reaparece sin ingresar en este celular pide el PIN: nunca abre las pestañas
+  await act(() => mockStore(true));
+  expect(await screen.findByText("Escribe tu PIN")).toBeOnTheScreen();
+  expect(screen.queryByText("Don Pipos")).toBeNull();
 });

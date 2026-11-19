@@ -1,13 +1,15 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import * as SecureStore from "expo-secure-store";
 import { useEffect, useState } from "react";
 
 import { biometricsAvailable, confirmWithBiometrics } from "@/lib/biometrics";
 import { hashPin, pinMatches, type StoredPin } from "@/lib/local-pin";
+import { forgetCachedData } from "@/lib/query";
 
 import { AUTO_LOCK_CHOICES, DEFAULT_AUTO_LOCK, MAX_LOCAL_ERRORS, type AutoLockMinutes } from "../constants";
 import { signOutMutation } from "../queries/mutations";
+import { sessionQuery } from "../queries/session";
 
 export type SessionStatus = "loading" | "signed-in" | "signed-out";
 export type UnlockAnswer = { ok: true } | { ok: false; attemptsLeft: number };
@@ -21,18 +23,22 @@ const readPin = async (): Promise<StoredPin | null> =>
 const asAutoLock = (value: string | null): AutoLockMinutes =>
   AUTO_LOCK_CHOICES.find((choice) => String(choice) === value) ?? DEFAULT_AUTO_LOCK;
 
-// El candado de la app en este celular: el PIN local, la huella y el bloqueo (docs/spec/auth.md §5)
+// El candado de la app en este celular: el PIN local, la huella y el bloqueo (docs/spec/auth.md §5).
+// Empieza bloqueada, y solo la abre el dueño en este celular: al ingresar (rememberSignIn), con su PIN o con su huella.
+// Una sesión que aparece por su cuenta (se renovó, volvió la señal) nunca la abre
 export function useUnlockState({ sessionStatus }: { sessionStatus: SessionStatus }) {
+  const queryClient = useQueryClient();
   const signOut = useMutation(signOutMutation);
   const [ready, setReady] = useState(false);
-  // Al abrir la app con una sesión guardada, empieza bloqueada. Sin sesión no hay nada que desbloquear: así, al ingresar,
-  // la app no pasa por la pantalla de Entrar
-  const [locked, setLocked] = useState(sessionStatus !== "signed-out");
+  const [locked, setLocked] = useState(true);
+  // Si la sesión se pierde, vuelve a bloquearse: si reaparece, hay que entrar otra vez
   const [previousStatus, setPreviousStatus] = useState(sessionStatus);
   if (sessionStatus !== previousStatus) {
     setPreviousStatus(sessionStatus);
-    if (sessionStatus === "signed-out") setLocked(false);
+    if (sessionStatus === "signed-out") setLocked(true);
   }
+  // Un ingreso en este celular en curso: la sesión queda guardada antes que el PIN local, y la app espera en Ingresar
+  const [signingIn, setSigningIn] = useState(false);
   const [lockedOut, setLockedOut] = useState(false);
   const [phone, setPhone] = useState<string | null>(null);
   const [biometricsEnabled, setBiometrics] = useState(false);
@@ -45,21 +51,33 @@ export function useUnlockState({ sessionStatus }: { sessionStatus: SessionStatus
       SecureStore.getItemAsync(SECRET.phone),
       AsyncStorage.getItem(PREFERENCE.biometrics),
       AsyncStorage.getItem(PREFERENCE.autoLock),
-    ]).then(([storedPhone, biometrics, autoLock]) => {
-      if (cancelled) return;
-      setPhone(storedPhone);
-      setBiometrics(biometrics === "1");
-      setAutoLock(asAutoLock(autoLock));
-      setReady(true);
-    });
+    ])
+      .then(([storedPhone, biometrics, autoLock]) => {
+        if (cancelled) return;
+        setPhone(storedPhone);
+        setBiometrics(biometrics === "1");
+        setAutoLock(asAutoLock(autoLock));
+      })
+      // Si no se puede leer, la app abre igual con lo de siempre (sin número, sin huella, 5 minutos)
+      .catch(() => undefined)
+      .finally(() => {
+        if (!cancelled) setReady(true);
+      });
     return () => {
       cancelled = true;
     };
   }, []);
 
+  // Borra lo de este dueño en el celular: PIN, número, ajustes y lo leído del negocio (Ley 29733)
   async function forget(): Promise<void> {
-    await Promise.all(Object.values(SECRET).map((key) => SecureStore.deleteItemAsync(key)));
+    await Promise.all([
+      ...Object.values(SECRET).map((key) => SecureStore.deleteItemAsync(key)),
+      AsyncStorage.multiRemove(Object.values(PREFERENCE)),
+      forgetCachedData(queryClient, sessionQuery.queryKey),
+    ]);
     setPhone(null);
+    setBiometrics(false);
+    setAutoLock(DEFAULT_AUTO_LOCK);
   }
 
   async function rememberPin(pin: string): Promise<void> {
@@ -75,6 +93,7 @@ export function useUnlockState({ sessionStatus }: { sessionStatus: SessionStatus
     setPhone(signedInPhone);
     setLockedOut(false);
     setLocked(false);
+    setSigningIn(false);
   }
 
   async function answerBiometricsOffer(accept: boolean): Promise<void> {
@@ -83,6 +102,7 @@ export function useUnlockState({ sessionStatus }: { sessionStatus: SessionStatus
   }
 
   async function signOutHere(): Promise<void> {
+    setLocked(true);
     await forget();
     await signOut.mutateAsync();
   }
@@ -136,6 +156,9 @@ export function useUnlockState({ sessionStatus }: { sessionStatus: SessionStatus
     biometricsEnabled,
     autoLockMinutes,
     offerBiometrics,
+    signingIn,
+    beginSignIn: () => setSigningIn(true),
+    endSignIn: () => setSigningIn(false),
     rememberSignIn,
     answerBiometricsOffer,
     rememberPin,

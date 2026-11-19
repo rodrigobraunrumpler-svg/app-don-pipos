@@ -8,8 +8,10 @@ import { AppError } from "@/lib/errors";
 import {
   CACHE_MAX_AGE,
   CACHE_SCHEMA,
+  CACHE_STORAGE_KEY,
   createPersistOptions,
   createQueryClient,
+  forgetCachedData,
   setupFocusManager,
   setupOnlineManager,
   STALE_TIME,
@@ -185,11 +187,22 @@ test("al registrar otra vez la señal, el aviso anterior se da de baja", () => {
   expect(first.remove).toHaveBeenCalledTimes(1);
 });
 
+test("al cerrar la sesión se borra la caché, también la guardada en el celular; la sesión se queda", async () => {
+  const client = newClient();
+  client.setQueryData(["pedidos"], [1, 2]);
+  client.setQueryData(["auth", "session"], "signed-in");
+  await AsyncStorage.setItem(CACHE_STORAGE_KEY, "{}");
+  await forgetCachedData(client, ["auth", "session"]);
+  expect(client.getQueryData(["pedidos"])).toBeUndefined();
+  expect(client.getQueryData(["auth", "session"])).toBe("signed-in");
+  expect(await AsyncStorage.getItem(CACHE_STORAGE_KEY)).toBeNull();
+});
+
 test("la caché guardada se escribe en el almacenamiento del celular y de ahí se vuelve a leer", async () => {
   const { persister } = createPersistOptions("0.1.0");
   const saved = { buster: "0.1.0", timestamp: 1_795_000_000_000, clientState: { mutations: [], queries: [] } };
   await persister.persistClient(saved);
-  expect(await AsyncStorage.getAllKeys()).toHaveLength(1);
+  expect(await AsyncStorage.getAllKeys()).toEqual([CACHE_STORAGE_KEY]);
   await expect(persister.restoreClient()).resolves.toEqual(saved);
   await persister.removeClient();
   expect(await AsyncStorage.getAllKeys()).toHaveLength(0);
