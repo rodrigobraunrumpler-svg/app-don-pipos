@@ -584,6 +584,7 @@ El PIN de prueba está en tu `.env.local`, en la línea `DEMO_OWNER_PIN`. El nú
 5. Escribe mal el PIN cinco veces: «Cerramos la sesión». Ingresa de nuevo.
 6. Cambia el PIN en Más → Cuenta y entra con el nuevo.
 7. Mira que Inicio muestre la fecha de hoy en español. Así se comprueban también las fechas de la fase 0 en el celular.
+8. Tras más de una hora sin usarla, pon el modo avión y abre la app: pide el PIN, no Ingresar. Sin escribirlo, quita el modo avión y espera unos segundos: sigue pidiendo el PIN. Con el PIN, entras.
 
 Si el PIN de prueba se bloquea, `pnpm owner reset-pin --phone 900000101 --demo` pone uno nuevo en `.env.local`.
 
