@@ -36,12 +36,15 @@ test("los tiempos de vida son los del documento", () => {
 });
 
 test("reintenta hasta 2 veces sin conexión y nunca un dato inválido", () => {
-  const retry = newClient().getDefaultOptions().queries?.retry as (count: number, error: AppError) => boolean;
+  const retry = newClient().getDefaultOptions().queries?.retry as (count: number, error: unknown) => boolean;
   expect(retry(0, new AppError("offline"))).toBe(true);
   expect(retry(1, new AppError("unexpected"))).toBe(true);
   expect(retry(2, new AppError("offline"))).toBe(false);
   expect(retry(0, new AppError("invalid"))).toBe(false);
   expect(retry(0, new AppError("forbidden"))).toBe(false);
+  // Lo que lanza una consulta llega sin convertir: se decide igual
+  expect(retry(0, new TypeError("Network request failed"))).toBe(true);
+  expect(retry(0, { code: "42501", message: "permission denied for table orders" })).toBe(false);
 });
 
 test("un error de una consulta llega convertido en AppError", async () => {

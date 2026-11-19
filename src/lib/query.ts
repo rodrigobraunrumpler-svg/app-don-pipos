@@ -40,7 +40,7 @@ export function createQueryClient(options?: { onError?: (error: AppError) => voi
       queries: {
         staleTime: STALE_TIME.live,
         gcTime: CACHE_MAX_AGE,
-        retry: (failureCount, error) => isRetryable(toAppError(error)) && failureCount < 2,
+        retry: (failureCount, error) => isRetryable(error) && failureCount < 2,
       },
       mutations: { retry: false },
     },

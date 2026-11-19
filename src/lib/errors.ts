@@ -52,11 +52,13 @@ export function toAppError(error: unknown): AppError {
   return new AppError(kindFromServer(error) ?? "unexpected", { cause: error });
 }
 
-// El texto para el dueño. El error técnico queda en `cause`, para los registros; nunca se muestra
-export function errorMessage(error: AppError): string {
-  return MESSAGES[error.kind];
+// El texto para el dueño. El error técnico queda en `cause`, para los registros; nunca se muestra.
+// Recibe cualquier cosa: lo que entrega una consulta no siempre pasó antes por toAppError
+export function errorMessage(error: unknown): string {
+  return MESSAGES[toAppError(error).kind];
 }
 
-export function isRetryable(error: AppError): boolean {
-  return error.kind === "offline" || error.kind === "unexpected";
+export function isRetryable(error: unknown): boolean {
+  const { kind } = toAppError(error);
+  return kind === "offline" || kind === "unexpected";
 }
