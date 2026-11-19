@@ -156,6 +156,12 @@ create function pg_temp.unlisted_functions_for_app() returns setof text language
       'public.list_products()',
       'public.save_product(uuid, integer, text, integer, integer, integer, boolean)',
       'public.set_product_active(uuid, boolean)',
+      'public.stock_overview()',
+      'public.register_production(uuid, jsonb)',
+      'public.register_waste(uuid, uuid, integer, text)',
+      'public.register_stock_count(uuid, jsonb)',
+      'public.revert_stock_change(uuid)',
+      'public.list_product_movements(uuid, integer, text)',
       -- lo que usan por dentro las reglas de acceso y las funciones de arriba
       'private.owned_business_ids()',
       'private.fail(text)',
@@ -163,7 +169,12 @@ create function pg_temp.unlisted_functions_for_app() returns setof text language
       'private.update_settings(integer, jsonb)',
       'private.product_json(products)',
       'private.save_product(uuid, integer, text, integer, integer, integer, boolean)',
-      'private.set_product_active(uuid, boolean)'
+      'private.set_product_active(uuid, boolean)',
+      'private.reserved_stock(uuid)',
+      'private.register_production(uuid, jsonb)',
+      'private.register_waste(uuid, uuid, integer, text)',
+      'private.register_stock_count(uuid, jsonb)',
+      'private.revert_stock_change(uuid)'
     )
 $$;
 

@@ -246,7 +246,15 @@ export type Database = {
     };
     Functions: {
       get_business: { Args: Record<PropertyKey, never>; Returns: Json };
+      list_product_movements: { Args: { p_cursor?: string; p_limit?: number; p_product_id: string }; Returns: Json };
       list_products: { Args: Record<PropertyKey, never>; Returns: Json };
+      register_production: { Args: { p_items: Json; p_request_id: string }; Returns: Json };
+      register_stock_count: { Args: { p_counts: Json; p_request_id: string }; Returns: Json };
+      register_waste: {
+        Args: { p_product_id: string; p_quantity: number; p_reason: string; p_request_id: string };
+        Returns: Json;
+      };
+      revert_stock_change: { Args: { p_request_id: string }; Returns: Json };
       save_product: {
         Args: {
           p_cost_cents: number;
@@ -260,6 +268,7 @@ export type Database = {
         Returns: Json;
       };
       set_product_active: { Args: { p_active: boolean; p_id: string }; Returns: Json };
+      stock_overview: { Args: Record<PropertyKey, never>; Returns: Json };
       update_settings: { Args: { p_expected_version: number; p_patch: Json }; Returns: Json };
     };
     Enums: {
