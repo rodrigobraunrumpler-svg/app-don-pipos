@@ -1,5 +1,7 @@
 import { Image, Text, View } from "react-native";
 
+import { formatLongDate } from "@/lib/dates";
+
 export default function Home() {
   return (
     <View className="flex-1 items-center justify-center gap-3 bg-background px-6">
@@ -13,6 +15,7 @@ export default function Home() {
       </View>
       <Text className="font-extrabold text-3xl text-text">Don Pipos</Text>
       <Text className="font-medium text-base text-text-secondary">Fase 0 lista</Text>
+      <Text className="font-regular text-sm text-text-muted">{formatLongDate(new Date())}</Text>
     </View>
   );
 }

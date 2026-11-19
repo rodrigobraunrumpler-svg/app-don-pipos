@@ -8,6 +8,7 @@ test("un AppError pasa igual", () => {
 test.each([
   [new TypeError("Network request failed"), "offline"],
   [new TypeError("Failed to fetch"), "offline"],
+  [new TypeError("Cannot read properties of undefined (reading 'id')"), "unexpected"],
   [{ code: "P0001", message: "invalid" }, "invalid"],
   [{ code: "P0001", message: "not_found" }, "notFound"],
   [{ code: "P0001", message: "forbidden" }, "forbidden"],
@@ -42,6 +43,36 @@ test.each([
   ["unexpected", "Algo salió mal de nuestro lado. Vuelve a intentar en un momento."],
 ] as const)("el texto de %s", (kind, text) => {
   expect(errorMessage(new AppError(kind))).toBe(text);
+});
+
+// Lo que llega de una consulta no siempre es un AppError: TanStack Query entrega tal cual lo que lanzó la función
+const UNEXPECTED_TEXT = "Algo salió mal de nuestro lado. Vuelve a intentar en un momento.";
+const zodLikeError = Object.assign(new Error("Invalid input: expected number, received string"), {
+  name: "ZodError",
+  issues: [{ code: "invalid_type", expected: "number", path: ["totalCents"], message: "Invalid input" }],
+});
+
+test.each([
+  ["un TypeError de un descuido en el código", new TypeError("x is not a function"), UNEXPECTED_TEXT, true],
+  [
+    "un TypeError de la red",
+    new TypeError("Network request failed"),
+    "Sin conexión. Revisa tu señal y vuelve a intentar.",
+    true,
+  ],
+  ["un texto suelto", "boom", UNEXPECTED_TEXT, true],
+  ["null", null, UNEXPECTED_TEXT, true],
+  ["undefined", undefined, UNEXPECTED_TEXT, true],
+  ["un error de Zod al leer la respuesta", zodLikeError, UNEXPECTED_TEXT, true],
+  [
+    "un error de la base sin convertir",
+    { code: "P0001", message: "invalid" },
+    "Hay un dato que no es válido. Revísalo y vuelve a intentar.",
+    false,
+  ],
+])("%s también tiene su texto en español y su regla de reintento", (_name, error, text, retryable) => {
+  expect(errorMessage(error)).toBe(text);
+  expect(isRetryable(error)).toBe(retryable);
 });
 
 test("solo se reintenta sin conexión o ante algo inesperado", () => {
