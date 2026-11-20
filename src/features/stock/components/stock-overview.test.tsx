@@ -1,5 +1,5 @@
 import { onlineManager } from "@tanstack/react-query";
-import { act, fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 
 import { AppError } from "@/lib/errors";
 import { renderWithProviders } from "@/test/render";
@@ -8,7 +8,11 @@ import type { StockItem } from "../schema/stock";
 import { StockOverview } from "./stock-overview";
 
 const mockOverview = jest.fn();
-jest.mock("../api/stock", () => ({ getStockOverview: () => mockOverview() }));
+const mockSuggestion = jest.fn();
+jest.mock("../api/stock", () => ({
+  getStockOverview: () => mockOverview(),
+  getProductionSuggestion: () => mockSuggestion(),
+}));
 
 const item = (overrides: Partial<StockItem>): StockItem => ({
   productId: "00000000-0000-4000-8000-000000000a01",
@@ -33,7 +37,10 @@ const ITEMS = [
 
 const handlers = () => ({ onOpenProduct: jest.fn(), onRegisterProduction: jest.fn(), onGoToProducts: jest.fn() });
 
-beforeEach(() => mockOverview.mockReset().mockResolvedValue(ITEMS));
+beforeEach(() => {
+  mockOverview.mockReset().mockResolvedValue(ITEMS);
+  mockSuggestion.mockReset().mockResolvedValue({ ready: false, horizonDays: 7, items: [] });
+});
 afterEach(() => onlineManager.setOnline(true));
 
 test("cada alfajor con su línea, su número y su estado; «Agotado en la web» solo en el enlazado sin stock", async () => {
@@ -99,4 +106,43 @@ test("la rueda de recarga sale cuando el dueño tira hacia abajo, no con cada re
   await act(() => void screen.getByTestId("stock-scroll").props.refreshControl.props.onRefresh());
   await settle();
   expect(screen.getByTestId("stock-scroll").props.refreshControl.props.refreshing).toBe(true);
+});
+
+const suggestion = (amounts: number[]) => ({
+  ready: true,
+  horizonDays: 7,
+  items: amounts.map((suggested, index) => ({
+    productId: `p${index}`,
+    name: "Coqueta",
+    imageUrl: null,
+    suggested,
+    expected: 43,
+    weekdayUnits: 25,
+    weekdayDays: 5,
+    weekendUnits: 18,
+    weekendDays: 2,
+    minStock: 6,
+    onHand: 13,
+  })),
+});
+
+test("la sugerencia de la semana lleva a Registrar producción; al día, lo dice; sin historia, nada", async () => {
+  mockSuggestion.mockResolvedValue(suggestion([36, 109]));
+  const actions = handlers();
+  const first = await renderWithProviders(<StockOverview {...actions} />);
+  expect(await screen.findByText("Esta semana conviene hacer 145 alfajores")).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: /Ver cuánto de cada uno$/ }));
+  expect(actions.onRegisterProduction).toHaveBeenCalled();
+  await first.unmount();
+
+  mockSuggestion.mockResolvedValue(suggestion([0, 0]));
+  const second = await renderWithProviders(<StockOverview {...handlers()} />);
+  expect(await screen.findByText("Tu producción está al día para esta semana.")).toBeOnTheScreen();
+  await second.unmount();
+
+  mockSuggestion.mockResolvedValue({ ready: false, horizonDays: 7, items: [] });
+  await renderWithProviders(<StockOverview {...handlers()} />);
+  await screen.findByText("Coqueta");
+  await waitFor(() => expect(mockSuggestion).toHaveBeenCalledTimes(3));
+  expect(screen.queryByText(/conviene hacer|al día para/)).toBeNull();
 });

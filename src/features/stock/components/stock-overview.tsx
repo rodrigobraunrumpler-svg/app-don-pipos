@@ -17,6 +17,7 @@ import type { StockChangeDone } from "../schema/stock";
 import { CountSheet } from "./count-sheet";
 import { StockRow } from "./stock-row";
 import { StockToast } from "./stock-toast";
+import { SuggestionBanner } from "./suggestion-banner";
 import { WasteSheet } from "./waste-sheet";
 
 type Props = {
@@ -25,7 +26,8 @@ type Props = {
   onGoToProducts: () => void;
 };
 
-// La pestaña Stock: cada alfajor con su estado, «Contar stock», «Anotar merma» y «Registrar producción»
+// La pestaña Stock: la sugerencia de la semana, cada alfajor con su estado y hasta cuándo alcanza, «Contar stock»,
+// «Anotar merma» y «Registrar producción»
 export function StockOverview({ onOpenProduct, onRegisterProduction, onGoToProducts }: Props) {
   const online = useOnline();
   const { colors } = useTheme();
@@ -108,6 +110,7 @@ export function StockOverview({ onOpenProduct, onRegisterProduction, onGoToProdu
           {online ? null : (
             <Notice>{`Sin conexión. Ves el stock de las ${updatedAt}; para registrar, espera la señal.`}</Notice>
           )}
+          <SuggestionBanner onOpen={onRegisterProduction} />
           <View className="mt-3 overflow-hidden rounded-md border border-border bg-surface">
             {data.map((item) => (
               <StockRow key={item.productId} item={item} onPress={() => onOpenProduct(item.productId)} />

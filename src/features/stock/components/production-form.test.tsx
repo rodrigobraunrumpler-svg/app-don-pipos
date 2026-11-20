@@ -9,7 +9,9 @@ import { ProductionForm } from "./production-form";
 
 const mockProduction = jest.fn();
 const mockRevert = jest.fn();
+const mockSuggestion = jest.fn();
 jest.mock("../api/stock", () => ({
+  getProductionSuggestion: () => mockSuggestion(),
   getStockOverview: async () => (jest.requireActual("@/test/stock-items") as { TEST_ITEMS: unknown }).TEST_ITEMS,
   registerProduction: (input: unknown) => mockProduction(input),
   revertStockChange: (requestId: string) => mockRevert(requestId),
@@ -20,6 +22,7 @@ jest.mock("../api/stock", () => ({
 beforeEach(() => {
   mockProduction.mockReset();
   mockRevert.mockReset();
+  mockSuggestion.mockReset().mockResolvedValue({ ready: false, horizonDays: 7, items: [] });
 });
 afterEach(() => onlineManager.setOnline(true));
 
@@ -93,4 +96,39 @@ test("si ese código ya se guardó con otros datos, lo dice y el siguiente inten
   await fireEvent.press(screen.getByRole("button", { name: "Guardar producción: 1 alfajor" }));
   await waitFor(() => expect(mockProduction).toHaveBeenCalledTimes(2));
   expect(mockProduction.mock.calls[1][0].requestId).not.toBe(mockProduction.mock.calls[0][0].requestId);
+});
+
+test("con historia, cada alfajor empieza en lo sugerido y explica por qué", async () => {
+  const why = { expected: 43, weekdayUnits: 25, weekdayDays: 5, weekendUnits: 18, weekendDays: 2, imageUrl: null };
+  mockSuggestion.mockResolvedValue({
+    ready: true,
+    horizonDays: 7,
+    items: [
+      { ...why, productId: COQUETA_ID, name: "Coqueta", suggested: 36, minStock: 6, onHand: 13 },
+      { ...why, productId: LIMON_ID, name: "Limon Kiss", suggested: 0, minStock: 5, onHand: 50 },
+    ],
+  });
+  mockProduction.mockResolvedValue({ total: 36, items: [], backOnWeb: [] });
+  await renderWithProviders(<ProductionForm onBack={jest.fn()} onSeeStock={jest.fn()} />);
+  expect(
+    await screen.findByText(
+      "Lo sugerido cubre 7 días. Si produces más o menos seguido, cámbialo en Ajustes y la cuenta se ajusta sola.",
+    ),
+  ).toBeOnTheScreen();
+  expect(screen.getByText("Sugerido: 36")).toBeOnTheScreen();
+  expect(screen.getByLabelText("Cantidad de Coqueta")).toHaveDisplayValue("36");
+  expect(screen.getByLabelText("Cantidad de Limon Kiss")).toHaveDisplayValue("0");
+  await fireEvent.press(screen.getByRole("button", { name: "Por qué 36" }));
+  expect(
+    screen.getByText(
+      "Vende unas 5 al día de lunes a viernes y 9 los sábados y domingos: 43 en la semana. Más tu mínimo (6), menos lo que tienes (13): 36.",
+    ),
+  ).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: "Guardar producción: 36 alfajores" }));
+  await waitFor(() =>
+    expect(mockProduction).toHaveBeenCalledWith({
+      requestId: expect.any(String),
+      items: [{ productId: COQUETA_ID, quantity: 36 }],
+    }),
+  );
 });

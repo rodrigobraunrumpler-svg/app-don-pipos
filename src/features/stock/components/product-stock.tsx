@@ -15,17 +15,19 @@ import { useOnline } from "@/lib/use-online";
 
 import { useUndoToast } from "../hooks/use-undo-toast";
 import { productMovementsQuery, stockOverviewQuery } from "../queries/stock";
+import { coverageShort } from "../rules/coverage";
 import type { StockChangeDone } from "../schema/stock";
 import { CountSheet } from "./count-sheet";
 import { MovementRow } from "./movement-row";
+import { SalesByWeekday } from "./sales-by-weekday";
 import { StateChip } from "./state-chip";
 import { StockToast } from "./stock-toast";
 import { WasteSheet } from "./waste-sheet";
 
 type Props = { productId: string; price: number | undefined; onBack: () => void };
 
-// Un alfajor: su estado, su stock y su mínimo, sus movimientos por páginas, «Contar stock» y «Anotar merma».
-// «Cómo se vende» llega en la fase 4, con las ventas. El precio lo trae la pantalla (une productos y stock)
+// Un alfajor: su estado, su stock, cuánto le alcanza y su mínimo, «Cómo se vende», sus movimientos por páginas,
+// «Contar stock» y «Anotar merma». El precio lo trae la pantalla (une productos y stock)
 export function ProductStock({ productId, price, onBack }: Props) {
   const online = useOnline();
   const overview = useQuery(stockOverviewQuery);
@@ -81,6 +83,7 @@ export function ProductStock({ productId, price, onBack }: Props) {
     );
   }
 
+  const reach = coverageShort(item);
   const summary = (
     <View>
       <View className="flex-row items-center gap-4">
@@ -106,11 +109,20 @@ export function ProductStock({ productId, price, onBack }: Props) {
           <Text className="font-extrabold text-2xl text-text">{item.onHand}</Text>
           <Text className="text-[13px] text-text-secondary">en stock</Text>
         </View>
+        {reach ? (
+          <View className="flex-1 rounded-md border border-border bg-surface px-4 py-3">
+            <Text numberOfLines={1} adjustsFontSizeToFit className="font-extrabold text-2xl text-text">
+              {reach}
+            </Text>
+            <Text className="text-[13px] text-text-secondary">le alcanza</Text>
+          </View>
+        ) : null}
         <View className="flex-1 rounded-md border border-border bg-surface px-4 py-3">
           <Text className="font-extrabold text-2xl text-text">{item.minStock}</Text>
           <Text className="text-[13px] text-text-secondary">mínimo</Text>
         </View>
       </View>
+      <SalesByWeekday productId={productId} />
       <View className="mb-1 mt-5 flex-row items-baseline justify-between">
         <Text className="font-extrabold text-lg text-text">Movimientos</Text>
         {movements.data ? (

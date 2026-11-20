@@ -11,7 +11,15 @@ import { ProductStock } from "./product-stock";
 const NBSP = " ";
 const mockMovements = jest.fn();
 jest.mock("../api/stock", () => ({
-  getStockOverview: async () => (jest.requireActual("@/test/stock-items") as { TEST_ITEMS: unknown }).TEST_ITEMS,
+  // La Coqueta con historia: le alcanza 3 días
+  getStockOverview: async () => {
+    const [coqueta, ...rest] = (jest.requireActual("@/test/stock-items") as { TEST_ITEMS: object[] }).TEST_ITEMS;
+    return [{ ...coqueta, coverageDays: 3 }, ...rest];
+  },
+  getProductSalesByWeekday: async () => ({
+    ready: true,
+    days: [4.6, 5, 5.2, 4.8, 5.4, 9.5, 8.5].map((average, index) => ({ dow: index + 1, average })),
+  }),
   listProductMovements: (input: unknown) => mockMovements(input),
   registerWaste: jest.fn(),
   registerStockCount: jest.fn(),
@@ -111,4 +119,16 @@ test("sin señal dice desde cuándo son los movimientos que se ven", async () =>
   await screen.findByText("Mostrando 20 de 25");
   onlineManager.setOnline(false);
   expect(await screen.findByText(/^Sin conexión\. Ves los movimientos de las \d\d:\d\d\.$/)).toBeOnTheScreen();
+});
+
+test("cuánto le alcanza y cómo se vende, con la nota de las últimas 4 semanas", async () => {
+  await renderWithProviders(<ProductStock productId={COQUETA_ID} price={1200} onBack={jest.fn()} />);
+  expect(await screen.findByText("3 días")).toBeOnTheScreen();
+  expect(screen.getByText("le alcanza")).toBeOnTheScreen();
+  expect(screen.getByText("Cómo se vende")).toBeOnTheScreen();
+  expect(
+    await screen.findByText(
+      "Unas 5 al día de lunes a viernes y 9 los sábados y domingos, según las últimas 4 semanas.",
+    ),
+  ).toBeOnTheScreen();
 });

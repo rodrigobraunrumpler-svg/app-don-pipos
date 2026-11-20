@@ -7,9 +7,7 @@ import { Icon } from "@/components/ui/icon";
 import { LoadError } from "@/components/ui/load-error";
 import { Notice } from "@/components/ui/notice";
 import { SkeletonRows } from "@/components/ui/skeleton";
-import { Stepper } from "@/components/ui/stepper";
 import { Toast } from "@/components/ui/toast";
-import { ProductAvatar } from "@/features/products";
 import { formatLongDate } from "@/lib/dates";
 import { errorMessage, toAppError } from "@/lib/errors";
 import { confirmTap } from "@/lib/haptics";
@@ -18,17 +16,21 @@ import { useRequestId } from "@/lib/use-request-id";
 
 import { STOCK_CONFLICT_TEXT } from "../constants";
 import { registerProductionMutation, revertStockChangeMutation } from "../queries/mutations";
-import { stockOverviewQuery } from "../queries/stock";
+import { productionSuggestionQuery, stockOverviewQuery } from "../queries/stock";
 import { productionSaveLabel, productionTotal } from "../rules/production";
 import { ProductionSaved } from "./production-saved";
+import { SuggestedRow } from "./suggested-row";
 
 type Saved = { requestId: string; total: number; backOnWeb: string[] };
 type Props = { onBack: () => void; onSeeStock: () => void };
 
-// Registrar producción: cuántos se hicieron de cada alfajor. La sugerencia llega en la fase 4, con las ventas
+// Registrar producción: cuántos se hicieron de cada alfajor. Con 7 días de ventas, cada contador empieza en lo
+// sugerido (D16) y explica por qué; sin historia, empieza en 0. Sin señal y sin la sugerencia guardada, como sin historia
 export function ProductionForm({ onBack, onSeeStock }: Props) {
   const online = useOnline();
   const { data, isError, refetch } = useQuery(stockOverviewQuery);
+  const suggestion = useQuery(productionSuggestionQuery);
+  const plan = suggestion.data?.ready ? suggestion.data : null;
   const production = useMutation(registerProductionMutation);
   const revert = useMutation(revertStockChangeMutation);
   const { requestId, renew } = useRequestId();
@@ -36,15 +38,23 @@ export function ProductionForm({ onBack, onSeeStock }: Props) {
   const [saved, setSaved] = useState<Saved | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const total = productionTotal(amounts);
+  const suggestedFor = (productId: string) => plan?.items.find((item) => item.productId === productId);
+  // Lo que el dueño tocó, y si no, lo sugerido
+  const values = Object.fromEntries(
+    (data ?? []).map((item) => [
+      item.productId,
+      amounts[item.productId] ?? suggestedFor(item.productId)?.suggested ?? 0,
+    ]),
+  );
+  const total = productionTotal(values);
   const today = formatLongDate(new Date());
 
   async function submit() {
     setProblem(null);
     try {
-      const items = (data ?? [])
-        .filter((item) => (amounts[item.productId] ?? 0) > 0)
-        .map((item) => ({ productId: item.productId, quantity: amounts[item.productId] ?? 0 }));
+      const items = Object.entries(values)
+        .filter(([, quantity]) => quantity > 0)
+        .map(([productId, quantity]) => ({ productId, quantity }));
       const result = await production.mutateAsync({ requestId, items });
       setSaved({ requestId, total: result.total, backOnWeb: result.backOnWeb.map((product) => product.name) });
       renew();
@@ -90,7 +100,7 @@ export function ProductionForm({ onBack, onSeeStock }: Props) {
         />
       ) : !data && isError ? (
         <LoadError what="el stock" onRetry={() => void refetch()} />
-      ) : !data ? (
+      ) : !data || suggestion.isLoading ? (
         <View className="px-5 pt-3">
           <SkeletonRows rows={5} />
         </View>
@@ -101,31 +111,21 @@ export function ProductionForm({ onBack, onSeeStock }: Props) {
             <View className="mt-3 flex-row gap-2.5 rounded-sm bg-olive-soft px-3 py-3">
               <Icon name="information-outline" size={18} tone="olive" />
               <Text className="flex-1 text-sm text-text">
-                Todavía no hay ventas suficientes para sugerir. Anota lo que hiciste y desde la próxima semana la app
-                sugiere sola.
+                {plan
+                  ? `Lo sugerido cubre ${plan.horizonDays} días. Si produces más o menos seguido, cámbialo en Ajustes y la cuenta se ajusta sola.`
+                  : "Todavía no hay ventas suficientes para sugerir. Anota lo que hiciste y desde la próxima semana la app sugiere sola."}
               </Text>
             </View>
             <View className="mt-3.5 overflow-hidden rounded-md border border-border bg-surface">
               {data.map((item) => (
-                <View
+                <SuggestedRow
                   key={item.productId}
-                  className="min-h-[68px] flex-row items-center gap-3 border-b border-border px-3.5 py-3"
-                >
-                  <ProductAvatar product={item} />
-                  <View className="flex-1">
-                    <Text numberOfLines={2} className="font-extrabold text-base text-text">
-                      {item.name}
-                    </Text>
-                    <Text numberOfLines={2} className="text-[13px] text-text-secondary">
-                      Anota cuántos hiciste
-                    </Text>
-                  </View>
-                  <Stepper
-                    value={amounts[item.productId] ?? 0}
-                    onChange={(value) => setAmounts((current) => ({ ...current, [item.productId]: value }))}
-                    label={item.name}
-                  />
-                </View>
+                  item={item}
+                  suggestion={suggestedFor(item.productId)}
+                  horizonDays={plan?.horizonDays ?? 7}
+                  value={values[item.productId] ?? 0}
+                  onChange={(value) => setAmounts((current) => ({ ...current, [item.productId]: value }))}
+                />
               ))}
             </View>
             {problem ? <Text className="mt-2 font-bold text-sm text-danger">{problem}</Text> : null}

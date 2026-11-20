@@ -41,3 +41,12 @@ export function whyText(item: Why, horizonDays: number): string {
     `vende ${sells}: ${item.expected} ${span}. Más tu mínimo (${item.minStock})${stock}: ${item.suggested}.`,
   );
 }
+
+// La nota de «Cómo se vende» (la maqueta): el promedio de lunes a viernes y el de los fines de semana, redondeados
+export function weekdayNote(days: { dow: number; average: number }[]): string {
+  const mean = (list: { average: number }[]) =>
+    Math.round(list.reduce((sum, day) => sum + day.average, 0) / Math.max(list.length, 1));
+  const weekday = mean(days.filter((day) => day.dow <= 5));
+  const weekend = mean(days.filter((day) => day.dow >= 6));
+  return `Unas ${weekday} al día de lunes a viernes y ${weekend} los sábados y domingos, según las últimas 4 semanas.`;
+}
