@@ -23,9 +23,34 @@ jest.mock("@/features/businesses/api/business", () => ({
     settings: { activePaymentMethods: ["cash", "yape"], deliveryFeeCents: 500, version: 1 },
   }),
 }));
-jest.mock("@/features/customers/api/customers", () => ({ findCustomerByPhone: async () => null }));
+const mockMatch = jest.fn();
+const mockLoyalty = jest.fn();
+jest.mock("@/features/customers/api/customers", () => ({ findCustomerByPhone: (phone: string) => mockMatch(phone) }));
+jest.mock("@/features/loyalty/api/loyalty", () => ({ getLoyaltySettings: () => mockLoyalty() }));
+const LOYALTY = {
+  isActive: true,
+  stampUnit: "order",
+  goal: 10,
+  rewardKind: "free_item",
+  rewardAmountCents: null,
+  rewardText: null,
+  version: 2,
+};
+const SOFIA = {
+  id: "c7",
+  name: "Sofía L. (DEMO)",
+  address: null,
+  ordersCount: 10,
+  lastOrderAt: null,
+  stamps: 10,
+  lastOrder: null,
+};
 
-beforeEach(() => mockCreate.mockReset());
+beforeEach(() => {
+  mockCreate.mockReset();
+  mockMatch.mockReset().mockResolvedValue(null);
+  mockLoyalty.mockReset().mockResolvedValue({ ...LOYALTY, isActive: false });
+});
 
 function Details({ onSaved = jest.fn() }: { onSaved?: jest.Mock }) {
   const [draft, setDraft] = useState<DraftState>({ ...emptyDraft(), quantities: { [COQUETA_ID]: 2 } });
@@ -111,4 +136,34 @@ test("una fecha más allá de la semana se escribe como día/mes", async () => {
   await fireEvent.press(screen.getByRole("button", { name: "Guardar pedido de S/ 24.00" }));
   await waitFor(() => expect(mockCreate).toHaveBeenCalled());
   expect(mockCreate.mock.calls[0][0].draft.scheduledFor).toBe(target);
+});
+
+test("con su premio listo, «Aplicar» descuenta el alfajor más barato y el pedido lo pide; «Quitar» lo saca", async () => {
+  mockLoyalty.mockResolvedValue(LOYALTY);
+  mockMatch.mockResolvedValue(SOFIA);
+  mockCreate.mockResolvedValue(TEST_ORDER);
+  await renderWithProviders(<Details />);
+  await fireEvent.changeText(await screen.findByLabelText("Teléfono del cliente"), "987654321");
+  expect(await screen.findByText("Sofía tiene su premio listo")).toBeOnTheScreen();
+  expect(screen.getByText("1 alfajor gratis, por completar su tarjeta de sellos")).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: "Aplicar" }));
+  expect(screen.getByText("Premio aplicado: −S/\u00a012.00")).toBeOnTheScreen();
+  expect(screen.getByText("Premio de fidelidad")).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: "Quitar" }));
+  expect(await screen.findByRole("button", { name: "Guardar pedido de S/\u00a024.00" })).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: "Aplicar" }));
+  await fireEvent.press(await screen.findByRole("button", { name: "Guardar pedido de S/\u00a012.00" }));
+  await waitFor(() => expect(mockCreate).toHaveBeenCalled());
+  const sent = mockCreate.mock.calls[0]![0] as { draft: Record<string, unknown> };
+  expect(sent.draft.redeemReward).toBe(true);
+  expect(sent.draft).not.toHaveProperty("discountCents");
+});
+
+test("sin sellos suficientes o con la fidelidad apagada, no aparece el premio", async () => {
+  mockLoyalty.mockResolvedValue(LOYALTY);
+  mockMatch.mockResolvedValue({ ...SOFIA, stamps: 9 });
+  await renderWithProviders(<Details />);
+  await fireEvent.changeText(await screen.findByLabelText("Teléfono del cliente"), "987654321");
+  await screen.findByText("Sofía L. (DEMO)");
+  expect(screen.queryByText("Sofía tiene su premio listo")).toBeNull();
 });

@@ -10,6 +10,7 @@ import { Notice } from "@/components/ui/notice";
 import { SkeletonRows } from "@/components/ui/skeleton";
 import { Toast } from "@/components/ui/toast";
 import { businessQuery } from "@/features/businesses";
+import { loyaltySettingsQuery, stampsMessage } from "@/features/loyalty";
 import { formatPhone } from "@/features/customers";
 import { MessagePreview } from "@/features/messages";
 import { formatTime } from "@/lib/dates";
@@ -41,6 +42,8 @@ export function OrderDetail({ orderId, onBack }: Props) {
   const online = useOnline();
   const { data: order, isError, refetch, dataUpdatedAt } = useQuery(orderQuery(orderId));
   const methods = useQuery({ ...businessQuery, select: (business) => business.settings.activePaymentMethods }).data;
+  // {sellos} del mensaje de entregado: con la fidelidad encendida, los sellos que lleva su cliente
+  const loyalty = useQuery(loyaltySettingsQuery).data;
   const advance = useAdvanceOrder(orderId);
   const revert = useRevertStatus(orderId);
   const [sheet, setSheet] = useState<"pay" | "delivery" | null>(null);
@@ -139,7 +142,15 @@ export function OrderDetail({ orderId, onBack }: Props) {
                 {`Avisar «${STATUS_LABELS[order.status].toLowerCase()}» a ${customerName.split(" ")[0]}`}
               </Text>
             </View>
-            <MessagePreview templateKey={template} context={messageContext(order, methods ?? [])} phone={phone} />
+            <MessagePreview
+              templateKey={template}
+              context={messageContext(
+                order,
+                methods ?? [],
+                loyalty ? stampsMessage(loyalty, order.customer?.stamps ?? 0) : "",
+              )}
+              phone={phone}
+            />
           </View>
         ) : null}
         <OrderItems order={order} />

@@ -12,6 +12,7 @@ const DRAFT: DraftState = {
   promisedTime: "",
   discountCents: 0,
   discountReason: "",
+  redeemReward: false,
   paymentMode: "none",
   paymentMethod: null,
   paymentCents: 0,
@@ -106,4 +107,24 @@ test("cómo queda el cobro, debajo del total", () => {
   );
   expect(collectionText(DRAFT, 2400)).toBe(`Se cobra ${sol("24.00")} al recoger.`);
   expect(collectionText({ ...DRAFT, fulfillment: "delivery" }, 2900)).toBe(`Se cobra ${sol("29.00")} al recibir.`);
+});
+
+test("con el premio de fidelidad, el borrador lo pide y no lleva otro descuento", () => {
+  const draft = {
+    ...DRAFT,
+    name: "Sofía (DEMO)",
+    redeemReward: true,
+    discountCents: 500,
+    discountReason: "Cumpleaños",
+  };
+  const order = toOrderDraft(draft, { phone: "+51987654321", today: "2026-11-18", totalCents: 1200, lines: [] });
+  expect(order.redeemReward).toBe(true);
+  expect(order).not.toHaveProperty("discountCents");
+  expect(order).not.toHaveProperty("discountReason");
+  expect(
+    toOrderDraft(
+      { ...draft, redeemReward: false },
+      { phone: "+51987654321", today: "2026-11-18", totalCents: 1200, lines: [] },
+    ),
+  ).not.toHaveProperty("redeemReward");
 });

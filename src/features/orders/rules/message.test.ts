@@ -16,7 +16,14 @@ test("los datos del pedido para los mensajes de WhatsApp (contexto de la maqueta
     adelanto: `Recibimos tu adelanto de ${sol("20.00")}; faltan ${sol("22.00")}.`,
     entrega: "Te avisamos cuando salga.",
     pago: `Total a pagar: ${sol("22.00")} (Yape, Plin, transferencia o efectivo).`,
+    sellos: "",
   });
+});
+
+test("los sellos del mensaje de entregado los arma quien llama (loyalty)", () => {
+  expect(messageContext(TEST_ORDER, ["cash"], "Llevas 7 de 10 sellos para tu premio.").sellos).toBe(
+    "Llevas 7 de 10 sellos para tu premio.",
+  );
 });
 
 test("pagado, para recoger otro día con hora, y solo con los medios activos", () => {

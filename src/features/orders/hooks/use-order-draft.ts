@@ -18,6 +18,7 @@ export const emptyDraft = (): DraftState => ({
   promisedTime: "",
   discountCents: 0,
   discountReason: "",
+  redeemReward: false,
   paymentMode: "none",
   paymentMethod: null,
   paymentCents: 0,

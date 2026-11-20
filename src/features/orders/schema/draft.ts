@@ -16,6 +16,8 @@ export const draftStateSchema = z.object({
   promisedTime: z.string(),
   discountCents: z.number().int().min(0),
   discountReason: z.string(),
+  // El premio de fidelidad aplicado (lo calcula la base al guardar). Un borrador de antes no lo trae: sin premio
+  redeemReward: z.boolean().default(false),
   paymentMode: z.enum(["none", "all", "part"]),
   paymentMethod: paymentMethodSchema.nullable(),
   paymentCents: z.number().int().min(0),

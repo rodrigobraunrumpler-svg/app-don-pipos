@@ -29,9 +29,23 @@ jest.mock("@/features/businesses/api/business", () => ({
 }));
 jest.mock("@/features/messages/api/templates", () => ({
   listTemplates: async () => [
-    { key: "on_the_way", body: "Hola {nombre}, tu pedido {numero} va en camino. {pago}", version: 1 },
+    { key: "on_the_way", body: "Hola {nombre}, tu pedido {numero} va en camino. {pago}", version: 1, isDefault: true },
+    { key: "delivered", body: "¡Gracias por tu compra, {nombre}! {sellos}", version: 1, isDefault: true },
   ],
 }));
+const mockLoyalty = jest.fn();
+jest.mock("@/features/loyalty/api/loyalty", () => ({ getLoyaltySettings: () => mockLoyalty() }));
+beforeEach(() =>
+  mockLoyalty.mockReset().mockResolvedValue({
+    isActive: true,
+    stampUnit: "order",
+    goal: 10,
+    rewardKind: "free_item",
+    rewardAmountCents: null,
+    rewardText: null,
+    version: 1,
+  }),
+);
 
 const at = "2026-11-19T15:00:00.000Z";
 const withStatus = (status: Order["status"], changes: Partial<Order> = {}): Order => ({
@@ -149,5 +163,12 @@ test("si ese pago ya se había guardado con otro monto, lo dice sin invitar a re
     await screen.findByText(
       "Este pago ya se había guardado antes de tu cambio. Revisa los pagos del pedido antes de registrarlo otra vez.",
     ),
+  ).toBeOnTheScreen();
+});
+
+test("el mensaje de entregado dice cuántos sellos lleva", async () => {
+  await open(withStatus("delivered", { customer: { ...TEST_ORDER.customer!, stamps: 7 } }));
+  expect(
+    await screen.findByText("¡Gracias por tu compra, Ana! Llevas 7 de 10 sellos para tu premio."),
   ).toBeOnTheScreen();
 });

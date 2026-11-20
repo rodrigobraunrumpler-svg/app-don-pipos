@@ -4,6 +4,7 @@ import { ScrollView, Text, View } from "react-native";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { businessQuery } from "@/features/businesses";
+import { loyaltySettingsQuery, stampsMessage } from "@/features/loyalty";
 import { MessagePreview } from "@/features/messages";
 import { formatCents } from "@/lib/money";
 
@@ -19,6 +20,8 @@ import { SummaryRow } from "./summary-row";
 // como le llega al cliente, con «Avisar por WhatsApp»
 export function OrderSaved({ order, onAnother }: { order: Order; onAnother: () => void }) {
   const methods = useQuery({ ...businessQuery, select: (business) => business.settings.activePaymentMethods }).data;
+  // {sellos} del mensaje de entregado: con la fidelidad encendida, los sellos que lleva su cliente
+  const loyalty = useQuery(loyaltySettingsQuery).data;
   const name = order.customer?.name ?? order.customerName ?? "";
   const due = order.totalCents - order.paidCents;
   const method = order.payments.find((payment) => payment.kind === "payment")?.method;
@@ -66,7 +69,11 @@ export function OrderSaved({ order, onAnother }: { order: Order; onAnother: () =
           </View>
           <MessagePreview
             templateKey="confirmation"
-            context={messageContext(order, methods ?? [])}
+            context={messageContext(
+              order,
+              methods ?? [],
+              loyalty ? stampsMessage(loyalty, order.customer?.stamps ?? 0) : "",
+            )}
             phone={order.customer?.phone}
             actionLabel="Avisar por WhatsApp"
           />

@@ -63,7 +63,14 @@ export const orderSchema = z.object({
   ),
   timeline: z.array(z.object({ status: orderStatusSchema, at: z.string() })),
   customer: z
-    .object({ id: z.string(), name: z.string(), phone: z.string().nullable(), address: z.string().nullable() })
+    .object({
+      id: z.string(),
+      name: z.string(),
+      phone: z.string().nullable(),
+      address: z.string().nullable(),
+      // Sus sellos de hoy (para el mensaje de entregado); un pedido guardado en el celular antes no los trae
+      stamps: z.number().int().optional(),
+    })
     .nullable(),
 });
 export type Order = z.infer<typeof orderSchema>;
@@ -105,6 +112,7 @@ export type OrderDraft = {
   promisedAt?: string;
   discountCents?: number;
   discountReason?: string;
+  redeemReward?: boolean;
   note?: string;
   payment?: { method: PaymentMethod; amountCents: number };
   lines: OrderLineInput[];

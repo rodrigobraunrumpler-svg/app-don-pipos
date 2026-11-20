@@ -22,9 +22,11 @@ import { PAYMENT_METHOD_LABELS } from "../constants";
 import { useCreateOrder } from "../hooks/use-order-changes";
 import { collectionText, draftProblem, toOrderDraft } from "../rules/draft";
 import { draftTotal } from "../rules/totals";
+import { useDraftReward } from "../hooks/use-draft-reward";
 import type { DraftState } from "../schema/draft";
 import type { Order, PaymentMethod } from "../schema/order";
 import { DraftDiscount } from "./draft-discount";
+import { RewardBanner } from "./reward-banner";
 import { DraftPayment } from "./draft-payment";
 import { DraftSchedule } from "./draft-schedule";
 import { SummaryRow } from "./summary-row";
@@ -62,10 +64,17 @@ export function DraftDetails({ draft, onChange, onBack, onSaved, onSaving }: Pro
     }));
   const units = lines.reduce((sum, line) => sum + line.quantity, 0);
   const fee = draft.fulfillment === "delivery" ? (settings.data?.deliveryFeeCents ?? 0) : 0;
+  // El premio de fidelidad, si está listo; aplicado, reemplaza al descuento a mano (si el teléfono cambia, se va)
+  const reward = useDraftReward(
+    phone,
+    lines,
+    draftTotal({ lines, deliveryFeeCents: fee, discountCents: 0 }).totalCents,
+  );
+  const applied = draft.redeemReward && reward !== null;
   const { subtotalCents, totalCents } = draftTotal({
     lines,
     deliveryFeeCents: fee,
-    discountCents: draft.discountCents,
+    discountCents: applied ? reward.amountCents : draft.discountCents,
   });
   const methods = METHODS.filter((method) => settings.data?.activePaymentMethods.includes(method));
   const missing = draftProblem(draft, {
@@ -85,12 +94,15 @@ export function DraftDetails({ draft, onChange, onBack, onSaved, onSaving }: Pro
       // devuelve el mismo pedido. Al guardar, el borrador se vacía y el siguiente trae otro código
       const order = await create.mutateAsync({
         requestId: draft.requestId,
-        draft: toOrderDraft(draft, {
-          phone,
-          today,
-          totalCents,
-          lines: lines.map(({ productId, quantity }) => ({ productId, quantity })),
-        }),
+        draft: toOrderDraft(
+          { ...draft, redeemReward: applied },
+          {
+            phone,
+            today,
+            totalCents,
+            lines: lines.map(({ productId, quantity }) => ({ productId, quantity })),
+          },
+        ),
       });
       confirmTap();
       onSaving?.(false);
@@ -121,6 +133,14 @@ export function DraftDetails({ draft, onChange, onBack, onSaved, onSaving }: Pro
               onChange({ quantities: Object.fromEntries(repeated.map((line) => [line.productId, line.quantity])) })
             }
           />
+          {reward ? (
+            <RewardBanner
+              reward={reward}
+              applied={applied}
+              onApply={() => onChange({ redeemReward: true, discountCents: 0, discountReason: "" })}
+              onRemove={() => onChange({ redeemReward: false })}
+            />
+          ) : null}
         </Section>
         <Section title="Entrega">
           <Segmented
@@ -154,12 +174,19 @@ export function DraftDetails({ draft, onChange, onBack, onSaved, onSaving }: Pro
           promisedTime={draft.promisedTime}
           onChange={onChange}
         />
-        <DraftDiscount discountCents={draft.discountCents} discountReason={draft.discountReason} onChange={onChange} />
+        {applied ? null : (
+          <DraftDiscount
+            discountCents={draft.discountCents}
+            discountReason={draft.discountReason}
+            onChange={onChange}
+          />
+        )}
         <DraftPayment draft={draft} methods={methods} onChange={onChange} />
         <View accessibilityLabel="Resumen" className="mt-5 rounded-md border border-border bg-surface px-4 py-3">
           <SummaryRow label={`${units} ${units === 1 ? "alfajor" : "alfajores"}`} value={formatCents(subtotalCents)} />
           {fee ? <SummaryRow label="Delivery" value={formatCents(fee)} /> : null}
-          {draft.discountCents > 0 ? (
+          {applied ? <SummaryRow label="Premio de fidelidad" value={`−${formatCents(reward.amountCents)}`} /> : null}
+          {!applied && draft.discountCents > 0 ? (
             <SummaryRow
               label={`Descuento${draft.discountReason ? ` (${draft.discountReason.toLowerCase()})` : ""}`}
               value={`−${formatCents(draft.discountCents)}`}

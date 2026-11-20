@@ -27,8 +27,8 @@ function scheduledText(order: Order): string {
 }
 
 // Los datos de un pedido para llenar los mensajes de WhatsApp (contexto de la maqueta). {adelanto}, {entrega} y {pago}
-// son frases completas o nada; {sellos} queda vacío hasta la fidelidad (fase 7)
-export function messageContext(order: Order, methods: PaymentMethod[]): Record<string, string> {
+// son frases completas o nada; {sellos} lo arma quien llama con la fidelidad (loyalty), o queda vacío
+export function messageContext(order: Order, methods: PaymentMethod[], sellos = ""): Record<string, string> {
   const due = order.totalCents - order.paidCents;
   const name = order.customer?.name ?? order.customerName ?? "";
   return {
@@ -51,5 +51,6 @@ export function messageContext(order: Order, methods: PaymentMethod[]): Record<s
           ? "Te avisamos cuando salga."
           : "",
     pago: due > 0 ? `Total a pagar: ${formatCents(due)} (${spokenMethods(methods)}).` : "Ya está pagado.",
+    sellos,
   };
 }

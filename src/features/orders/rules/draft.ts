@@ -53,7 +53,12 @@ export function toOrderDraft(
     ...(draft.fulfillment === "delivery" ? { deliveryAddress: draft.address.trim() } : {}),
     ...(draft.scheduledFor ? { scheduledFor: draft.scheduledFor } : {}),
     ...(draft.promisedTime ? { promisedAt: `${draft.scheduledFor ?? today}T${draft.promisedTime}:00-05:00` } : {}),
-    ...(draft.discountCents > 0 ? { discountCents: draft.discountCents, discountReason: draft.discountReason } : {}),
+    // Con el premio de fidelidad, la base pone el descuento: no va otro
+    ...(draft.redeemReward
+      ? { redeemReward: true }
+      : draft.discountCents > 0
+        ? { discountCents: draft.discountCents, discountReason: draft.discountReason }
+        : {}),
     ...(amount > 0 && draft.paymentMethod ? { payment: { method: draft.paymentMethod, amountCents: amount } } : {}),
     ...(note ? { note } : {}),
     lines,
