@@ -113,10 +113,10 @@ La anota el script de copia del VPS. No lleva `business_id` porque la copia es d
   - sin sesión → Ingresar (`auth.md`);
   - con sesión pero sin puesta en marcha → la puesta en marcha (`src/app/setup/`: un grupo `(setup)` pondría su primer paso en «/», que ya es la entrada);
   - si no → Inicio.
-  - Mientras se sabe si falta (el primer ingreso, un instante), la entrada muestra el fondo. Si no se puede saber (sin señal, error), entra a Inicio: la app nunca se queda bloqueada.
+  - Mientras se sabe si falta (el primer ingreso, un instante), la entrada muestra el fondo. Si no se puede saber (sin señal, o falló una vez), entra a Inicio sin esperar los reintentos: la app nunca se queda bloqueada.
 - **Puesta en marcha:**
   - Paso 1, «Tus productos»: la lista con sus precios. «Agregar otro producto» usa `products`.
-  - Paso 2, «Tu stock de hoy»: + y − por alfajor.
+  - Paso 2, «Tu stock de hoy»: + y − por alfajor. Cada uno empieza en lo que ya hay en la nevera (0 en un negocio nuevo): «Terminar» sin tocarlo no cambia el stock de un negocio que ya lo llevaba.
   - Paso 3, «Tus tipos de gasto»: chips con los cinco de la maqueta (Insumos, Empaques, Delivery, Servicios, Otros), los cuatro primeros marcados. Son sugerencias de pantalla: nada se crea sin «Terminar».
   - «Terminar» muestra «Todo listo» y lleva a Inicio con el consejo de la primera vez («Toca + abajo…», «Entendido»). El consejo sale una sola vez: una marca en el celular que «Entendido» borra.
   - Cada paso es una pantalla de la pila: se puede volver atrás sin perder lo puesto.
@@ -126,7 +126,7 @@ La anota el script de copia del VPS. No lleva `business_id` porque la copia es d
   - «Producción»: cada cuántos días produce. Inicio y Stock sugieren para ese periodo.
   - «Clientes que no vuelven»: a partir de cuántos días sin pedir un cliente sale en «No vuelven» (decidido en la fase 7b; la maqueta no tiene la fila).
 - **Más, arriba:** «Tus datos están respaldados. Última copia de seguridad: hoy, 03:00». Si está atrasada, en ámbar: «La copia de seguridad está atrasada. El equipo ya está avisado».
-- **Vistas:** «Guardando…», y sin internet: los cambios esperan a que vuelva la señal.
+- **Vistas:** «Guardando…». Sin internet, las hojas dicen «Sin conexión. Los cambios esperan a que vuelva la señal» y no dejan guardar hasta que vuelva (los guardados de la app salen al momento y avisan si no hay señal). Un cambio que llegó antes responde «Otro cambio llegó antes: revisa los ajustes y vuelve a guardar», sin perder lo escrito.
 
 ## 7. Con otros módulos
 

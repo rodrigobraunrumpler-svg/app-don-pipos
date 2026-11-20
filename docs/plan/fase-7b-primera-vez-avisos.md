@@ -428,3 +428,86 @@ Se escriben en las especificaciones en la tarea 1, antes de la base.
 
 - [ ] **Paso 1:** `pnpm test`, `pnpm test:db`, `pnpm lint`, `pnpm typecheck` y `pnpm format:check`.
 - [ ] **Paso 2: Commit** — `docs: record the phase 7b result and what is left to check on the phone`.
+
+## Resultado (2026-11-20)
+
+La fase 7b quedó construida en la rama `fase-7b`, con un commit por tarea y una corrección propia antes de la revisión (el stock del paso 2, abajo).
+
+| Comprobación | Resultado |
+|---|---|
+| `pnpm test:coverage` | 741 pruebas; 100 % en `lib/{money,dates,errors}`, `theme/tokens` y las cuentas de `features/*/rules` |
+| `pnpm db:check` | Pasa entera: 764 pruebas de la base en 36 archivos, los 49 casos de velocidad, consejos de Supabase sin nada pendiente y tipos al día |
+| `pnpm lint`, `pnpm lint:rules`, `pnpm typecheck`, `pnpm test:scripts`, `prettier --check` | Pasan |
+
+- **En el proyecto de desarrollo** quedó una migración: `complete_setup`.
+- **El negocio DEMO todavía no hizo la puesta en marcha:** la verás al entrar.
+- **Librería nueva:** expo-notifications, que viene en Expo Go. Después de juntar, `pnpm install` en la carpeta principal.
+- **La caché guardada cambió de forma** (`CACHE_SCHEMA` 5): la primera vez que abras la app, vuelve a pedir todo.
+
+### Lo que falta: probar en el celular
+
+```bash
+cd /home/javier/var-mar/app && pnpm install && pnpm start --tunnel
+```
+
+Ingresa con el dueño DEMO (900 000 101, el PIN de tu `.env.local`).
+
+1. **La puesta en marcha:** al entrar sale «Paso 1 de 3».
+   - «Tus productos» muestra los alfajores con su precio; «Agregar otro producto» abre la hoja de siempre.
+   - En «Tu stock de hoy» cada alfajor empieza en lo que ya hay. Cambia uno con + y −.
+   - En «Tus tipos de gasto», desmarca uno y vuelve con la flecha: lo puesto sigue ahí.
+   - «Terminar» → «Todo listo» → «Ir a Inicio».
+   - Los pasos se deslizan, y el botón atrás del celular vuelve de a uno.
+2. **El consejo:** en Inicio sale «Anota tu primer pedido». «Entendido» lo cierra y no vuelve a salir.
+3. **El permiso de avisos:** la primera vez, el celular pregunta si Don Pipos puede mandar avisos. Di que sí.
+4. **El alfajor que se acaba:** si uno está «bajo» en Stock, llega un aviso al momento («… se está acabando»). Tócalo: abre Registrar producción. Ese mismo alfajor no vuelve a avisar hoy.
+5. **El pedido de mañana:** anota un pedido para mañana, antes de las 18:00. A las 18:00 llega «Mañana…: pedido de …», aunque la app esté cerrada, y al tocarlo se abre el pedido.
+6. **Los saldos:** con un pedido de ayer entregado sin cobrar, a las 09:00 llega «… te debe S/ …». Al tocarlo abre Por cobrar.
+7. **La campana:** en la cabecera de Inicio, «Avisos» lleva un punto si hay algo. Lista lo de hoy, y cada aviso abre su pantalla.
+8. **Ajustes en Más:**
+   - «Medios de pago»: apaga Plin. Al anotar un pedido ya no sale, y el último encendido no se puede apagar.
+   - «Delivery»: cambia el costo; un pedido con delivery suma el nuevo.
+   - «Producción»: cada cuántos días; la nota cambia, y Stock e Inicio sugieren para ese periodo.
+   - «Recordatorios»: apaga uno.
+   - «Clientes que no vuelven»: cambia los días; «No vuelven» de Clientes sigue el número nuevo.
+   - Si en Ajustes del celular le quitas el permiso de avisos a Expo Go, la hoja Recordatorios lo dice y «Abrir ajustes del celular» te lleva ahí.
+
+En Expo Go los avisos salen con el ícono de Expo Go; el de Don Pipos llega con la APK (fase 8). En algunos celulares Android, un aviso programado puede llegar unos minutos tarde: el sistema junta las alarmas para ahorrar batería.
+
+### Lo que cambió respecto de este plan
+
+**Tarea 1**
+- La migración lleva la hora UTC en el nombre, como las anteriores. Con la hora de Lima quedaba antes de la última enviada, y `db push` la habría rechazado.
+
+**Tarea 2**
+- Los ajustes se guardan de a uno, y cada cambio sale con la versión que dejó el anterior: dos interruptores tocados seguidos no chocan.
+
+**Tarea 3**
+- Se sumó `useSaveSettings` (guardar → sí o no, con el porqué), para que las cuatro hojas y Recordatorios usen el mismo texto de «otro cambio llegó antes».
+- Sin señal, los interruptores y «Guardar» quedan apagados con «Sin conexión. Los cambios esperan a que vuelva la señal», como en Fidelidad y Mensajes. Los guardados de la app salen al momento y avisan si no hay señal.
+- La fila con interruptor (`SwitchRow`) dice «deshabilitado» al lector de pantalla también donde `Switch` no lo pasa solo.
+
+**Tarea 4**
+- La puerta de la puesta en marcha entra a Inicio desde el primer fallo, sin esperar los reintentos: el primer ingreso no se queda en blanco unos segundos.
+- La puerta pide el negocio apenas hay sesión, también con la app bloqueada o en la pregunta de la huella.
+- «Ir a Inicio» lo hace `useFinishSetup`, y la puerta del layout raíz lleva a Inicio.
+- Los chips del paso 3 van sin ícono (el `Chip` común no lleva); el ícono igual viaja a `complete_setup`.
+- **Corrección propia antes de la revisión:** el paso 2 empezaba cada alfajor en 0. Un negocio que ya llevaba stock (el DEMO, o un dueño que usó la app antes) lo perdía con solo tocar «Terminar». Ahora cada alfajor empieza en lo que hay en la nevera (0 en un negocio nuevo), y «Siguiente» y «Terminar» esperan a que llegue.
+
+**Tarea 6**
+- Los saldos se suman por cliente: dos pedidos de la misma persona dicen «Jorge P. te debe S/ 48.00», no «2 clientes». «Desde…» cuenta desde su deuda más vieja.
+
+**Tarea 7**
+- Los avisos del celular viven en `src/lib/notifications.ts`: la regla de módulos no deja que `api/` use paquetes de Expo.
+- Los avisos «de ahora» (un alfajor) salen aparte de los programados. Lo programado solo se reemplaza si cambió, así no se cancela y reprograma todo en cada recarga.
+- Cerrar la sesión borra lo programado y lo que está a la vista, desde el layout de Ingresar (se monta siempre que no hay sesión).
+- El permiso se pide solo si nunca se pidió, una vez por arranque. Si se negó, lo resuelve la hoja Recordatorios.
+
+**Tarea 8**
+- El interruptor de los alfajores dice «Cuando llegan al mínimo o quedan para un día», porque avisa con el estado «bajo» de Stock (cambio 8).
+- Después de dar el permiso desde la hoja, los avisos se programan con la próxima recarga de datos: al abrir la app, al volver a ella o después de guardar.
+
+**Tarea 9**
+- La campana usa su propia cuenta (`listReminders`), dicha a hoy. Los textos programados están escritos para cuando salen («Mañana…» el día antes, «desde hace N días» el día del aviso).
+- Por eso la campana lista el pedido de mañana (aunque ya pasaron las 18:00), cada alfajor bajo y los saldos contados desde hoy.
+- La campana sigue los interruptores: un tipo apagado tampoco sale ahí.
