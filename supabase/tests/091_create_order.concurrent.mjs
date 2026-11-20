@@ -12,7 +12,10 @@ export default async function orderNumbersUnderConcurrency({ openSession, assert
      from private.pin_credentials c join public.businesses b on b.owner_id = c.user_id where c.phone = $1`,
     [DEMO_PHONE],
   );
-  assert.ok(rows[0]?.product_id, "hace falta el negocio DEMO con sus alfajores: pnpm owner create --demo y pnpm demo:data");
+  assert.ok(
+    rows[0]?.product_id,
+    "hace falta el negocio DEMO con sus alfajores: pnpm owner create --demo y pnpm demo:data",
+  );
   const items = JSON.stringify([{ productId: rows[0].product_id, quantity: 1 }]);
   const login = async (session) => {
     await session.query(
