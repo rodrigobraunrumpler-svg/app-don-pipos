@@ -1,5 +1,5 @@
 import type { Debt, ReminderData, StockLevel, UpcomingOrder } from "../schema/reminder";
-import { buildReminders } from "./build";
+import { buildReminders, listReminders } from "./build";
 
 const ALL_ON = { scheduled: true, stock: true, balances: true };
 // Miércoles 18 de noviembre de 2026 en Lima (UTC−5)
@@ -151,4 +151,15 @@ test("con su interruptor apagado no hay avisos de ese tipo; lo de ahora va prime
     "balances",
     "scheduled",
   ]);
+});
+
+test("la campana de Inicio los dice a hoy: el pedido de mañana, lo que se acaba y quién debe", () => {
+  const later = { ...ORDER, id: "o2", dueDate: "2026-11-21" };
+  const everything = data({ upcoming: [ORDER, later], stock: [LOW], receivables: [DEBT], notifiedToday: ["stock:p1"] });
+  expect(listReminders(everything, ALL_ON, WED_1900)).toEqual([
+    expect.objectContaining({ id: "stock:p1", title: "Morenita se está acabando" }),
+    expect.objectContaining({ id: "order:o1", title: "Mañana a las 10:00: pedido de Patricia V. (DEMO)" }),
+    expect.objectContaining({ id: "balances", body: "Desde ayer. Toca para enviarle un recordatorio." }),
+  ]);
+  expect(listReminders(everything, { scheduled: false, stock: false, balances: false }, WED_1900)).toEqual([]);
 });

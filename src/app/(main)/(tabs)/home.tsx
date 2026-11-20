@@ -1,7 +1,8 @@
-import { router } from "expo-router";
+import { router, type Href } from "expo-router";
 
 import { Screen } from "@/components/ui/screen";
 import { ordersKeys } from "@/features/orders";
+import { RemindersBell } from "@/features/reminders";
 import { FirstTip, HomeScreen, reportsKeys } from "@/features/reports";
 import { stockKeys } from "@/features/stock";
 import { useRefreshOnFocus } from "@/lib/use-refresh-on-focus";
@@ -23,6 +24,7 @@ export default function Home() {
         onProduct={(productId) => router.navigate({ pathname: "/stock/[productId]", params: { productId } })}
         onProduction={() => router.navigate("/stock/production")}
         onNewOrder={() => router.navigate("/orders/new")}
+        headerAction={<RemindersBell onOpen={(href) => router.navigate(href as Href)} />}
       />
       <FirstTip />
     </Screen>

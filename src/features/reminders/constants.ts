@@ -8,3 +8,6 @@ export const REMINDER_ROWS = [
   { kind: "stock", title: "Alfajores que se acaban", description: "Cuando llegan al mínimo o quedan para un día" },
   { kind: "balances", title: "Saldos pendientes", description: "Si alguien debe desde hace un día" },
 ] as const;
+
+// El ícono de cada aviso en la lista de la campana
+export const REMINDER_ICONS = { scheduled: "calendar-clock", stock: "cookie-outline", balances: "cash-clock" } as const;

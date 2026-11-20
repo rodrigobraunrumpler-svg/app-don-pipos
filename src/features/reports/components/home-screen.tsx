@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { RefreshControl, ScrollView, Text, View } from "react-native";
 
 import { Logo } from "@/components/ui/logo";
@@ -29,6 +29,8 @@ type Props = {
   onProduct: (productId: string) => void;
   onProduction: () => void;
   onNewOrder: () => void;
+  // A la derecha de la cabecera: la campana de avisos (la arma la pantalla de src/app, reports no conoce a reminders)
+  headerAction?: ReactNode;
 };
 
 // Inicio (inicio de la maqueta): el saludo, lo urgente, lo cobrado hoy con los números del día, tu stock, qué producir y
@@ -42,6 +44,7 @@ export function HomeScreen({
   onProduct,
   onProduction,
   onNewOrder,
+  headerAction,
 }: Props) {
   const online = useOnline();
   const { colors } = useTheme();
@@ -73,7 +76,10 @@ export function HomeScreen({
     >
       <View className="flex-row items-center gap-2.5">
         <Logo size="tiny" />
-        <Text className="font-extrabold text-lg text-text">Don Pipos</Text>
+        <Text numberOfLines={1} className="flex-1 font-extrabold text-lg text-text">
+          Don Pipos
+        </Text>
+        {headerAction}
       </View>
       {online ? null : <Notice>{offline}</Notice>}
       <View className="mt-3.5">

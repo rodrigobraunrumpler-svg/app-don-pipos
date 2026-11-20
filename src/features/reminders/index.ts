@@ -2,3 +2,4 @@
 export { useReminderSync } from "./hooks/use-reminder-sync";
 export { useNotificationTaps } from "./hooks/use-notification-taps";
 export { RemindersRow } from "./components/reminders-row";
+export { RemindersBell } from "./components/reminders-bell";
