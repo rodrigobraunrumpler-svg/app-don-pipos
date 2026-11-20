@@ -6,7 +6,7 @@ import { OrderDetail } from "@/features/orders";
 export default function OrderScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   return (
-    <Screen bottom={false}>
+    <Screen>
       <OrderDetail orderId={id} onBack={() => router.back()} />
     </Screen>
   );

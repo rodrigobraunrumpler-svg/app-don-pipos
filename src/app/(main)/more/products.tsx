@@ -5,7 +5,7 @@ import { ProductList } from "@/features/products";
 
 export default function Products() {
   return (
-    <Screen bottom={false}>
+    <Screen>
       <ProductList onBack={() => router.back()} />
     </Screen>
   );

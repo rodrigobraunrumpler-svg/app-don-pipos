@@ -5,7 +5,7 @@ import { ProductionForm } from "@/features/stock";
 
 export default function Production() {
   return (
-    <Screen bottom={false}>
+    <Screen>
       <ProductionForm onBack={() => router.back()} onSeeStock={() => router.back()} />
     </Screen>
   );

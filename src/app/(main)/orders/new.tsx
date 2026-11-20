@@ -5,7 +5,7 @@ import { NewOrder } from "@/features/orders";
 
 export default function NewOrderScreen() {
   return (
-    <Screen bottom={false}>
+    <Screen>
       <NewOrder onBack={() => router.back()} />
     </Screen>
   );

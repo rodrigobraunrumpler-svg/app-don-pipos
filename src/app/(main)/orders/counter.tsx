@@ -5,7 +5,7 @@ import { CounterSale } from "@/features/orders";
 
 export default function CounterSaleScreen() {
   return (
-    <Screen bottom={false}>
+    <Screen>
       <CounterSale onBack={() => router.back()} />
     </Screen>
   );

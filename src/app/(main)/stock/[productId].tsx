@@ -13,7 +13,7 @@ export default function ProductStockScreen() {
     select: (products) => products.find((product) => product.id === productId)?.priceCents,
   });
   return (
-    <Screen bottom={false}>
+    <Screen>
       <ProductStock productId={productId} price={price} onBack={() => router.back()} />
     </Screen>
   );

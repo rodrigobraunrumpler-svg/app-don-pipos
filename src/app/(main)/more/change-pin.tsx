@@ -5,7 +5,7 @@ import { ChangePinFlow } from "@/features/auth";
 
 export default function ChangePin() {
   return (
-    <Screen bottom={false}>
+    <Screen>
       <ChangePinFlow onDone={() => router.back()} />
     </Screen>
   );
