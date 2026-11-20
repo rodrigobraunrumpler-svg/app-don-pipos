@@ -953,6 +953,7 @@ export type Database = {
         Args: { p_business_date: string; p_counted_cents: number; p_opening_cents: number; p_request_id: string };
         Returns: Json;
       };
+      complete_setup: { Args: { p_categories: Json; p_request_id: string; p_stock: Json }; Returns: Json };
       correct_expense: {
         Args: {
           p_amount_cents: number;

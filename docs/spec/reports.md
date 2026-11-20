@@ -73,7 +73,8 @@ Los comunes: solo lectura, de los datos del negocio del dueño.
   - los números del día, que abren Pedidos con el filtro puesto;
   - la bandeja de stock y qué producir;
   - por entregar y próximos;
-  - el consejo de la primera vez.
+  - el consejo de la primera vez, una sola vez después de la puesta en marcha;
+  - en la cabecera, la campana «Avisos» (`reminders.md`).
   - Vistas: cargando, actualizando, sin datos, error, sin internet y servidor en pausa. El consejo de la primera vez llega con la puesta en marcha (fase 7) y «servidor en pausa» con el proyecto de producción (fase 8): saber que está en pausa necesita uno de verdad para confirmar cómo responde.
   - El saludo cambia con la hora de Lima: «Buenos días» hasta las 12:00, «Buenas tardes» hasta las 19:00 y «Buenas noches» después.
 - **Reportes:**

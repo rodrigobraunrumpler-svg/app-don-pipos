@@ -211,11 +211,13 @@ create function pg_temp.unlisted_functions_for_app() returns setof text language
       'public.loyalty_overview(integer)',
       'public.update_template(text, integer, text)',
       'public.reset_template(text)',
+      'public.complete_setup(uuid, jsonb, jsonb)',
       -- lo que usan por dentro las reglas de acceso y las funciones de arriba
       'private.owned_business_ids()',
       'private.fail(text)',
       'private.settings_json(business_settings)',
       'private.update_settings(integer, jsonb)',
+      'private.complete_setup(uuid, jsonb, jsonb)',
       'private.product_json(products)',
       'private.save_product(uuid, integer, text, integer, integer, integer, boolean)',
       'private.set_product_active(uuid, boolean)',

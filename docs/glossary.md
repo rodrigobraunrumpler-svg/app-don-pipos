@@ -17,13 +17,14 @@ Un concepto nuevo se agrega aquí antes de usarlo en el código.
 | Huella | `biometrics` | — | Solo en el celular |
 | Entrar (huella o PIN) | `unlock` | — | Las veces siguientes, sin internet |
 | Pedir huella o PIN | `autoLock` | — | Minutos en segundo plano |
-| Puesta en marcha | `setup` | `businesses.setup_done_at` | Productos, stock de hoy y tipos de gasto |
+| Puesta en marcha | `setup` | `businesses.setup_done_at`, función `complete_setup` | Los tres pasos de la primera vez: productos, stock de hoy y tipos de gasto |
 | Ajustes | `settings` | `business_settings` | Medios de pago, delivery, días de producción |
 | Módulos del negocio | `modules` | `businesses.modules` | Lo que usa cada negocio: `orders`, `stock`… |
 | Falta la puesta en marcha | `setupDone` | `businesses.setup_done_at` | `false` mientras la fecha esté vacía |
+| Consejo de la primera vez | `firstTip` | — | «Anota tu primer pedido»: sale una vez en Inicio, después de la puesta en marcha |
 | Medios de pago activos | `activePaymentMethods` | `active_payment_methods` | Los apagados no aparecen al anotar pedidos y gastos |
 | Zona de reparto | `deliveryZone` | `delivery_zone` | Pendiente con el cliente |
-| «No vuelve» a los… días | `lapsedAfterDays` | `lapsed_after_days` | 30 por defecto |
+| «No vuelve» a los… días | `lapsedAfterDays` | `lapsed_after_days` | De 7 a 120; 30 por defecto. En Ajustes: «Clientes que no vuelven» |
 | Recordatorios activos | `reminders` | `business_settings.reminders` | `scheduled`, `stock` y `balances` |
 | Versión esperada | `expectedVersion` | `p_expected_version` | La versión que la app tenía al abrir el formulario |
 
@@ -146,6 +147,7 @@ Un concepto nuevo se agrega aquí antes de usarlo en el código.
 | Sellos de un pedido | `orderStamps` | `private.sync_order_stamps` | Los deja justos al entregar, deshacer, anular o corregir |
 | Mensaje de WhatsApp | `messageTemplate` | `message_templates` | Confirmación, en camino, listo, entregado, recordatorio de saldo, «te extrañamos» |
 | Recordatorio | `reminder` | — | Aviso del celular |
+| Avisos (la campana de Inicio) | `reminderList` | — | Los recordatorios de ahora, con su pantalla; la misma lista que se programa en el celular |
 
 ## Reportes y web
 

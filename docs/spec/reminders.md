@@ -22,10 +22,12 @@ En esta versión no hay un servidor de notificaciones.
 
 - Cada vez que la app trae datos nuevos (al abrir, al volver de segundo plano y después de guardar), recalcula los avisos y reemplaza los que había programado.
 - **Pedido para otro día:** el día antes de su `due_date`, a las 18:00. «Mañana a las 10:00: pedido de Patricia V. 24 alfajores para recoger. Falta cobrar S/ 138.00.»
-- **Alfajor que se acaba:** cuando alcanza para un día o menos. Avisa al momento, una sola vez por alfajor y por día. «Morenita se está acabando…»
-- **Saldo pendiente:** a las 09:00, si alguien debe desde hace un día o más. «Jorge P. te debe S/ 24.00…»
+  - El cuerpo usa el resumen del pedido, porque la lista no trae la cantidad total: «12 Coquetas, 12 Morenitas para recoger. Falta cobrar S/ 138.00.» Un pedido entregado no avisa, y si la hora ya pasó (anotado después de las 18:00 del día antes), tampoco.
+- **Alfajor que se acaba:** con el estado `low` de Stock (lo libre en el mínimo o debajo, o que alcanza para un día o menos; decidido en la fase 7b: así avisa también las primeras semanas, sin 7 días de ventas). Avisa al momento, una sola vez por alfajor y por día. «Morenita se está acabando…»
+- **Saldo pendiente:** a las 09:00, si alguien debe desde hace un día o más: un pedido de ayer o antes ya entregado o con adelanto (`remind` de Por cobrar). Un solo aviso para todos: «Jorge P. te debe S/ 24.00…» o «3 clientes te deben S/ 96.00…». Mira la primera página de Por cobrar (los 20 más nuevos).
 - **Al tocar un aviso,** se abre su pantalla: el pedido, Registrar producción o Por cobrar.
 - **El límite:** los avisos salen con lo último que la app supo. Cuando lleguen los pedidos de la web (fase 2), se suma un aviso desde el servidor.
+- **Cerrar la sesión** cancela los avisos programados: llevan nombres de clientes.
 
 ## 4. Permisos
 
@@ -42,7 +44,8 @@ Los interruptores siguen los permisos comunes de `business_settings`. Además, l
 ## 6. Pantallas y estados
 
 - **Más → Recordatorios:** tres interruptores, cada uno con su descripción. Si el celular no dio permiso de avisos, lo dice y abre los ajustes del sistema.
-- **Los avisos** llevan el logo de Don Pipos.
+- **Los avisos** llevan el logo de Don Pipos. En Expo Go llevan el de Expo Go: el de Don Pipos (blanco sobre transparente, como pide Android) entra con la app de verdad (fase 8).
+- **La campana de Inicio** abre «Avisos»: la misma lista que se programa, cada uno con su pantalla. Lleva un punto si hay alguno.
 
 ## 7. Con otros módulos
 

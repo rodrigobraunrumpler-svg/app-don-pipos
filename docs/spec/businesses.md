@@ -76,12 +76,13 @@ La anota el script de copia del VPS. No lleva `business_id` porque la copia es d
   - `p_patch` trae una o más de las claves de `settings` (menos `version`), y ninguna otra.
   - Valida todo antes de guardar: de 1 a 4 medios de pago válidos y sin repetir; el delivery, un entero de 0 a 1,000,000 céntimos; producir cada 1 a 14 días; «no vuelve» de 7 a 120 días; la zona, un texto de hasta 120 caracteres (vacío se guarda como `null`); los recordatorios, con sus tres claves.
   - Cualquier otra forma responde `invalid` y no guarda nada. Con otra versión responde `conflict`.
-- **`complete_setup(stock, expense_category_names)`:** en una sola operación:
-  - carga el stock de hoy de cada producto, como movimientos `adjustment` con motivo «stock inicial»;
-  - crea los tipos de gasto elegidos;
-  - marca `setup_done_at`.
+- **`complete_setup(p_request_id, p_stock, p_categories)`:** en una sola operación (decidido en la fase 7b):
+  - carga el stock de hoy de cada producto. `p_stock` trae todos los alfajores como `[{ productId, counted }]`. Como en un conteo, el ajuste es lo contado menos lo que debería haber en la nevera (libre + apartado): un movimiento `adjustment` con motivo `initial` («Stock inicial»), y sin diferencia no hay movimiento;
+  - crea los tipos de gasto elegidos, `[{ name, icon }]` (de 0 a 20; la tabla pide el ícono). Un nombre que ya existe (sin mirar mayúsculas) o repetido no se crea otra vez;
+  - marca `setup_done_at`;
+  - devuelve `{ adjustments, categories }`.
 
-  Los productos ya los cargó el equipo con el catálogo confirmado (§7 de `PROJECT_CONTEXT.md`); en el paso 1 el dueño solo los revisa. Si se llama otra vez, responde `conflict`.
+  Lleva código de pedido como las demás escrituras: una respuesta perdida devuelve lo mismo. Los productos ya los cargó el equipo con el catálogo confirmado (§7 de `PROJECT_CONTEXT.md`); en el paso 1 el dueño solo los revisa. Una segunda puesta en marcha (otro código) responde `conflict`, y la app lo toma como «ya estaba hecha».
 - **La copia de seguridad:**
   - `private.record_backup(...)`: la llama el script del VPS con la llave secreta, que solo está en el VPS, al terminar cada copia.
   - `backup_status()`: devuelve a la app solo la hora de la última copia buena y si está atrasada (más de 26 horas).
@@ -103,23 +104,27 @@ La anota el script de copia del VPS. No lleva `business_id` porque la copia es d
   - `production_interval_days` 1 → «Cada día»; 7 → «Cada 7 días».
   - Delivery 500 → «S/ 5.00»; 0 → «Sin costo».
   - Medios activos `cash`, `yape`, `plin` → «3».
+  - «No vuelven» 30 → «30 días».
+  - Recordatorios: «3 activos», «1 activo» o «Apagados».
 
 ## 6. Pantallas y estados
 
 - **El layout raíz decide adónde va:**
   - sin sesión → Ingresar (`auth.md`);
-  - con sesión pero sin puesta en marcha → `(setup)`;
+  - con sesión pero sin puesta en marcha → la puesta en marcha (`src/app/setup/`: un grupo `(setup)` pondría su primer paso en «/», que ya es la entrada);
   - si no → Inicio.
+  - Mientras se sabe si falta (el primer ingreso, un instante), la entrada muestra el fondo. Si no se puede saber (sin señal, error), entra a Inicio: la app nunca se queda bloqueada.
 - **Puesta en marcha:**
   - Paso 1, «Tus productos»: la lista con sus precios. «Agregar otro producto» usa `products`.
   - Paso 2, «Tu stock de hoy»: + y − por alfajor.
-  - Paso 3, «Tus tipos de gasto»: chips.
-  - «Terminar» muestra «Todo listo» y lleva a Inicio con el consejo de la primera vez («Toca + abajo…», «Entendido»).
-  - Se puede volver atrás entre pasos sin perder lo puesto.
+  - Paso 3, «Tus tipos de gasto»: chips con los cinco de la maqueta (Insumos, Empaques, Delivery, Servicios, Otros), los cuatro primeros marcados. Son sugerencias de pantalla: nada se crea sin «Terminar».
+  - «Terminar» muestra «Todo listo» y lleva a Inicio con el consejo de la primera vez («Toca + abajo…», «Entendido»). El consejo sale una sola vez: una marca en el celular que «Entendido» borra.
+  - Cada paso es una pantalla de la pila: se puede volver atrás sin perder lo puesto.
 - **Más, hojas de ajustes:**
   - «Medios de pago»: interruptores. Los apagados dejan de aparecer al anotar pedidos y gastos.
-  - «Delivery»: el costo. La zona de reparto, pendiente.
+  - «Delivery»: el costo. La zona de reparto no se muestra ni se pide hasta que algo la use (la web, en su fase 2).
   - «Producción»: cada cuántos días produce. Inicio y Stock sugieren para ese periodo.
+  - «Clientes que no vuelven»: a partir de cuántos días sin pedir un cliente sale en «No vuelven» (decidido en la fase 7b; la maqueta no tiene la fila).
 - **Más, arriba:** «Tus datos están respaldados. Última copia de seguridad: hoy, 03:00». Si está atrasada, en ámbar: «La copia de seguridad está atrasada. El equipo ya está avisado».
 - **Vistas:** «Guardando…», y sin internet: los cambios esperan a que vuelva la señal.
 
