@@ -85,7 +85,7 @@ export function CounterSale({ onBack }: { onBack: () => void }) {
               return (
                 <View
                   key={product.id}
-                  className="min-h-[68px] flex-row items-center gap-3 border-b border-border px-4 py-3"
+                  className="min-h-[68px] flex-row items-center gap-3 border-b border-border px-3.5 py-3"
                 >
                   <ProductAvatar product={product} />
                   <Pressable
@@ -94,7 +94,9 @@ export function CounterSale({ onBack }: { onBack: () => void }) {
                     onPress={() => setQuantity(product.id, quantity + 1)}
                     className="flex-1"
                   >
-                    <Text className="font-extrabold text-base text-text">{product.name}</Text>
+                    <Text numberOfLines={2} className="font-extrabold text-base text-text">
+                      {product.name}
+                    </Text>
                     <Text className="text-[13px] text-text-secondary">{formatCents(product.priceCents)}</Text>
                     {left === null ? null : (
                       <Text className={`font-bold text-[13px] ${left <= 0 ? "text-danger" : "text-text-secondary"}`}>
@@ -124,7 +126,7 @@ export function CounterSale({ onBack }: { onBack: () => void }) {
         <Text className="font-bold text-sm text-text-secondary">Cobrar con</Text>
         <View className="flex-row flex-wrap gap-2">
           {methods.map((method) => (
-            <View key={method} className="min-w-[46%] flex-1">
+            <View key={method} className="w-[48%] grow">
               <Button
                 variant="secondary"
                 label={PAYMENT_METHOD_LABELS[method]}

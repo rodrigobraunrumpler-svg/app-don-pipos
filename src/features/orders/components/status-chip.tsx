@@ -3,7 +3,7 @@ import { Text, View } from "react-native";
 import { Icon } from "@/components/ui/icon";
 import type { ColorName } from "@/theme";
 
-import { STATUS_ICONS, STATUS_LABELS } from "../constants";
+import { STATUS_ICONS, STATUS_LABELS, STATUS_SHORT_LABELS } from "../constants";
 import type { OrderStatus } from "../schema/order";
 
 // Cada estado con su color y su ícono (las clases van completas: el compilador de estilos no arma nombres)
@@ -36,12 +36,14 @@ const STYLES: Record<OrderStatus, { box: string; text: string; tone: ColorName }
   },
 };
 
-export function StatusChip({ status }: { status: OrderStatus }) {
+export function StatusChip({ status, short = false }: { status: OrderStatus; short?: boolean }) {
   const style = STYLES[status];
   return (
     <View className={`flex-row items-center gap-1 rounded-full px-2.5 py-1 ${style.box}`}>
       <Icon name={STATUS_ICONS[status]} size={14} tone={style.tone} />
-      <Text className={`font-extrabold text-xs ${style.text}`}>{STATUS_LABELS[status]}</Text>
+      <Text className={`font-extrabold text-xs ${style.text}`}>
+        {(short ? STATUS_SHORT_LABELS : STATUS_LABELS)[status]}
+      </Text>
     </View>
   );
 }

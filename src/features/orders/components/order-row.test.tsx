@@ -54,6 +54,14 @@ test("un pedido de ayer que nadie entregó", async () => {
     paidCents: 0,
   };
   await renderWithProviders(<OrderRow order={overdue} now={NOW} onPress={jest.fn()} />);
-  for (const text of ["#0037, ayer", "Delivery", "Atrasado desde ayer", "En camino", "Cobrar S/ 42.00"])
+  for (const text of ["#0037, ayer", "Delivery", "Atrasado", "En camino", "Cobrar S/ 42.00"])
     expect(screen.getByText(text)).toBeOnTheScreen();
+});
+
+test("en la fila, «Listo para recoger» se acorta a «Listo» para que todo entre en una línea", async () => {
+  const ready = { ...summaryOf(TEST_ORDER), fulfillment: "pickup" as const, status: "ready" as const };
+  await renderWithProviders(<OrderRow order={ready} now={NOW} onPress={jest.fn()} />);
+  expect(screen.getByText("Listo")).toBeOnTheScreen();
+  expect(screen.queryByText("Listo para recoger")).toBeNull();
+  expect(screen.getByRole("button", { name: /Listo para recoger/ })).toBeOnTheScreen();
 });

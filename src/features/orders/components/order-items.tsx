@@ -12,12 +12,14 @@ export function OrderItems({ order }: { order: Order }) {
   return (
     <View className="mt-5 rounded-md border border-border bg-surface px-4 py-3">
       {order.lines.map((line) => (
-        <View key={line.productId} className="flex-row justify-between py-1">
-          <View>
-            <Text className="text-base text-text">{lineLabel(line.quantity, line.productName)}</Text>
+        <View key={line.productId} className="flex-row items-center gap-3 py-1">
+          <View className="flex-1">
+            <Text numberOfLines={1} className="text-base text-text">
+              {lineLabel(line.quantity, line.productName)}
+            </Text>
             <Text className="text-[13px] text-text-secondary">{`${formatCents(line.unitPriceCents)} c/u`}</Text>
           </View>
-          <Text className="text-base text-text">{formatCents(line.quantity * line.unitPriceCents)}</Text>
+          <Text className="shrink-0 text-base text-text">{formatCents(line.quantity * line.unitPriceCents)}</Text>
         </View>
       ))}
       {order.deliveryFeeCents > 0 ? <SummaryRow label="Delivery" value={formatCents(order.deliveryFeeCents)} /> : null}

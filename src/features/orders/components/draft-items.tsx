@@ -52,12 +52,14 @@ export function DraftItems({ quantities, onQuantity, recoveredAt, onStartOver, o
       ) : (
         <ScrollView contentContainerClassName="px-5 pb-6">
           {recoveredAt ? (
-            <View className="mt-3 flex-row items-center gap-2.5 rounded-sm bg-olive-soft px-3 py-2">
-              <Icon name="history" size={18} tone="olive" />
-              <Text className="flex-1 text-sm text-text">
-                {`Recuperamos el pedido que dejaste a medias a las ${formatTime(new Date(recoveredAt))}.`}
-              </Text>
-              <View>
+            <View className="mt-3 rounded-sm bg-olive-soft px-3 pt-2.5">
+              <View className="flex-row gap-2.5">
+                <Icon name="history" size={18} tone="olive" />
+                <Text className="flex-1 text-sm text-text">
+                  {`Recuperamos el pedido que dejaste a medias a las ${formatTime(new Date(recoveredAt))}.`}
+                </Text>
+              </View>
+              <View className="self-start pl-5">
                 <Button variant="text" label="Empezar de nuevo" onPress={onStartOver} />
               </View>
             </View>
@@ -80,13 +82,18 @@ export function DraftItems({ quantities, onQuantity, recoveredAt, onStartOver, o
                 const warning = level ? overStockWarning(quantity, level.onHand) : null;
                 return (
                   <View key={product.id} className="border-b border-border">
-                    <View className="min-h-[68px] flex-row items-center gap-3 px-4 py-3">
+                    <View className="min-h-[68px] flex-row items-center gap-3 px-3.5 py-3">
                       <ProductAvatar product={product} />
                       <View className="flex-1">
-                        <Text className="font-extrabold text-base text-text">{product.name}</Text>
+                        <Text numberOfLines={2} className="font-extrabold text-base text-text">
+                          {product.name}
+                        </Text>
                         <Text className="text-[13px] text-text-secondary">{formatCents(product.priceCents)}</Text>
                         {hint ? (
-                          <Text className={`font-bold text-[13px] ${hint.low ? "text-danger" : "text-text-secondary"}`}>
+                          <Text
+                            numberOfLines={1}
+                            className={`font-bold text-[13px] ${hint.low ? "text-danger" : "text-text-secondary"}`}
+                          >
                             {hint.text}
                           </Text>
                         ) : null}
@@ -98,7 +105,7 @@ export function DraftItems({ quantities, onQuantity, recoveredAt, onStartOver, o
                       />
                     </View>
                     {warning ? (
-                      <View className="flex-row gap-2 bg-warning-soft px-4 py-2.5">
+                      <View className="flex-row gap-2 bg-warning-soft px-3.5 py-2.5">
                         <Icon name="alert-outline" size={18} tone="warning" />
                         <Text className="flex-1 text-sm text-text">{warning}</Text>
                       </View>
@@ -112,7 +119,7 @@ export function DraftItems({ quantities, onQuantity, recoveredAt, onStartOver, o
       )}
       <View className="flex-row items-center gap-3 border-t border-border bg-background px-5 py-3">
         <View className="flex-1">
-          <Text className="text-sm text-text-secondary">
+          <Text numberOfLines={1} className="text-[13px] text-text-secondary">
             {!products.data
               ? "Cargando alfajores…"
               : units
@@ -121,7 +128,7 @@ export function DraftItems({ quantities, onQuantity, recoveredAt, onStartOver, o
           </Text>
           <Text className="font-extrabold text-xl text-text">{formatCents(subtotalCents)}</Text>
         </View>
-        <View className="w-40">
+        <View className="w-32">
           <Button label="Seguir" disabled={units === 0} onPress={onNext} />
         </View>
       </View>

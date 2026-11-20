@@ -62,23 +62,28 @@ export function CountSheet({ productIds, onClose, onDone }: Props) {
         {items.map((item) => {
           const difference = valueOf(item) - item.physical;
           return (
-            <View key={item.productId} className="flex-row items-center gap-3 border-b border-border py-3">
-              <ProductAvatar product={item} size="small" />
-              <View className="flex-1">
-                <Text className="font-bold text-base text-text">{item.name}</Text>
-                <Text className="text-[13px] text-text-secondary">{expectedLabel(item.onHand, item.reserved)}</Text>
+            <View key={item.productId} className="border-b border-border py-3">
+              <View className="flex-row items-center gap-3">
+                <ProductAvatar product={item} size="small" />
+                <Text numberOfLines={2} className="flex-1 font-bold text-base text-text">
+                  {item.name}
+                </Text>
+                <Text
+                  className={`min-w-10 text-right font-extrabold text-sm ${difference > 0 ? "text-olive" : difference < 0 ? "text-danger" : "text-text-muted"}`}
+                >
+                  {differenceLabel(valueOf(item), item.physical)}
+                </Text>
+                <Stepper
+                  value={valueOf(item)}
+                  onChange={(value) => setCounted((current) => ({ ...current, [item.productId]: value }))}
+                  label={item.name}
+                  max={100_000}
+                />
               </View>
-              <Text
-                className={`min-w-10 text-right font-extrabold text-sm ${difference > 0 ? "text-olive" : difference < 0 ? "text-danger" : "text-text-muted"}`}
-              >
-                {differenceLabel(valueOf(item), item.physical)}
+              {/* Debajo y a lo ancho: al lado del contador no entraba */}
+              <Text className="mt-1 pl-[52px] text-[13px] text-text-secondary">
+                {expectedLabel(item.onHand, item.reserved)}
               </Text>
-              <Stepper
-                value={valueOf(item)}
-                onChange={(value) => setCounted((current) => ({ ...current, [item.productId]: value }))}
-                label={item.name}
-                max={100_000}
-              />
             </View>
           );
         })}

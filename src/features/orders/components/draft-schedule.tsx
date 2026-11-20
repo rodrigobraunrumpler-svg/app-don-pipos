@@ -69,7 +69,7 @@ export function DraftSchedule({ scheduledFor, otherDay, promisedTime, onChange }
             onChangeText={(text) => onChange({ promisedTime: text.trim() })}
             maxLength={5}
             keyboardType="numbers-and-punctuation"
-            placeholder="Hora acordada (opcional)"
+            placeholder="Hora (opcional)"
           />
         </View>
         {scheduledFor ? null : (

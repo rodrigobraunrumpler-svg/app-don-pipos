@@ -1,4 +1,4 @@
-import { lateness, latenessLabel } from "./lateness";
+import { lateness, latenessLabel, latenessShortLabel } from "./lateness";
 
 // Hoy es miércoles 18 de noviembre de 2026 en Lima
 const at = (iso: string) => new Date(iso);
@@ -55,3 +55,9 @@ test("de hoy, con la hora acordada todavía por llegar → no va tarde", () =>
   expect(
     lateness(order({ status: "preparing", promisedAt: "2026-11-18T18:00:00.000Z" }), at("2026-11-18T17:30:00Z")),
   ).toBeNull());
+
+test("en la fila de la lista, el atraso va corto: el día ya está junto al número", () => {
+  expect(latenessShortLabel(null)).toBe("");
+  expect(latenessShortLabel({ kind: "late", minutes: 10 })).toBe("10 min tarde");
+  expect(latenessShortLabel({ kind: "overdue", since: "2026-11-18" })).toBe("Atrasado");
+});

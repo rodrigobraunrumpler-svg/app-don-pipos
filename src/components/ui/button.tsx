@@ -21,10 +21,17 @@ export function Button({ label, onPress, variant = "primary", icon, disabled = f
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
-      className={`w-full flex-row items-center justify-center gap-2 rounded-full px-5 ${disabled && variant !== "text" ? "min-h-[50px] bg-border-strong" : BOX[variant]}`}
+      className={`w-full flex-row items-center justify-center gap-2 rounded-full px-4 ${disabled && variant !== "text" ? "min-h-[50px] bg-border-strong" : BOX[variant]}`}
     >
       {icon}
-      <Text className={`font-extrabold text-base ${disabled ? "text-text-muted" : LABEL[variant]}`}>{label}</Text>
+      <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.8}
+        className={`shrink font-extrabold text-base ${disabled ? "text-text-muted" : LABEL[variant]}`}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }

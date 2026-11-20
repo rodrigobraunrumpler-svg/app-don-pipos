@@ -8,6 +8,9 @@ export const STATUS_LABELS = {
   cancelled: "Anulado",
 } as const;
 
+// En la fila de la lista, donde el estado comparte la línea con el número: «Listo para recoger» se acorta
+export const STATUS_SHORT_LABELS = { ...STATUS_LABELS, ready: "Listo" } as const;
+
 export const FULFILLMENT_LABELS = { delivery: "Delivery", pickup: "Recoge", counter: "Mostrador" } as const;
 
 // En el orden de la venta de mostrador: efectivo primero

@@ -4,24 +4,25 @@ import { Icon } from "./icon";
 
 type Props = { value: number; onChange: (value: number) => void; label: string; min?: number; max?: number };
 
-const BUTTON = "h-11 w-11 items-center justify-center rounded-full border-[1.5px]";
+const BUTTON = "h-[38px] w-[38px] items-center justify-center rounded-full";
 
-// El contador − número +: producción, merma, conteo y stock mínimo. En el límite, el botón se apaga.
+// El contador − número + de la maqueta: una píldora de 44 de alto con botones de 38 y el número al medio (unos 116 de
+// ancho, para que el nombre del alfajor quepa al lado en un celular angosto). En el límite, el botón se apaga.
 // El número también se escribe: una producción de 145 no son 145 toques
 export function Stepper({ value, onChange, label, min = 0, max = 10_000 }: Props) {
   const canLess = value > min;
   const canMore = value < max;
   return (
-    <View className="flex-row items-center gap-1.5">
+    <View className="h-11 flex-row items-center rounded-full border border-border-strong bg-surface px-[3px]">
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`Menos ${label}`}
         accessibilityState={{ disabled: !canLess }}
         disabled={!canLess}
         onPress={() => onChange(value - 1)}
-        className={`${BUTTON} ${canLess ? "border-border-strong bg-surface" : "border-border bg-sunken"}`}
+        className={`${BUTTON} ${canLess ? "" : "opacity-35"}`}
       >
-        <Icon name="minus" size={20} tone={canLess ? "text" : "textMuted"} />
+        <Icon name="minus" size={20} />
       </Pressable>
       <TextInput
         accessibilityLabel={`Cantidad de ${label}`}
@@ -33,7 +34,8 @@ export function Stepper({ value, onChange, label, min = 0, max = 10_000 }: Props
         keyboardType="number-pad"
         selectTextOnFocus
         maxLength={String(max).length}
-        className="min-w-12 text-center font-extrabold text-lg text-text"
+        className="min-w-7 px-0.5 py-0 text-center font-extrabold text-base text-text"
+        style={{ fontVariant: ["tabular-nums"] }}
       />
       <Pressable
         accessibilityRole="button"
@@ -41,9 +43,9 @@ export function Stepper({ value, onChange, label, min = 0, max = 10_000 }: Props
         accessibilityState={{ disabled: !canMore }}
         disabled={!canMore}
         onPress={() => onChange(value + 1)}
-        className={`${BUTTON} ${canMore ? "border-primary bg-primary" : "border-border bg-sunken"}`}
+        className={`${BUTTON} ${canMore ? "" : "opacity-35"}`}
       >
-        <Icon name="plus" size={20} tone={canMore ? "onPrimary" : "textMuted"} />
+        <Icon name="plus" size={20} />
       </Pressable>
     </View>
   );

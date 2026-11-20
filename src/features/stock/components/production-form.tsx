@@ -109,12 +109,16 @@ export function ProductionForm({ onBack, onSeeStock }: Props) {
               {data.map((item) => (
                 <View
                   key={item.productId}
-                  className="min-h-[68px] flex-row items-center gap-3 border-b border-border px-4 py-3"
+                  className="min-h-[68px] flex-row items-center gap-3 border-b border-border px-3.5 py-3"
                 >
                   <ProductAvatar product={item} />
                   <View className="flex-1">
-                    <Text className="font-extrabold text-base text-text">{item.name}</Text>
-                    <Text className="text-[13px] text-text-secondary">Anota cuántos hiciste</Text>
+                    <Text numberOfLines={2} className="font-extrabold text-base text-text">
+                      {item.name}
+                    </Text>
+                    <Text numberOfLines={2} className="text-[13px] text-text-secondary">
+                      Anota cuántos hiciste
+                    </Text>
                   </View>
                   <Stepper
                     value={amounts[item.productId] ?? 0}

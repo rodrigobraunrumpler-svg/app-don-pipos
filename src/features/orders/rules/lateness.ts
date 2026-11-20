@@ -33,3 +33,9 @@ export function latenessLabel(value: Lateness, now: Date): string {
   if (days < 7) return `Atrasado desde el ${formatWeekday(noon).toLowerCase()}`;
   return `Atrasado desde el ${formatShortDate(noon)}`;
 }
+
+// En la fila de la lista, corto: el día del pedido ya va junto a su número («#0037, ayer»)
+export function latenessShortLabel(value: Lateness): string {
+  if (!value) return "";
+  return value.kind === "late" ? `${value.minutes} min tarde` : "Atrasado";
+}
