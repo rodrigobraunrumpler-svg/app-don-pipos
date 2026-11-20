@@ -1,6 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 
 import { Icon, type IconName } from "@/components/ui/icon";
+import type { OrderFilter } from "@/features/orders";
 import type { ColorName } from "@/theme";
 
 import { useUrgentRows } from "../hooks/use-urgent-rows";
@@ -9,6 +10,7 @@ import type { UrgentKind, UrgentRow } from "../rules/urgent";
 // La maqueta: el reloj para lo que va tarde y lo que se acaba, el triángulo para el stock; rojo lo que no espera
 const ICONS: Record<UrgentKind, IconName> = {
   late: "clock-outline",
+  more: "clipboard-list-outline",
   out: "alert-outline",
   owed: "alert-outline",
   check: "alert-outline",
@@ -16,6 +18,7 @@ const ICONS: Record<UrgentKind, IconName> = {
 };
 const TONES: Record<UrgentKind, ColorName> = {
   late: "danger",
+  more: "warning",
   out: "danger",
   owed: "danger",
   check: "warning",
@@ -25,17 +28,19 @@ const TONES: Record<UrgentKind, ColorName> = {
 type Props = {
   now: Date;
   onOpenOrder: (orderId: string) => void;
+  onOrders: (filter: OrderFilter) => void;
   onProduct: (productId: string) => void;
   onProduction: () => void;
 };
 
-// Lo urgente, arriba de Inicio: cada fila lleva a su pedido, a revisar el alfajor o a Registrar producción
-export function HomeUrgent({ now, onOpenOrder, onProduct, onProduction }: Props) {
+// Lo urgente, arriba de Inicio: cada fila lleva a su pedido (o a Pedidos), a revisar el alfajor o a Registrar producción
+export function HomeUrgent({ now, onOpenOrder, onOrders, onProduct, onProduction }: Props) {
   const rows = useUrgentRows(now);
   if (rows.length === 0) return null;
 
   function open(row: UrgentRow) {
     if (row.kind === "late") onOpenOrder(row.id);
+    else if (row.kind === "more") onOrders("to_deliver");
     else if (row.kind === "check") onProduct(row.id);
     else onProduction();
   }

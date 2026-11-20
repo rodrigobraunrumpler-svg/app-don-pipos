@@ -7,6 +7,7 @@ export type LateOrder = {
   customerName: string | null;
   fulfillment: string;
   promisedAt: string | null;
+  dueDate: string;
   lateness: "late" | "overdue";
   label: string;
 };
@@ -19,7 +20,7 @@ export type StockLine = {
   coverageDays: number | null;
   line: string;
 };
-export type UrgentKind = "late" | "out" | "owed" | "check" | "low";
+export type UrgentKind = "late" | "more" | "out" | "owed" | "check" | "low";
 export type UrgentRow = { id: string; kind: UrgentKind; title: string; detail: string };
 
 // Lo agotado y lo que falta para pedidos van antes que revisar y que lo que se acaba
@@ -27,6 +28,20 @@ const STOCK_ORDER: UrgentKind[] = ["out", "owed", "check", "low"];
 const PRODUCE = "Registrar producción";
 
 const lowerFirst = (text: string): string => text.charAt(0).toLowerCase() + text.slice(1);
+const compare = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
+
+// Lo atrasado de días anteriores primero, del día más viejo; después lo que va tarde hoy, lo prometido antes primero.
+// Pedidos los da al revés (del número más nuevo), y así lo más atrasado quedaba abajo
+function lateFirst(a: LateOrder, b: LateOrder): number {
+  if (a.lateness !== b.lateness) return a.lateness === "overdue" ? -1 : 1;
+  return a.lateness === "overdue" ? compare(a.dueDate, b.dueDate) : compare(a.promisedAt ?? "", b.promisedAt ?? "");
+}
+
+// Más pedidos por entregar de los que se miraron: alguno puede ir tarde
+function moreRow(count: number): UrgentRow {
+  const title = `${count} ${count === 1 ? "pedido más" : "pedidos más"} por entregar`;
+  return { id: "to_deliver", kind: "more", title, detail: "Míralos en Pedidos: alguno puede ir tarde" };
+}
 
 function lateRow(order: LateOrder): UrgentRow {
   const who = `${order.number}${order.customerName ? ` de ${order.customerName}` : ""}`;
@@ -55,9 +70,13 @@ function stockRow(item: StockLine): UrgentRow | null {
   return { id, kind: "low", title, detail: PRODUCE };
 }
 
-// Lo urgente de Inicio, en el orden de reports.md §5: lo atrasado y lo que va tarde, lo agotado (y lo que falta para
-// pedidos), lo que hay que revisar y lo que se acaba
-export function urgentRows(late: LateOrder[], stock: StockLine[]): UrgentRow[] {
+// Lo urgente de Inicio, en el orden de reports.md §5: lo atrasado y lo que va tarde (y cuántos pedidos más hay por
+// entregar, si no se miraron todos), lo agotado (y lo que falta para pedidos), lo que hay que revisar y lo que se acaba
+export function urgentRows(late: LateOrder[], stock: StockLine[], moreToDeliver = 0): UrgentRow[] {
   const stockRows = stock.map(stockRow).filter((row): row is UrgentRow => row !== null);
-  return [...late.map(lateRow), ...STOCK_ORDER.flatMap((kind) => stockRows.filter((row) => row.kind === kind))];
+  return [
+    ...[...late].sort(lateFirst).map(lateRow),
+    ...(moreToDeliver > 0 ? [moreRow(moreToDeliver)] : []),
+    ...STOCK_ORDER.flatMap((kind) => stockRows.filter((row) => row.kind === kind)),
+  ];
 }

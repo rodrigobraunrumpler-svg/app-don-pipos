@@ -78,7 +78,13 @@ export function HomeScreen({
         </Text>
         <Text className="mt-0.5 text-base text-text-secondary">{formatLongDate(now)}</Text>
       </View>
-      <HomeUrgent now={now} onOpenOrder={onOpenOrder} onProduct={onProduct} onProduction={onProduction} />
+      <HomeUrgent
+        now={now}
+        onOpenOrder={onOpenOrder}
+        onOrders={onOrders}
+        onProduct={onProduct}
+        onProduction={onProduction}
+      />
       <CollectedToday onCash={onCash} onOrders={onOrders} onReceivables={onReceivables} />
       <StockTray onProduct={onProduct} onStock={onStock} />
       <HomeSuggestion onProduction={onProduction} />

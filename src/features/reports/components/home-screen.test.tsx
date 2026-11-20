@@ -25,9 +25,9 @@ jest.mock("@/features/stock/api/stock", () => ({
 }));
 
 const today = businessDate(new Date());
-const page = (items: OrderSummary[]) => ({
+const page = (items: OrderSummary[], total = items.length) => ({
   items,
-  meta: { limit: 20, total: items.length, hasMore: false, nextCursor: null },
+  meta: { limit: 20, total, hasMore: total > items.length, nextCursor: null },
 });
 const order = (overrides: Partial<OrderSummary>): OrderSummary => ({
   id: "o44",
@@ -86,8 +86,10 @@ const handlers = () => ({
 beforeEach(() => {
   mockSummary.mockReset().mockResolvedValue(SUMMARY);
   mockList.mockReset().mockImplementation(async (filter: string) =>
+    // Como list_orders: del número más nuevo al más viejo
     filter === "to_deliver"
       ? page([
+          order({}),
           order({
             id: "o37",
             number: 37,
@@ -97,7 +99,6 @@ beforeEach(() => {
             dueDate: previousDay(today),
             status: "new",
           }),
-          order({}),
         ])
       : page([order({ id: "o50", number: 50, dueDate: "2099-01-01", promisedAt: null, status: "new" })]),
   );
@@ -227,4 +228,12 @@ test("si una parte no carga, las demás se ven", async () => {
   mockSummary.mockResolvedValue(SUMMARY);
   await fireEvent.press(screen.getByRole("button", { name: "Reintentar" }));
   expect(await screen.findByText("S/\u00a067.00")).toBeOnTheScreen();
+});
+
+test("con más pedidos por entregar de los que entran, una fila lleva a Pedidos", async () => {
+  mockList.mockImplementation(async (filter: string) => (filter === "to_deliver" ? page([order({})], 24) : page([])));
+  const on = handlers();
+  await renderWithProviders(<HomeScreen {...on} />);
+  await fireEvent.press(await screen.findByRole("button", { name: /^23 pedidos más por entregar\./ }));
+  expect(on.onOrders).toHaveBeenCalledWith("to_deliver");
 });
