@@ -605,6 +605,8 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      create_counter_sale: { Args: { p_items: Json; p_method: string; p_request_id: string }; Returns: Json };
+      create_order: { Args: { p_draft: Json; p_request_id: string }; Returns: Json };
       get_business: { Args: Record<PropertyKey, never>; Returns: Json };
       list_product_movements: { Args: { p_cursor?: string; p_limit?: number; p_product_id: string }; Returns: Json };
       list_products: { Args: Record<PropertyKey, never>; Returns: Json };
