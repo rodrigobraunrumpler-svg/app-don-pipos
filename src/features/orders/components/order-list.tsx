@@ -15,11 +15,17 @@ import { useTheme } from "@/theme";
 
 import { FILTER_LABELS } from "../constants";
 import { orderCountsQuery, orderQuery, ordersQuery, receivablesQuery } from "../queries/orders";
-import type { OrderFilter, OrderSummary } from "../schema/order";
+import { orderFilterSchema, type OrderFilter, type OrderSummary } from "../schema/order";
 import { OrderFilters } from "./order-filters";
 import { OrderRow } from "./order-row";
 
-type Props = { onOpen: (orderId: string) => void; onNew: () => void; onReceivables: () => void };
+type Props = {
+  // El filtro que pide otra pantalla («por entregar» en Inicio). Uno desconocido no cambia nada
+  requestedFilter?: string;
+  onOpen: (orderId: string) => void;
+  onNew: () => void;
+  onReceivables: () => void;
+};
 type Row =
   | { type: "group"; key: string; title: string }
   | { type: "order"; key: string; order: OrderSummary; finished: boolean };
@@ -42,11 +48,18 @@ function groupToday(orders: OrderSummary[]): Row[] {
 }
 
 // La pestaña Pedidos (PANTALLAS.pedidos): la búsqueda, los filtros con su cantidad y la lista por páginas de 20
-export function OrderList({ onOpen, onNew, onReceivables }: Props) {
+export function OrderList({ requestedFilter, onOpen, onNew, onReceivables }: Props) {
   const online = useOnline();
   const { colors } = useTheme();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<OrderFilter>("today");
+  // Se pone cada vez que llega uno: la pestaña no se desmonta, así que no basta con el valor inicial
+  const [requested, setRequested] = useState<string | undefined>();
+  if (requestedFilter !== requested) {
+    setRequested(requestedFilter);
+    const parsed = orderFilterSchema.safeParse(requestedFilter);
+    if (parsed.success) setFilter(parsed.data);
+  }
   const [text, setText] = useState("");
   const [search, setSearch] = useState("");
   // La rueda de recarga, solo mientras el dueño tira hacia abajo
