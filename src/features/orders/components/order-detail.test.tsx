@@ -15,6 +15,7 @@ const mockEdit = jest.fn();
 const mockRevertEdit = jest.fn();
 const mockCancel = jest.fn();
 const mockRevertCancel = jest.fn();
+const mockChange = jest.fn();
 jest.mock("../api/orders", () => ({
   getOrder: () => mockGet(),
   advanceOrder: (input: unknown) => mockAdvance(input),
@@ -24,6 +25,7 @@ jest.mock("../api/orders", () => ({
   revertEdit: (input: unknown) => mockRevertEdit(input),
   cancelOrder: (input: unknown) => mockCancel(input),
   revertCancel: (input: unknown) => mockRevertCancel(input),
+  changePaymentMethod: (input: unknown) => mockChange(input),
 }));
 jest.mock("@/features/products/api/products", () => ({
   listProducts: async () => (jest.requireActual("@/test/products") as { TEST_PRODUCTS: unknown }).TEST_PRODUCTS,
@@ -54,7 +56,7 @@ const open = async (order: Order) => {
 };
 
 beforeEach(() =>
-  [mockGet, mockAdvance, mockRevert, mockPay, mockEdit, mockRevertEdit, mockCancel, mockRevertCancel].forEach((mock) =>
+  [mockGet, mockAdvance, mockRevert, mockPay, mockEdit, mockRevertEdit, mockCancel, mockRevertCancel, mockChange].forEach((mock) =>
     mock.mockReset(),
   ),
 );
@@ -194,4 +196,19 @@ test("un pedido anulado dice su motivo y ya no ofrece acciones", async () => {
   ).toBeOnTheScreen();
   for (const label of ["Editar pedido", "Anular", "Registrar pago de S/ 22.00"])
     expect(screen.queryByRole("button", { name: label })).toBeNull();
+});
+
+test("la devolución se lee como tal y el medio de un pago se corrige ahí mismo", async () => {
+  const refund = { ...TEST_ORDER.payments[0]!, id: "00000000-0000-4000-8000-0000000000e2", kind: "refund" as const };
+  const order = withStatus("cancelled", { cancelReason: "Sin stock", paidCents: 0, payments: [TEST_ORDER.payments[0]!, refund] });
+  mockChange.mockResolvedValue(order);
+  await open(order);
+  expect(await screen.findByText("Devolución: Yape")).toBeOnTheScreen();
+  expect(screen.getByText("−S/ 20.00")).toBeOnTheScreen();
+  await fireEvent.press(screen.getAllByRole("button", { name: "Cambiar medio" })[1]!);
+  expect(await screen.findByText("Devolución de S/ 20.00 con Yape. Elige con qué fue de verdad.")).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: "Efectivo" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Guardar medio" }));
+  expect(await screen.findByText("Medio cambiado: Efectivo")).toBeOnTheScreen();
+  expect(mockChange).toHaveBeenCalledWith({ requestId: expect.any(String), paymentId: refund.id, method: "cash" });
 });

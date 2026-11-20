@@ -139,7 +139,15 @@ export function OrderDetail({ orderId, onBack }: Props) {
           </View>
         ) : null}
         <OrderItems order={order} />
-        <OrderPayments order={order} now={now} canPay={canPay} disabled={!online} onPay={() => setSheet("pay")} />
+        <OrderPayments
+          order={order}
+          now={now}
+          canPay={canPay}
+          disabled={!online}
+          methods={methods ?? []}
+          onPay={() => setSheet("pay")}
+          onMessage={(text) => setMessage({ text })}
+        />
         {order.customer ? (
           <View className="mt-5">
             <Text accessibilityRole="header" className="font-extrabold text-lg text-text">
