@@ -225,3 +225,83 @@ Se escriben en `orders.md`, `stock.md` y `docs/plan/README.md` en la tarea 2, an
 - [ ] **Paso 2: Documentar y commit** — `docs: record phase 4b results and the phone test`.
 
 **Lo que pruebas tú en el celular** (va en «Lo que falta»): moverse por la app (pestañas, Nuevo pedido paso a paso, atrás con la flecha y con el botón del celular); editar un pedido y deshacerlo; anular uno pagado devolviendo una parte; cambiar el medio de un pago; Por cobrar y «Recordar»; la sugerencia en Stock y «Por qué»; «Cómo se vende» en un alfajor; deshacer una venta de mostrador.
+
+---
+
+## Resultado (2026-11-19)
+
+La fase 4b quedó construida en la rama `fase-4b`, con un commit por tarea y uno de formato.
+
+| Comprobación | Resultado |
+|---|---|
+| `pnpm test:coverage` | 510 pruebas; 100 % en `lib/{money,dates,errors}`, `theme/tokens` y las cuentas de `features/*/rules` |
+| `pnpm db:check` | Pasa entera: 543 pruebas de la base en 27 archivos, consejos de Supabase sin nada pendiente y tipos al día |
+| `pnpm db:perf` | 25 casos, todos con índice; el más lento, buscar un nombre en 3 años de pedidos: 33 ms. La sugerencia de producción con 3 años de pedidos: 9 ms |
+| `pnpm lint`, `pnpm lint:rules`, `pnpm typecheck`, `pnpm test:scripts` | Pasan |
+
+En el proyecto de desarrollo quedaron las cuatro migraciones de la fase: editar, anular, medio de pago y por cobrar, y la venta esperada. No se cargaron pedidos DEMO.
+
+### Lo que falta: probar en el celular
+
+```bash
+cd /home/javier/var-mar/app && pnpm start --tunnel
+```
+
+Ingresa con el dueño DEMO (900 000 101, el PIN de tu `.env.local`):
+
+1. **Moverte por la app:** cambia de pestaña (se deslizan de lado). + → Un pedido: elige alfajores → «Seguir»: el paso 2 entra desde la derecha. La flecha de arriba y el botón atrás del celular vuelven al paso 1 con lo que elegiste y, otra vez atrás, a donde estabas. Guarda el pedido: desde «Pedido guardado», atrás ya no vuelve al formulario.
+2. **Editar y deshacer:** abre un pedido sin entregar → «Editar pedido» → suma una Limon Kiss → «Guardar cambios». Sale «Pedido #000X actualizado: S/ …»; «Deshacer» lo deja como estaba.
+3. **Anular devolviendo una parte:** un pedido con adelanto (por ejemplo S/ 20 con Yape) → «Anular» → «El cliente canceló» → baja el monto devuelto a 10 → «Anular pedido». El pedido dice «Pedido anulado: el cliente canceló…», en Pagos aparece «Devolución: Yape» con −S/ 10.00 y, en Stock, los alfajores volvieron.
+4. **Cambiar el medio:** en un pago, «Cambiar medio» → Efectivo → «Guardar medio». Sale «Medio cambiado: Efectivo».
+5. **Por cobrar:** Pedidos → filtro «Por cobrar» → «Ver por cobrar». En un pedido entregado con saldo, o con adelanto, «Recordar a …» abre WhatsApp con el recordatorio del saldo. Una fila abre su pedido; atrás vuelve a Por cobrar y, otra vez atrás, a Pedidos.
+6. **Deshacer una venta de mostrador:** + → Una venta de mostrador → cobra → «Deshacer» en el aviso. Sale «Venta #000X anulada, con su devolución.» y en Pedidos se ve anulada.
+7. **La sugerencia y «Cómo se vende»** necesitan 7 días de pedidos. Hoy, Stock no muestra la sugerencia, Registrar producción dice «Todavía no hay ventas suficientes…» y un alfajor no muestra «le alcanza» ni el gráfico. Desde el séptimo día con pedidos aparecen solos.
+
+### Lo que cambió respecto de este plan
+
+**Tarea 1**
+- El pedido guardado tiene su propia pantalla (`orders/saved/[id]`), que reemplaza todo el recorrido: atrás desde ahí vuelve a donde empezaste. «Anotar otro pedido» abre un recorrido nuevo.
+- «Seguir» usa `router.navigate`: un doble toque abre un solo paso 2.
+- Las pruebas usan `router.back()`, como la app (`testRouter.back()` de expo-router no se movía).
+
+**Tarea 2**
+- `edit_order` revisa sus propias líneas: la que ya estaba se queda aunque su alfajor se haya apagado; una nueva necesita un alfajor activo.
+- Editar, deshacer y anular comparten `private.set_order_lines` y `private.refresh_order_totals`.
+- La prueba 090 buscaba «el pedido 1» en todos los negocios y fallaba con tu #0001 de la prueba en el celular; ahora busca solo en su negocio.
+
+**Tarea 3**
+- `revert_cancel` pide que la anulación sea el último cambio del pedido, en su estado y en el registro de cambios: si después se cambió el medio de un pago, ya no se deshace.
+- Los totales del cliente nunca bajan de cero al anular.
+
+**Tarea 4**
+- `change_payment_method` toma primero el pedido, como todo cambio de un pedido, y también corrige el medio de una devolución de un pedido anulado.
+
+**Tarea 5**
+- La historia empieza en el primer pedido sin anular del negocio. El promedio de cada día divide por las veces que ese día cae en la historia: los días sin ventas cuentan como cero.
+- Un alfajor que no se vende alcanza «para más de una semana» y no queda en «poco» por el alcance.
+
+**Tarea 6**
+- Las llamadas nuevas viven en `api/orders.ts` (el plan decía `api/corrections.ts`). Sin devolución, la app manda 0 y un medio vacío: los tipos generados piden los dos.
+- `CACHE_SCHEMA` sube a 3: lo guardado en el celular con la forma anterior se descarta una vez.
+- Una petición que pasa 20 s sin respuesta se corta y se ve como «Sin conexión».
+
+**Tarea 7**
+- Anular empieza sin motivo marcado (la maqueta marcaba «El cliente canceló»): el motivo siempre lo elige el dueño. «Otro» se guarda tal cual, sin campo de texto, como en la maqueta.
+- «Anular» también aparece en un pedido entregado (lo decidiste el 2026-11-18); «Editar pedido», solo antes de entregar.
+- Al editar por debajo de lo pagado, el medio de la devolución empieza sin elegir; al anular, empieza con todo lo pagado y el medio del último pago.
+
+**Tarea 8**
+- «Cambiar medio» es un enlace bajo el monto de cada pago o devolución, y no aparece si no hay otro medio activo. El botón de la hoja dice «Guardar medio».
+
+**Tarea 9**
+- La entrada es la tarjeta «Te deben S/ X» del filtro «Por cobrar» de Pedidos, hasta que llegue Inicio.
+- «Recordar a …» funciona sin señal (WhatsApp guarda el mensaje). Un saldo que tocaría recordar, pero sin teléfono, dice «Sin teléfono».
+- Por cobrar llega de 20 en 20 con «Cargar N más», sin tirar para recargar: cada cambio de un pedido ya la refresca.
+
+**Tarea 10**
+- El «Deshacer» de la venta pide su propio código al tocarlo y va en la fila de cambios de esa venta. Si falla, el aviso dice por qué, y la venta se puede anular desde su pedido.
+
+**Tarea 11**
+- La sugerencia de Stock abre Registrar producción también sin señal: ahí se ve lo sugerido que quedó guardado.
+- Registrar producción espera la sugerencia solo mientras se pide: sin señal y sin nada guardado, abre como sin historia.
+- La nota del gráfico dice «según las últimas 4 semanas» aunque la historia sea más corta (de 7 a 27 días).
