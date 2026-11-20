@@ -12,13 +12,13 @@ import { useOnline } from "@/lib/use-online";
 
 import { useSaveSettings } from "../hooks/use-save-settings";
 import { businessQuery } from "../queries/business";
-import { productionNote } from "../rules/settings-labels";
+import { productionLabel, productionNote } from "../rules/settings-labels";
 
 // Más → Producción: cada cuántos días produce (de 1 a 14). Inicio y Stock sugieren para ese periodo
 export function ProductionSheet({ onClose }: { onClose: () => void }) {
   const online = useOnline();
   const settings = useQuery(businessQuery).data?.settings;
-  const { save, saving, failure } = useSaveSettings();
+  const { save, saving, failure, conflict } = useSaveSettings();
   const [edited, setEdited] = useState<number | null>(null);
   const days = edited ?? settings?.productionIntervalDays;
 
@@ -45,6 +45,9 @@ export function ProductionSheet({ onClose }: { onClose: () => void }) {
             <Text className="flex-1 text-sm text-text">{productionNote(days)}</Text>
           </View>
           {failure ? <Text className="font-bold text-sm text-danger">{failure}</Text> : null}
+          {conflict && settings ? (
+            <Text className="text-sm text-text">{`Lo guardado ahora: ${productionLabel(settings.productionIntervalDays)}`}</Text>
+          ) : null}
           <Button
             label={saving ? "Guardando…" : "Guardar"}
             disabled={!online || saving}

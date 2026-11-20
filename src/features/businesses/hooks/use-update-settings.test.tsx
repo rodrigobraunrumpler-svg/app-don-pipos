@@ -1,5 +1,5 @@
 import { QueryClientProvider } from "@tanstack/react-query";
-import { act, renderHook } from "@testing-library/react-native";
+import { act, renderHook, waitFor } from "@testing-library/react-native";
 import type { ReactNode } from "react";
 
 import { AppError } from "@/lib/errors";
@@ -47,4 +47,22 @@ test("si otro cambio llegó antes (conflict), vuelve a como estaba", async () =>
     await result.current.mutateAsync({ deliveryFeeCents: 900 }).catch(() => undefined);
   });
   expect(settings()).toEqual(TEST_BUSINESS.settings);
+});
+
+test("dos interruptores tocados seguidos salen de a uno, cada uno con la versión que dejó el anterior", async () => {
+  const { wrapper, settings } = setup();
+  mockUpdate.mockReset();
+  mockUpdate.mockImplementation(async (version: number, patch: object) => ({
+    ...TEST_BUSINESS.settings,
+    ...patch,
+    version: version + 1,
+  }));
+  const { result } = await renderHook(() => useUpdateSettings(), { wrapper });
+  await act(async () => {
+    result.current.mutate({ activePaymentMethods: ["cash", "yape", "transfer"] });
+    result.current.mutate({ activePaymentMethods: ["cash", "yape"] });
+  });
+  await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(2));
+  expect(mockUpdate.mock.calls.map(([version]) => version)).toEqual([1, 2]);
+  await waitFor(() => expect(settings()).toMatchObject({ activePaymentMethods: ["cash", "yape"], version: 3 }));
 });

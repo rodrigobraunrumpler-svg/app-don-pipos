@@ -12,75 +12,24 @@ import { useReminderSync } from "./use-reminder-sync";
 
 // Miércoles 18 de noviembre de 2026, 11:40 en Lima
 const NOW = new Date("2026-11-18T16:40:00.000Z");
-const page = <T,>(items: T[]) => ({
-  items,
-  meta: { limit: 20, total: items.length, hasMore: false, nextCursor: null },
-});
 let mockBusiness = TEST_BUSINESS;
-// Lo que hay: un pedido para mañana, un saldo de ayer y Morenita baja. Cada prueba lo cambia si necesita
+// Lo que hay: un pedido para mañana, un saldo de ayer y Morenita baja (src/test/reminders.ts). Cada prueba lo cambia
 let mockEmpty = false;
 let mockOnHand = 4;
 let mockReceivablesFail = false;
 jest.mock("@/features/businesses/api/business", () => ({ getBusiness: async () => mockBusiness }));
-jest.mock("@/features/orders/api/orders", () => ({
-  listUpcomingOrders: async () =>
-    mockEmpty
-      ? []
-      : [
-          {
-            id: "o1",
-            number: 44,
-            status: "new",
-            fulfillment: "pickup",
-            customerName: "Patricia V. (DEMO)",
-            itemsSummary: "12 Coquetas",
-            totalCents: 14400,
-            paidCents: 0,
-            promisedAt: "2026-11-19T15:00:00.000Z",
-            dueDate: "2026-11-19",
-          },
-        ],
-  listReceivables: async () => {
-    if (mockReceivablesFail) throw new (jest.requireActual("@/lib/errors").AppError)("unexpected");
-    return {
-      ...page(
-        mockEmpty
-          ? []
-          : [
-              {
-                id: "o9",
-                number: 40,
-                customerName: "Jorge P. (DEMO)",
-                customerPhone: "+51900000301",
-                fulfillment: "pickup",
-                status: "delivered",
-                totalCents: 2400,
-                paidCents: 0,
-                dueDate: "2026-11-17",
-                scheduledFor: null,
-                remind: true,
-              },
-            ],
-      ),
-      meta: { limit: 20, total: 1, hasMore: false, nextCursor: null, totalDueCents: 2400 },
-    };
-  },
-}));
-jest.mock("@/features/stock/api/stock", () => ({
-  getStockOverview: async () => [
-    {
-      productId: "p1",
-      name: "Morenita",
-      imageUrl: null,
-      linkedToWeb: false,
-      minStock: 6,
-      onHand: mockOnHand,
-      reserved: 0,
-      physical: mockOnHand,
-      coverageDays: 1,
-      state: mockEmpty ? "ok" : "low",
+jest.mock("@/features/orders/api/orders", () => {
+  const { UPCOMING_ORDER, receivablesPage } = jest.requireActual("@/test/reminders");
+  return {
+    listUpcomingOrders: async () => (mockEmpty ? [] : [UPCOMING_ORDER]),
+    listReceivables: async () => {
+      if (mockReceivablesFail) throw new (jest.requireActual("@/lib/errors").AppError)("unexpected");
+      return receivablesPage(!mockEmpty);
     },
-  ],
+  };
+});
+jest.mock("@/features/stock/api/stock", () => ({
+  getStockOverview: async () => [jest.requireActual("@/test/reminders").morenita(mockOnHand, mockEmpty ? "ok" : "low")],
 }));
 
 const schedule = jest.mocked(Notifications.scheduleNotificationAsync);
@@ -254,4 +203,18 @@ test("si Por cobrar no carga, los avisos de pedidos y de stock no esperan", asyn
   await sync();
   await waitFor(() => expect(schedule).toHaveBeenCalledTimes(2));
   expect(scheduled().map((call) => call.identifier)).toEqual(["order:o1", "stock:p1"]);
+});
+
+test("apagar «Saldos pendientes» con los avisos ya programados los saca", async () => {
+  const client = await sync();
+  await waitFor(() => expect(schedule).toHaveBeenCalledTimes(3));
+  schedule.mockClear();
+  cancelAll.mockClear();
+  mockBusiness = {
+    ...TEST_BUSINESS,
+    settings: { ...TEST_BUSINESS.settings, reminders: { scheduled: true, stock: true, balances: false } },
+  };
+  await act(() => client.refetchQueries());
+  await waitFor(() => expect(cancelAll).toHaveBeenCalled());
+  expect(scheduled().map((call) => call.identifier)).toEqual(["order:o1"]);
 });

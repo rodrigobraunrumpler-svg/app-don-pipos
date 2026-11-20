@@ -11,12 +11,13 @@ import { useOnline } from "@/lib/use-online";
 
 import { useSaveSettings } from "../hooks/use-save-settings";
 import { businessQuery } from "../queries/business";
+import { lapsedLabel } from "../rules/settings-labels";
 
 // Más → Clientes que no vuelven: a partir de cuántos días sin pedir (de 7 a 120) un cliente sale en «No vuelven»
 export function LapsedSheet({ onClose }: { onClose: () => void }) {
   const online = useOnline();
   const settings = useQuery(businessQuery).data?.settings;
-  const { save, saving, failure } = useSaveSettings();
+  const { save, saving, failure, conflict } = useSaveSettings();
   const [edited, setEdited] = useState<number | null>(null);
   const days = edited ?? settings?.lapsedAfterDays;
 
@@ -39,6 +40,9 @@ export function LapsedSheet({ onClose }: { onClose: () => void }) {
             <Stepper value={days} onChange={setEdited} label="días sin pedir" min={7} max={120} />
           </View>
           {failure ? <Text className="font-bold text-sm text-danger">{failure}</Text> : null}
+          {conflict && settings ? (
+            <Text className="text-sm text-text">{`Lo guardado ahora: ${lapsedLabel(settings.lapsedAfterDays)}`}</Text>
+          ) : null}
           <Button
             label={saving ? "Guardando…" : "Guardar"}
             disabled={!online || saving}
