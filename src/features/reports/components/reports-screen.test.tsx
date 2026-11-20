@@ -114,5 +114,5 @@ test("sin pedidos ni gastos en el periodo ni en el anterior, lo dice; sin señal
   await renderWithProviders(<ReportsScreen {...handlers()} />);
   expect(await screen.findByText("Todavía no hay datos")).toBeOnTheScreen();
   onlineManager.setOnline(false);
-  expect(await screen.findByText(/^Sin conexión\. Ves los números de las \d\d:\d\d\.$/)).toBeOnTheScreen();
+  expect(await screen.findByText(/^Sin conexión\. Ves los números cargados a las \d\d:\d\d\.$/)).toBeOnTheScreen();
 });

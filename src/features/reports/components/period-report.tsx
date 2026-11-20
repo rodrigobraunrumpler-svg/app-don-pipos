@@ -7,11 +7,11 @@ import { Icon } from "@/components/ui/icon";
 import { LoadError } from "@/components/ui/load-error";
 import { Notice } from "@/components/ui/notice";
 import { SkeletonRows } from "@/components/ui/skeleton";
-import { formatTime } from "@/lib/dates";
 import { useOnline } from "@/lib/use-online";
 
 import { reportSummaryQuery } from "../queries/reports";
 import { barUnit } from "../rules/bars";
+import { loadedWhen } from "../rules/loaded";
 import type { Period } from "../rules/period";
 import { ByMethod } from "./by-method";
 import { ExportSheet } from "./export-sheet";
@@ -48,7 +48,7 @@ export function PeriodReport({ period, today, onRanking }: Props) {
   return (
     <>
       {online ? null : (
-        <Notice>{`Sin conexión. Ves los números de las ${formatTime(new Date(dataUpdatedAt))}.`}</Notice>
+        <Notice>{`Sin conexión. Ves los números cargados ${loadedWhen(new Date(dataUpdatedAt), new Date())}.`}</Notice>
       )}
       {empty ? (
         <View className="items-center pt-10">

@@ -1,5 +1,5 @@
 import { onlineManager } from "@tanstack/react-query";
-import { fireEvent, screen, within } from "@testing-library/react-native";
+import { act, fireEvent, screen, within } from "@testing-library/react-native";
 
 import type { OrderSummary } from "@/features/orders";
 import type { StockItem } from "@/features/stock";
@@ -249,4 +249,11 @@ test("una devolución de hoy deja un medio en negativo: también se ve, para que
   expect(screen.getByText("Efectivo")).toBeOnTheScreen();
   expect(screen.getByText("Yape")).toBeOnTheScreen();
   expect(screen.queryByText("Plin")).toBeNull();
+});
+
+test("sin señal y sin nada guardado, no dice que se ve algo", async () => {
+  mockSummary.mockReturnValue(new Promise(() => undefined));
+  await act(() => onlineManager.setOnline(false));
+  await renderWithProviders(<HomeScreen {...handlers()} />);
+  expect(await screen.findByText("Sin conexión. Lo de hoy se carga cuando vuelva la señal.")).toBeOnTheScreen();
 });

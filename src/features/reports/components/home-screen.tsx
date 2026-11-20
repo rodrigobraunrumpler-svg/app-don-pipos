@@ -6,13 +6,14 @@ import { Logo } from "@/components/ui/logo";
 import { Notice } from "@/components/ui/notice";
 import { ordersKeys, type OrderFilter } from "@/features/orders";
 import { stockKeys } from "@/features/stock";
-import { formatLongDate, formatTime } from "@/lib/dates";
+import { formatLongDate } from "@/lib/dates";
 import { useOnline } from "@/lib/use-online";
 import { useTheme } from "@/theme";
 
 import { reportsKeys } from "../queries/keys";
 import { homeSummaryQuery } from "../queries/reports";
 import { greeting } from "../rules/greeting";
+import { loadedWhen } from "../rules/loaded";
 import { CollectedToday } from "./collected-today";
 import { HomeOrders } from "./home-orders";
 import { HomeSuggestion } from "./home-suggestion";
@@ -49,7 +50,10 @@ export function HomeScreen({
   // La rueda de recarga, solo mientras el dueño tira hacia abajo
   const [pulling, setPulling] = useState(false);
   const now = new Date();
-  const loadedAt = dataUpdatedAt ? `, a las ${formatTime(new Date(dataUpdatedAt))}` : "";
+  // Sin señal: de cuándo es lo que se ve; sin nada guardado, que llega con la señal
+  const offline = dataUpdatedAt
+    ? `Sin conexión. Ves lo último que se cargó, ${loadedWhen(new Date(dataUpdatedAt), now)}.`
+    : "Sin conexión. Lo de hoy se carga cuando vuelva la señal.";
 
   function refresh() {
     setPulling(true);
@@ -71,7 +75,7 @@ export function HomeScreen({
         <Logo size="tiny" />
         <Text className="font-extrabold text-lg text-text">Don Pipos</Text>
       </View>
-      {online ? null : <Notice>{`Sin conexión. Ves lo último que se cargó${loadedAt}.`}</Notice>}
+      {online ? null : <Notice>{offline}</Notice>}
       <View className="mt-3.5">
         <Text accessibilityRole="header" className="font-extrabold text-[25px] text-text">
           {greeting(now)}
