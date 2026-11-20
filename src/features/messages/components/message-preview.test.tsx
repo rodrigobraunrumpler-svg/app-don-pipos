@@ -23,7 +23,8 @@ const CONTEXT = {
   total: "S/ 42.00",
   entrega: "Te lo llevamos hoy.",
 };
-const TEXT = "Hola Ana, recibimos tu pedido #0042: 2 Coquetas, 1 Pipo Crush. Total: S/ 42.00. Te lo llevamos hoy. ¡Gracias!";
+const TEXT =
+  "Hola Ana, recibimos tu pedido #0042: 2 Coquetas, 1 Pipo Crush. Total: S/ 42.00. Te lo llevamos hoy. ¡Gracias!";
 
 test("la burbuja se llena con los datos del pedido y el botón abre WhatsApp con ese texto", async () => {
   const open = jest.spyOn(Linking, "openURL").mockResolvedValue(undefined);
@@ -34,7 +35,9 @@ test("la burbuja se llena con los datos del pedido y el botón abre WhatsApp con
 });
 
 test("sin teléfono, solo la burbuja", async () => {
-  await renderWithProviders(<MessagePreview templateKey="on_the_way" context={{ nombre: "Ana", numero: "#0042" }} phone={null} />);
+  await renderWithProviders(
+    <MessagePreview templateKey="on_the_way" context={{ nombre: "Ana", numero: "#0042" }} phone={null} />,
+  );
   expect(await screen.findByText("Hola Ana, tu pedido #0042 va en camino.")).toBeOnTheScreen();
   expect(screen.queryByRole("button", { name: "Enviar por WhatsApp" })).toBeNull();
 });

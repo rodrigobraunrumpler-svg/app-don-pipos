@@ -8,9 +8,7 @@ export const customerMatchSchema = z
     address: z.string().nullable(),
     ordersCount: z.number().int(),
     lastOrderAt: z.string().nullable(),
-    lastOrder: z
-      .object({ lines: z.array(z.object({ productId: z.string(), quantity: z.number().int() })) })
-      .nullable(),
+    lastOrder: z.object({ lines: z.array(z.object({ productId: z.string(), quantity: z.number().int() })) }).nullable(),
   })
   .nullable();
 export type CustomerMatch = z.infer<typeof customerMatchSchema>;

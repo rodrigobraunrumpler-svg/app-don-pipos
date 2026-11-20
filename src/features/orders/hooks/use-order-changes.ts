@@ -17,7 +17,8 @@ import type { Order } from "../schema/order";
 // Cada cambio de un pedido refresca los pedidos, el stock (una venta resta, un pedido aparta) y el último pedido del
 // cliente. El pedido que devuelve la base queda listo para abrirlo
 const INVALIDATES = [ordersKeys.all, stockKeys.all, customersKeys.all];
-const keep = (queryClient: QueryClient) => (order: Order) => queryClient.setQueryData(ordersKeys.detail(order.id), order);
+const keep = (queryClient: QueryClient) => (order: Order) =>
+  queryClient.setQueryData(ordersKeys.detail(order.id), order);
 
 // Crear, vender y cobrar esperan la respuesta («Guardando…»)
 export function useCreateOrder() {
@@ -27,7 +28,11 @@ export function useCreateOrder() {
 
 export function useCreateCounterSale() {
   const queryClient = useQueryClient();
-  return useMutation({ ...createCounterSaleMutation, meta: { invalidates: INVALIDATES }, onSuccess: keep(queryClient) });
+  return useMutation({
+    ...createCounterSaleMutation,
+    meta: { invalidates: INVALIDATES },
+    onSuccess: keep(queryClient),
+  });
 }
 
 export function useAddPayment() {

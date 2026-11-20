@@ -33,13 +33,20 @@ test("avanzar se ve al instante en el pedido y vuelve atrás si falla", async ()
   const { client, result } = await setup(() => useAdvanceOrder());
   await act(() => void result.current.mutate({ orderId: TEST_ORDER.id, fromStatus: "new" }));
   await waitFor(() => expect(client.getQueryData<typeof TEST_ORDER>(KEY)?.status).toBe("preparing"));
-  expect(client.getQueryData<typeof TEST_ORDER>(KEY)?.timeline.map((event) => event.status)).toEqual(["new", "preparing"]);
+  expect(client.getQueryData<typeof TEST_ORDER>(KEY)?.timeline.map((event) => event.status)).toEqual([
+    "new",
+    "preparing",
+  ]);
   await act(() => reject(new AppError("offline")));
   await waitFor(() => expect(client.getQueryData<typeof TEST_ORDER>(KEY)?.status).toBe("new"));
 });
 
 test("deshacer vuelve al estado anterior al instante, y queda lo que responde la base", async () => {
-  const preparing = { ...TEST_ORDER, status: "preparing" as const, timeline: [...TEST_ORDER.timeline, { status: "preparing" as const, at: "2026-11-19T14:40:00.000Z" }] };
+  const preparing = {
+    ...TEST_ORDER,
+    status: "preparing" as const,
+    timeline: [...TEST_ORDER.timeline, { status: "preparing" as const, at: "2026-11-19T14:40:00.000Z" }],
+  };
   let resolve: (order: unknown) => void = () => undefined;
   mockRevert.mockImplementationOnce(() => new Promise((done) => (resolve = done)));
   const { client, result } = await setup(() => useRevertStatus());

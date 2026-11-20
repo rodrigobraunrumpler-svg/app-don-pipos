@@ -94,7 +94,10 @@ export const cases = [
     ["«Hoy»", "'today'"],
     ["«Por entregar»", "'to_deliver'"],
     ["«Todos», primera página", "'all'"],
-    ["«Todos», la página siguiente con su cursor", "'all', null, 20, public.list_orders('all') -> 'meta' ->> 'nextCursor'"],
+    [
+      "«Todos», la página siguiente con su cursor",
+      "'all', null, 20, public.list_orders('all') -> 'meta' ->> 'nextCursor'",
+    ],
     ["buscar «#5000»", "'all', '#5000'"],
     ["buscar «cliente 15»", "'all', 'cliente 15'"],
   ].map(([name, args]) => ({

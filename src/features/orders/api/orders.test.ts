@@ -20,7 +20,9 @@ test("una respuesta que no calza es una falla inesperada", async () => {
 
 test("la lista pide su filtro, la búsqueda y el cursor; las cantidades llegan revisadas", async () => {
   respond({ items: [summaryOf(TEST_ORDER)], meta: { limit: 20, total: 1, hasMore: false, nextCursor: null } });
-  await expect(listOrders({ filter: "today", search: "ana", cursor: "42" })).resolves.toMatchObject({ meta: { total: 1 } });
+  await expect(listOrders({ filter: "today", search: "ana", cursor: "42" })).resolves.toMatchObject({
+    meta: { total: 1 },
+  });
   expect(mockRpc).toHaveBeenLastCalledWith("list_orders", { p_filter: "today", p_search: "ana", p_cursor: "42" });
   respond({ today: 1, toDeliver: 1, upcoming: 0, toCollect: 1 });
   await expect(getOrderCounts()).rejects.toMatchObject({ kind: "unexpected" });
@@ -36,9 +38,14 @@ test("crear, avanzar, deshacer y cobrar mandan lo que pide cada función", async
   expect(mockRpc).toHaveBeenLastCalledWith("advance_order", { p_order_id: TEST_ORDER.id, p_from_status: "new" });
   respond(TEST_ORDER);
   await revertStatus({ orderId: TEST_ORDER.id, expectedStatus: "preparing" });
-  expect(mockRpc).toHaveBeenLastCalledWith("revert_status", { p_order_id: TEST_ORDER.id, p_expected_status: "preparing" });
+  expect(mockRpc).toHaveBeenLastCalledWith("revert_status", {
+    p_order_id: TEST_ORDER.id,
+    p_expected_status: "preparing",
+  });
   respond(null, { code: "P0001", message: "conflict" });
-  await expect(addPayment({ requestId: "r2", orderId: TEST_ORDER.id, method: "cash", amountCents: 2200 })).rejects.toMatchObject({
+  await expect(
+    addPayment({ requestId: "r2", orderId: TEST_ORDER.id, method: "cash", amountCents: 2200 }),
+  ).rejects.toMatchObject({
     kind: "conflict",
   });
   expect(mockRpc).toHaveBeenLastCalledWith("add_payment", {

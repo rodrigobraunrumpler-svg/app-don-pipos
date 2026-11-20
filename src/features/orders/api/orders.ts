@@ -52,7 +52,11 @@ export const createOrder = (input: { requestId: string; draft: OrderDraft }) =>
 
 export const createCounterSale = (input: { requestId: string; items: OrderLineInput[]; method: PaymentMethod }) =>
   orderFrom(
-    supabase().rpc("create_counter_sale", { p_request_id: input.requestId, p_items: input.items, p_method: input.method }),
+    supabase().rpc("create_counter_sale", {
+      p_request_id: input.requestId,
+      p_items: input.items,
+      p_method: input.method,
+    }),
   );
 
 export const advanceOrder = (input: { orderId: string; fromStatus: OrderStatus }) =>

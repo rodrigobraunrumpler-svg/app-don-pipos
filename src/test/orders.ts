@@ -44,10 +44,16 @@ export const TEST_ORDER: Order = {
     },
   ],
   timeline: [{ status: "new", at: "2026-11-19T14:30:00.000Z" }],
-  customer: { id: "00000000-0000-4000-8000-0000000000c1", name: "Ana (DEMO)", phone: "+51900000990", address: "Jr. Lima 123" },
+  customer: {
+    id: "00000000-0000-4000-8000-0000000000c1",
+    name: "Ana (DEMO)",
+    phone: "+51900000990",
+    address: "Jr. Lima 123",
+  },
 };
 
 export function summaryOf(order: Order): OrderSummary {
-  const { id, number, status, fulfillment, customerName, itemsSummary, totalCents, paidCents, promisedAt, dueDate } = order;
+  const { id, number, status, fulfillment, customerName, itemsSummary, totalCents, paidCents, promisedAt, dueDate } =
+    order;
   return { id, number, status, fulfillment, customerName, itemsSummary, totalCents, paidCents, promisedAt, dueDate };
 }

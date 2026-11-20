@@ -18,7 +18,8 @@ type Props = {
   onRepeat: (lines: RepeatLine[]) => void;
 };
 
-const INPUT = "min-h-[50px] flex-row items-center gap-2.5 rounded-sm border-[1.5px] border-border-strong bg-surface px-3.5";
+const INPUT =
+  "min-h-[50px] flex-row items-center gap-2.5 rounded-sm border-[1.5px] border-border-strong bg-surface px-3.5";
 const lowerFirst = (text: string) => text.charAt(0).toLowerCase() + text.slice(1);
 
 // El cliente por su teléfono (D14). Con los 9 dígitos lo busca: si ya pidió, completa su nombre y ofrece repetir su
