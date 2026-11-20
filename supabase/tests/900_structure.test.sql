@@ -180,6 +180,11 @@ create function pg_temp.unlisted_functions_for_app() returns setof text language
       'public.list_receivables(integer, text)',
       'public.production_suggestion()',
       'public.product_sales_by_weekday(uuid)',
+      'public.list_expense_categories()',
+      'public.save_expense_category(uuid, integer, text, text)',
+      'public.set_category_active(uuid, integer, boolean)',
+      'public.create_expense(uuid, uuid, integer, text, text, timestamp with time zone)',
+      'public.attach_receipt(uuid, text)',
       -- lo que usan por dentro las reglas de acceso y las funciones de arriba
       'private.owned_business_ids()',
       'private.fail(text)',
@@ -205,7 +210,13 @@ create function pg_temp.unlisted_functions_for_app() returns setof text language
       'private.cancel_order(uuid, uuid, text, integer, text)',
       'private.revert_cancel(uuid)',
       'private.change_payment_method(uuid, uuid, text)',
-      'private.expected_sales(uuid)'
+      'private.expected_sales(uuid)',
+      'private.category_json(expense_categories)',
+      'private.expense_json(uuid)',
+      'private.save_expense_category(uuid, integer, text, text)',
+      'private.set_category_active(uuid, integer, boolean)',
+      'private.create_expense(uuid, uuid, integer, text, text, timestamp with time zone)',
+      'private.attach_receipt(uuid, text)'
     )
 $$;
 

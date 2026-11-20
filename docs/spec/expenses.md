@@ -30,7 +30,7 @@
 | Columna | Tipo | Regla |
 |---|---|---|
 | `name` | text | Único en el negocio |
-| `icon` | text | El nombre del ícono |
+| `icon` | text | El nombre del ícono, elegido entre unos pocos (insumos, empaques, delivery, servicios, local, otros…). Si la app no lo conoce, dibuja el de «otros» |
 | `is_active` | bool | |
 | `sort_order` | int | |
 
@@ -50,12 +50,13 @@
 
 ## 3. Funciones de la base
 
+- **`list_expense_categories()`:** los tipos del negocio, en su orden (decidido en el plan de la fase 5, como `list_products`).
 - **`create_expense(request_id, category_id, amount_cents, method, description, spent_at)`:** con el mismo `request_id`, devuelve el gasto ya creado.
 - **`attach_receipt(expense_id, receipt_path)`:** se llama después de subir la foto.
-- **`correct_expense(request_id, id, …)`:** anula el gasto viejo y crea el nuevo con `replaces_id`, en una sola operación. Las correcciones y anulaciones quedan en el registro (`private.audit_log`).
+- **`correct_expense(request_id, id, category_id, amount_cents, method, description)`:** anula el gasto viejo y crea el nuevo con `replaces_id`, en una sola operación; la fecha y la boleta pasan al nuevo. Se corrigen el monto, el tipo, el medio y la descripción (la maqueta mostraba solo el monto). Las correcciones y anulaciones quedan en el registro (`private.audit_log`).
 - **`void_expense(id, reason)`.**
 - **`revert_expense_change(expense_id)`:** el «Deshacer» de corregir o anular, dentro de los 10 minutos. Vuelve a dejar el gasto como estaba.
-- **`list_expenses(from, to, limit, cursor)`.**
+- **`list_expenses(from, to, limit, cursor)`:** los gastos que cuentan (sin anular), del más nuevo al más viejo. Uno corregido trae cuánto era antes; uno anulado sale de la lista.
 - **`expenses_summary(from, to)`:** el total y lo gastado por tipo, para las barras de «Gastado en noviembre».
 - **`save_expense_category(…)` y `set_category_active(…)`.**
 
@@ -74,7 +75,7 @@ Los comunes, más las políticas de Storage de §2.
   - «Gastado en noviembre S/ 1,245.50» y las barras por tipo;
   - «Anotar gasto»;
   - los últimos gastos, con su ícono, fecha, medio y monto;
-  - «Ver todos», por páginas;
+  - «Ver todos», de 20 en 20 en la misma pantalla;
   - corregir y anular, con «Deshacer».
   - Vistas: cargando, sin datos, error y sin internet.
 - **Anotar gasto:**
@@ -85,7 +86,8 @@ Los comunes, más las políticas de Storage de §2.
   - «Tomar foto de la boleta»;
   - «Guardar gasto de S/ X», con «Guardando…».
 
-  La foto sube después de guardar el gasto. Si falla, se reintenta sin perder el gasto.
+  La foto sube después de guardar el gasto, con su propio corte de 60 s. Si falla, el aviso ofrece reintentar, y la hoja del gasto deja agregarla después: el gasto nunca se pierde.
+  Sin señal, «Guardar» se apaga y lo dice: no queda un borrador guardado (son tres datos).
 - **Tipos de gasto:** una hoja en Más.
 
 ## 7. Con otros módulos

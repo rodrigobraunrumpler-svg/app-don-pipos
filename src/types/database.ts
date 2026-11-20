@@ -152,6 +152,122 @@ export type Database = {
           },
         ];
       };
+      expense_categories: {
+        Row: {
+          business_id: string;
+          created_at: string;
+          icon: string;
+          id: string;
+          is_active: boolean;
+          name: string;
+          sort_order: number;
+          updated_at: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          business_id: string;
+          created_at?: string;
+          icon: string;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          sort_order?: number;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          business_id?: string;
+          created_at?: string;
+          icon?: string;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          sort_order?: number;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "expense_categories_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      expenses: {
+        Row: {
+          amount_cents: number;
+          business_id: string;
+          category_id: string;
+          created_at: string;
+          description: string | null;
+          id: string;
+          method: string;
+          receipt_path: string | null;
+          replaces_id: string | null;
+          spent_at: string;
+          updated_at: string;
+          void_reason: string | null;
+          voided_at: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          amount_cents: number;
+          business_id: string;
+          category_id: string;
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          method: string;
+          receipt_path?: string | null;
+          replaces_id?: string | null;
+          spent_at?: string;
+          updated_at?: string;
+          void_reason?: string | null;
+          voided_at?: string | null;
+        };
+        Update: {
+          amount_cents?: number;
+          business_id?: string;
+          category_id?: string;
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          method?: string;
+          receipt_path?: string | null;
+          replaces_id?: string | null;
+          spent_at?: string;
+          updated_at?: string;
+          void_reason?: string | null;
+          voided_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "expenses_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "expenses_category_fkey";
+            columns: ["business_id", "category_id"];
+            isOneToOne: false;
+            referencedRelation: "expense_categories";
+            referencedColumns: ["business_id", "id"];
+          },
+          {
+            foreignKeyName: "expenses_replaces_fkey";
+            columns: ["business_id", "replaces_id"];
+            isOneToOne: false;
+            referencedRelation: "expenses";
+            referencedColumns: ["business_id", "id"];
+          },
+        ];
+      };
       message_templates: {
         Row: {
           body: string;
@@ -610,6 +726,7 @@ export type Database = {
         Returns: Json;
       };
       advance_order: { Args: { p_from_status: string; p_order_id: string }; Returns: Json };
+      attach_receipt: { Args: { p_expense_id: string; p_receipt_path: string }; Returns: Json };
       cancel_order: {
         Args: {
           p_order_id: string;
@@ -622,6 +739,17 @@ export type Database = {
       };
       change_payment_method: { Args: { p_method: string; p_payment_id: string; p_request_id: string }; Returns: Json };
       create_counter_sale: { Args: { p_items: Json; p_method: string; p_request_id: string }; Returns: Json };
+      create_expense: {
+        Args: {
+          p_amount_cents: number;
+          p_category_id: string;
+          p_description: string;
+          p_method: string;
+          p_request_id: string;
+          p_spent_at: string;
+        };
+        Returns: Json;
+      };
       create_order: { Args: { p_draft: Json; p_request_id: string }; Returns: Json };
       edit_order: {
         Args: {
@@ -637,6 +765,7 @@ export type Database = {
       find_customer_by_phone: { Args: { p_phone: string }; Returns: Json };
       get_business: { Args: Record<PropertyKey, never>; Returns: Json };
       get_order: { Args: { p_order_id: string }; Returns: Json };
+      list_expense_categories: { Args: Record<PropertyKey, never>; Returns: Json };
       list_orders: {
         Args: { p_cursor?: string; p_filter: string; p_limit?: number; p_search?: string };
         Returns: Json;
@@ -658,6 +787,10 @@ export type Database = {
       revert_edit: { Args: { p_order_id: string; p_version: number }; Returns: Json };
       revert_status: { Args: { p_expected_status: string; p_order_id: string }; Returns: Json };
       revert_stock_change: { Args: { p_request_id: string }; Returns: Json };
+      save_expense_category: {
+        Args: { p_expected_version: number; p_icon: string; p_id: string; p_name: string };
+        Returns: Json;
+      };
       save_product: {
         Args: {
           p_cost_cents: number;
@@ -670,6 +803,7 @@ export type Database = {
         };
         Returns: Json;
       };
+      set_category_active: { Args: { p_active: boolean; p_expected_version: number; p_id: string }; Returns: Json };
       set_product_active: { Args: { p_active: boolean; p_id: string }; Returns: Json };
       stock_overview: { Args: Record<PropertyKey, never>; Returns: Json };
       update_settings: { Args: { p_expected_version: number; p_patch: Json }; Returns: Json };

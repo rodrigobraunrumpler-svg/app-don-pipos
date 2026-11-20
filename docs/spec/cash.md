@@ -33,11 +33,13 @@ Cada conteo queda guardado; el último del día es el que vale.
 
 ## 3. Funciones de la base
 
-- **`cash_expected(business_date, opening_cents)`:** para ese día de Lima, devuelve:
+- **`cash_expected(business_date)`:** para ese día de Lima, devuelve:
   - lo cobrado en efectivo (pagos e ingresos a mano, sin anular);
   - los gastos pagados en efectivo, sin anular, y las devoluciones en efectivo de ese día;
-  - lo que debería haber;
-  - los totales de Yape, Plin y transferencia.
+  - los totales de Yape, Plin y transferencia;
+  - con cuánto abrió el último cierre de un día anterior, para «Abriste con».
+
+  No recibe con cuánto abrió (decidido en el plan de la fase 5): «Debería haber» lo calcula la vista previa mientras se escribe, y la base al cerrar.
 - **`close_cash_day(request_id, business_date, opening_cents, counted_cents)`:** guarda todo lo de arriba junto con el conteo. «Volver a contar» crea otro cierre, porque nada se borra.
 - **`latest_cash_count(business_date)`.**
 - **Si se corrige el medio de un pago de un día ya cerrado,** el cierre guardado queda como se hizo; `cash_expected` de ese día ya muestra lo corregido, y el dueño puede «Volver a contar».
@@ -48,7 +50,7 @@ Los comunes: el dueño lee sus cierres y escribe solo con las funciones.
 
 ## 5. Cuentas en el celular (`rules/`)
 
-- **`difference.ts`:** la vista previa mientras escribe lo contado.
+- **`difference.ts`:** la vista previa mientras escribe: lo que debería haber (con cuánto abrió + lo cobrado − lo gastado) y la diferencia con lo contado.
   - Contó 110 y debería haber 110 → «La caja cuadra».
   - Contó 102 y debería haber 120 → «Faltan S/ 18.00», con la pista «Revisa si falta anotar un gasto o un vuelto».
   - Contó 125 y debería haber 120 → «Sobran S/ 5.00», con la pista «Revisa si falta anotar una venta».

@@ -114,6 +114,15 @@ Un concepto nuevo se agrega aquí antes de usarlo en el código.
 | Tipo de gasto | `expenseCategory` | `expense_categories` | |
 | Foto de la boleta | `receiptPhoto` | `receipt_path` | Supabase Storage, privado |
 | Corregir un gasto | `correctExpense` | `replaces_id` | El viejo queda anulado y el nuevo lo apunta |
+| Anular un gasto | `voidExpense` | `voided_at`, `void_reason` | No cuenta en ningún total; nada se borra |
+| Deshacer (un gasto) | `revertExpenseChange` | función `revert_expense_change` | La última corrección o anulación del gasto, hasta 10 minutos después |
+| Gastado en el mes | `expensesSummary` | función `expenses_summary` | El total y lo gastado por tipo |
+| Anular un ingreso | `voidManualIncome` | función `void_manual_income` | Solo los anotados a mano; los pagos se corrigen en su pedido |
+| Cobrado en efectivo | `cashInCents` | `cash_in_cents` | Pagos e ingresos a mano en efectivo, sin anular, de ese día |
+| Gastos en efectivo | `cashOutCents` | `cash_out_cents` | Gastos y devoluciones en efectivo, sin anular, de ese día |
+| Lo contado | `countedCents` | `counted_cents` | Lo que hay en la caja |
+| Faltan, sobran | `differenceCents` | `difference_cents` | Lo contado − lo que debería haber |
+| Cerrar el día, volver a contar | `closeCashDay` | función `close_cash_day` | Cada conteo queda; el último del día es el que vale |
 | Cuadre de caja | `cashCount` | `cash_counts` | |
 | Abriste con | `openingCents` | `opening_cents` | |
 | Debería haber | `expectedCents` | — | Con cuánto abrió + cobrado en efectivo − gastos en efectivo |

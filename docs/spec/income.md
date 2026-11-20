@@ -41,7 +41,7 @@ Los índices de `payments` están en `orders.md`.
 
   La usan Inicio, Reportes y el cuadre de caja.
 - **`list_income(from, to, limit, cursor)`:** los pagos y los ingresos a mano juntos, del más nuevo al más viejo. La página usa un cursor sobre la fecha y el id.
-- **`create_manual_income(request_id, …)` y `void_manual_income(id, reason)`:** el mismo `request_id` no crea dos ingresos, y las anulaciones quedan en el registro (`private.audit_log`).
+- **`create_manual_income(request_id, description, amount_cents, method, received_on)` y `void_manual_income(id, reason)`:** el mismo `request_id` no crea dos ingresos, y las anulaciones quedan en el registro (`private.audit_log`). El día es hoy o ayer (sin selector de fecha); ayer se guarda a las 12:00 de Lima. Anular no tiene «Deshacer»: se confirma en una hoja.
 
 ## 4. Permisos
 
@@ -58,7 +58,7 @@ No tiene cuentas propias: los montos se muestran con `lib/money`.
   - el total del mes;
   - la lista: los pagos con su pedido y los ingresos a mano con su descripción;
   - «Anotar ingreso».
-- **Anotar ingreso:** el monto, la descripción, el medio de pago y la fecha.
+- **Anotar ingreso:** el monto, la descripción, el medio de pago y el día: «Hoy» o «Ayer».
 
 ## 7. Con otros módulos
 
