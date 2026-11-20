@@ -24,6 +24,15 @@ jest.mock("@/features/orders/api/orders", () => {
   };
 });
 
+jest.mock("@/features/businesses/api/business", () => ({
+  getBusiness: async () => ({
+    id: "00000000-0000-4000-8000-0000000000b1",
+    name: "Don Pipos (DEMO)",
+    settings: { activePaymentMethods: ["cash", "yape"], deliveryFeeCents: 500, version: 1 },
+  }),
+}));
+jest.mock("@/features/messages/api/templates", () => ({ listTemplates: async () => [] }));
+
 function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={createTestQueryClient()}>
@@ -40,4 +49,5 @@ test("tocar un pedido de la lista lo abre", async () => {
   );
   await fireEvent.press(await screen.findByRole("button", { name: /^#0042/ }));
   expect(screen).toHavePathname("/orders/00000000-0000-4000-8000-0000000000f1");
+  expect(await screen.findByText("Pedido #0042")).toBeOnTheScreen();
 });

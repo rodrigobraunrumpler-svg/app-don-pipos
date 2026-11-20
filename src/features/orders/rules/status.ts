@@ -13,6 +13,11 @@ const NEXT_LABELS: Partial<Record<OrderStatus, string>> = {
   delivered: "Marcar entregado",
 };
 
+// Los estados por los que pasa un pedido según su entrega (la línea de tiempo)
+export function statusFlow(fulfillment: Fulfillment): OrderStatus[] {
+  return FLOW[fulfillment];
+}
+
 // El siguiente estado según la entrega; el mostrador nace entregado
 export function nextStatus(fulfillment: Fulfillment, status: OrderStatus): OrderStatus | null {
   const flow = FLOW[fulfillment];

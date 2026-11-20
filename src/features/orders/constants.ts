@@ -26,3 +26,23 @@ export const FILTER_LABELS = {
   upcoming: "Próximos",
   all: "Todos",
 } as const;
+
+// El ícono de cada estado (MaterialCommunityIcons), en el chip y en la línea de tiempo
+export const STATUS_ICONS = {
+  new: "creation",
+  preparing: "chef-hat",
+  on_the_way: "moped",
+  ready: "shopping-outline",
+  delivered: "check-all",
+  cancelled: "close-circle-outline",
+} as const;
+
+// El mensaje de WhatsApp de cada estado; «preparando» y «anulado» no avisan
+export const STATUS_TEMPLATES: Partial<
+  Record<keyof typeof STATUS_LABELS, "confirmation" | "on_the_way" | "ready" | "delivered">
+> = {
+  new: "confirmation",
+  on_the_way: "on_the_way",
+  ready: "ready",
+  delivered: "delivered",
+};

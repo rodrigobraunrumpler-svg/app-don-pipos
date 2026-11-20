@@ -8,7 +8,7 @@ import { MessagePreview } from "@/features/messages";
 import { formatCents } from "@/lib/money";
 
 import { PAYMENT_METHOD_LABELS } from "../constants";
-import { dueDayLabel } from "../rules/day";
+import { orderHeadline } from "../rules/headline";
 import { lineLabel } from "../rules/line";
 import { messageContext } from "../rules/message";
 import { orderNumber } from "../rules/number";
@@ -20,9 +20,6 @@ import { SummaryRow } from "./summary-row";
 export function OrderSaved({ order, onAnother }: { order: Order; onAnother: () => void }) {
   const methods = useQuery({ ...businessQuery, select: (business) => business.settings.activePaymentMethods }).data;
   const name = order.customer?.name ?? order.customerName ?? "";
-  const day = order.scheduledFor ? dueDayLabel(order.scheduledFor, new Date()) : "";
-  const when = !day ? "hoy" : day === "mañana" ? "mañana" : `el ${day}`;
-  const how = order.fulfillment === "delivery" ? "delivery" : "recoge en el local";
   const due = order.totalCents - order.paidCents;
   const method = order.payments.find((payment) => payment.kind === "payment")?.method;
   const collection =
@@ -41,7 +38,7 @@ export function OrderSaved({ order, onAnother }: { order: Order; onAnother: () =
           <Text accessibilityRole="header" className="mt-3 font-extrabold text-2xl text-text">
             {`Pedido ${orderNumber(order.number)} guardado`}
           </Text>
-          <Text className="mt-1 text-center text-base text-text-secondary">{`${name}, ${how} ${when}`}</Text>
+          <Text className="mt-1 text-center text-base text-text-secondary">{orderHeadline(order, new Date())}</Text>
         </View>
         <View className="mt-5 rounded-md border border-border bg-surface px-4 py-3">
           {order.lines.map((line) => (
