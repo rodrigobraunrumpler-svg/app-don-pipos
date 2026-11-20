@@ -1,21 +1,35 @@
 import { useState } from "react";
 import { View } from "react-native";
 
-import { FormHeader } from "@/components/ui/form-header";
 import { SkeletonRows } from "@/components/ui/skeleton";
 
 import { useOrderDraft } from "../hooks/use-order-draft";
+import type { Order } from "../schema/order";
+import { DraftDetails } from "./draft-details";
 import { DraftItems } from "./draft-items";
+import { OrderSaved } from "./order-saved";
 
-// Nuevo pedido: el paso 1 (qué lleva) y el 2 (el cliente, la entrega y el pago), con el borrador en el celular
+// Nuevo pedido: el paso 1 (qué lleva), el 2 (el cliente, la entrega y el pago) y el pedido guardado. El borrador vive
+// en el celular hasta guardarlo
 export function NewOrder({ onBack }: { onBack: () => void }) {
-  const { draft, ready, recoveredAt, setQuantity, clear } = useOrderDraft();
+  const { draft, ready, recoveredAt, update, setQuantity, clear } = useOrderDraft();
   const [step, setStep] = useState<1 | 2>(1);
+  const [saved, setSaved] = useState<Order | null>(null);
   if (!ready)
     return (
       <View className="px-5 pt-3">
         <SkeletonRows rows={5} />
       </View>
+    );
+  if (saved)
+    return (
+      <OrderSaved
+        order={saved}
+        onAnother={() => {
+          setSaved(null);
+          setStep(1);
+        }}
+      />
     );
   if (step === 1)
     return (
@@ -28,6 +42,15 @@ export function NewOrder({ onBack }: { onBack: () => void }) {
         onNext={() => setStep(2)}
       />
     );
-  // El paso 2 llega en la tarea 10
-  return <FormHeader title="Nuevo pedido" subtitle="Paso 2 de 2: cliente, entrega y pago" onBack={() => setStep(1)} />;
+  return (
+    <DraftDetails
+      draft={draft}
+      onChange={update}
+      onBack={() => setStep(1)}
+      onSaved={(order) => {
+        clear();
+        setSaved(order);
+      }}
+    />
+  );
 }

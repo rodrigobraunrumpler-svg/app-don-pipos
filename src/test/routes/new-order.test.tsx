@@ -28,6 +28,20 @@ jest.mock("@/features/stock/api/stock", () => ({
 jest.mock("@/features/orders/api/orders", () => ({
   listOrders: async () => ({ items: [], meta: { limit: 20, total: 0, hasMore: false, nextCursor: null } }),
   getOrderCounts: async () => ({ today: 0, toDeliver: 0, upcoming: 0, toCollect: 0, all: 0 }),
+  createOrder: async () => (jest.requireActual("@/test/orders") as { TEST_ORDER: unknown }).TEST_ORDER,
+}));
+jest.mock("@/features/customers/api/customers", () => ({ findCustomerByPhone: async () => null }));
+jest.mock("@/features/businesses/api/business", () => ({
+  getBusiness: async () => ({
+    id: "00000000-0000-4000-8000-0000000000b1",
+    name: "Don Pipos (DEMO)",
+    settings: { activePaymentMethods: ["cash", "yape"], deliveryFeeCents: 500, version: 1 },
+  }),
+}));
+jest.mock("@/features/messages/api/templates", () => ({
+  listTemplates: async () => [
+    { key: "confirmation", body: "Hola {nombre}, recibimos tu pedido {numero}. ¡Gracias!", version: 1 },
+  ],
 }));
 
 function Providers({ children }: { children: ReactNode }) {
@@ -68,6 +82,33 @@ test("pedir más de lo que queda avisa, pero deja seguir", async () => {
   await fireEvent.changeText(await screen.findByLabelText("Cantidad de Coqueta"), "14");
   expect(screen.getByText("Solo quedan 13. Puedes anotarlo igual y ajustar el stock después.")).toBeOnTheScreen();
   expect(screen.getByRole("button", { name: "Seguir" })).toBeEnabled();
+});
+
+const ROUTES = {
+  _layout: MainLayout,
+  home: Home,
+  new: New,
+  "orders/_layout": OrdersLayout,
+  "orders/index": Orders,
+  "orders/new": NewOrder,
+  "orders/counter": Counter,
+  "stock/_layout": StockLayout,
+  "stock/index": Stock,
+  "stock/production": Production,
+};
+
+test("el recorrido: + → Un pedido → qué lleva → entrega y pago → guardado", async () => {
+  await renderRouter(ROUTES, { initialUrl: "/home", wrapper: Providers });
+  await fireEvent.press(await screen.findByRole("button", { name: "Anotar" }));
+  await fireEvent.press(await screen.findByRole("button", { name: /^Un pedido/ }));
+  await fireEvent.press(await screen.findByRole("button", { name: "Más Coqueta" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Seguir" }));
+  expect(await screen.findByText("Paso 2 de 2")).toBeOnTheScreen();
+  await fireEvent.changeText(screen.getByLabelText("Teléfono del cliente"), "900000990");
+  await fireEvent.changeText(await screen.findByLabelText("Nombre del cliente"), "Ana (DEMO)");
+  await fireEvent.press(screen.getByRole("button", { name: "Guardar pedido de S/ 12.00" }));
+  expect(await screen.findByText("Pedido #0042 guardado")).toBeOnTheScreen();
+  expect(await screen.findByText("Hola Ana, recibimos tu pedido #0042. ¡Gracias!")).toBeOnTheScreen();
 });
 
 test("el botón + abre «¿Qué quieres anotar?» y cada opción lleva a su pantalla", async () => {
