@@ -18,14 +18,18 @@ beforeEach(() => mockEdit.mockReset());
 // El pedido de ejemplo: 2 Coquetas a S/ 12 y 1 Pipo Crush a S/ 13 (ya no está en el catálogo), delivery S/ 5,
 // total S/ 42, pagado S/ 20, versión 1
 const open = (onDone = jest.fn()) =>
-  renderWithProviders(<EditOrderSheet order={TEST_ORDER} methods={["cash", "yape"]} onClose={jest.fn()} onDone={onDone} />);
+  renderWithProviders(
+    <EditOrderSheet order={TEST_ORDER} methods={["cash", "yape"]} onClose={jest.fn()} onDone={onDone} />,
+  );
 
 test("editar manda la versión y las líneas, con el total nuevo a la vista", async () => {
   const updated = { ...TEST_ORDER, version: 2, totalCents: 5400 };
   mockEdit.mockResolvedValue(updated);
   const onDone = jest.fn();
   await open(onDone);
-  expect(await screen.findByText("Lo que ya estaba conserva su precio; lo que agregues va al precio de hoy.")).toBeOnTheScreen();
+  expect(
+    await screen.findByText("Lo que ya estaba conserva su precio; lo que agregues va al precio de hoy."),
+  ).toBeOnTheScreen();
   expect(screen.getByRole("button", { name: "Guardar cambios" })).toBeDisabled();
   await fireEvent.press(await screen.findByRole("button", { name: "Más Limon Kiss" }));
   expect(screen.getByText("Nuevo total: S/ 54.00")).toBeOnTheScreen();
@@ -73,6 +77,8 @@ test("con un conflicto lo explica sin invitar a repetir", async () => {
   await fireEvent.press(await screen.findByRole("button", { name: "Más Coqueta" }));
   await fireEvent.press(screen.getByRole("button", { name: "Guardar cambios" }));
   expect(
-    await screen.findByText("Este pedido cambió mientras lo editabas. Ciérralo y vuelve a abrirlo para ver cómo quedó."),
+    await screen.findByText(
+      "Este pedido cambió mientras lo editabas. Ciérralo y vuelve a abrirlo para ver cómo quedó.",
+    ),
   ).toBeOnTheScreen();
 });

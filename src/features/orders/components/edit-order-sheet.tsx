@@ -45,12 +45,21 @@ export function EditOrderSheet({ order, methods, onClose, onDone }: Props) {
     })),
     ...catalog
       .filter((product) => product.isActive && !(product.id in before))
-      .map((product) => ({ id: product.id, name: product.name, imageUrl: product.imageUrl, priceCents: product.priceCents })),
+      .map((product) => ({
+        id: product.id,
+        name: product.name,
+        imageUrl: product.imageUrl,
+        priceCents: product.priceCents,
+      })),
   ];
   const quantity = (id: string) => quantities[id] ?? 0;
-  const lines = rows.filter((row) => quantity(row.id) > 0).map((row) => ({ productId: row.id, quantity: quantity(row.id) }));
+  const lines = rows
+    .filter((row) => quantity(row.id) > 0)
+    .map((row) => ({ productId: row.id, quantity: quantity(row.id) }));
   const total =
-    rows.reduce((sum, row) => sum + quantity(row.id) * row.priceCents, 0) + order.deliveryFeeCents - order.discountCents;
+    rows.reduce((sum, row) => sum + quantity(row.id) * row.priceCents, 0) +
+    order.deliveryFeeCents -
+    order.discountCents;
   const changed = rows.some((row) => quantity(row.id) !== (before[row.id] ?? 0));
   const refundCents = lines.length ? Math.max(order.paidCents - total, 0) : 0;
 

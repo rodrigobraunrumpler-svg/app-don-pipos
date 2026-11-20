@@ -40,7 +40,10 @@ export function OrderCorrections({ order, methods, online, onMessage }: Props) {
     onMessage({
       text: `Pedido ${number} actualizado: ${formatCents(updated.totalCents)}`,
       onUndo: () =>
-        revertEdit.mutate({ orderId: order.id, version: updated.version }, undone(`Pedido ${number}: se deshizo el cambio.`)),
+        revertEdit.mutate(
+          { orderId: order.id, version: updated.version },
+          undone(`Pedido ${number}: se deshizo el cambio.`),
+        ),
     });
   }
 

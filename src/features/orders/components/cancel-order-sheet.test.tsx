@@ -11,7 +11,9 @@ jest.mock("../api/orders", () => ({ cancelOrder: (input: unknown) => mockCancel(
 beforeEach(() => mockCancel.mockReset());
 
 const open = (onDone = jest.fn()) =>
-  renderWithProviders(<CancelOrderSheet order={TEST_ORDER} methods={["cash", "yape"]} onClose={jest.fn()} onDone={onDone} />);
+  renderWithProviders(
+    <CancelOrderSheet order={TEST_ORDER} methods={["cash", "yape"]} onClose={jest.fn()} onDone={onDone} />,
+  );
 
 test("sin motivo no se anula; con pagos, la devolución viene con todo lo pagado y su medio", async () => {
   const cancelled = { ...TEST_ORDER, status: "cancelled" as const, cancelReason: "Sin stock", version: 2 };

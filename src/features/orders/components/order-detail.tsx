@@ -95,8 +95,7 @@ export function OrderDetail({ orderId, onBack }: Props) {
     revert.mutate(
       { orderId, expectedStatus: status },
       {
-        onSuccess: (updated) =>
-          setMessage({ text: `${number}: volvió a «${STATUS_LABELS[updated.status]}».` }),
+        onSuccess: (updated) => setMessage({ text: `${number}: volvió a «${STATUS_LABELS[updated.status]}».` }),
         onError: (error) =>
           setMessage({
             text:

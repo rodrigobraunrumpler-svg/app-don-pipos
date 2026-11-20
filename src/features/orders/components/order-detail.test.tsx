@@ -56,9 +56,17 @@ const open = async (order: Order) => {
 };
 
 beforeEach(() =>
-  [mockGet, mockAdvance, mockRevert, mockPay, mockEdit, mockRevertEdit, mockCancel, mockRevertCancel, mockChange].forEach((mock) =>
-    mock.mockReset(),
-  ),
+  [
+    mockGet,
+    mockAdvance,
+    mockRevert,
+    mockPay,
+    mockEdit,
+    mockRevertEdit,
+    mockCancel,
+    mockRevertCancel,
+    mockChange,
+  ].forEach((mock) => mock.mockReset()),
 );
 
 test("la acción de abajo cambia según el estado y la entrega", async () => {
@@ -200,7 +208,11 @@ test("un pedido anulado dice su motivo y ya no ofrece acciones", async () => {
 
 test("la devolución se lee como tal y el medio de un pago se corrige ahí mismo", async () => {
   const refund = { ...TEST_ORDER.payments[0]!, id: "00000000-0000-4000-8000-0000000000e2", kind: "refund" as const };
-  const order = withStatus("cancelled", { cancelReason: "Sin stock", paidCents: 0, payments: [TEST_ORDER.payments[0]!, refund] });
+  const order = withStatus("cancelled", {
+    cancelReason: "Sin stock",
+    paidCents: 0,
+    payments: [TEST_ORDER.payments[0]!, refund],
+  });
   mockChange.mockResolvedValue(order);
   await open(order);
   expect(await screen.findByText("Devolución: Yape")).toBeOnTheScreen();

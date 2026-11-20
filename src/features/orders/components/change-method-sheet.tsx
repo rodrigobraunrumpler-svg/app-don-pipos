@@ -52,7 +52,12 @@ export function ChangeMethodSheet({ order, payment, methods, onClose, onDone }: 
         {methods
           .filter((item) => item !== payment.method)
           .map((item) => (
-            <Chip key={item} label={PAYMENT_METHOD_LABELS[item]} selected={method === item} onPress={() => setMethod(item)} />
+            <Chip
+              key={item}
+              label={PAYMENT_METHOD_LABELS[item]}
+              selected={method === item}
+              onPress={() => setMethod(item)}
+            />
           ))}
       </View>
       <View className="mt-4 gap-2 pb-2">
