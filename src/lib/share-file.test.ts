@@ -14,9 +14,9 @@ jest.mock("expo-file-system", () => ({
 jest.mock("expo-sharing", () => ({ shareAsync: (...args: unknown[]) => mockShare(...(args as [])) }));
 
 test("el archivo se escribe en la caché (sobre uno anterior del mismo nombre) y se comparte como CSV", async () => {
-  await shareCsv("don-pipos-2026-11-01-2026-11-18.csv", "﻿Tipo;Fecha\r\n");
+  await shareCsv("don-pipos-2026-11-01-2026-11-18.csv", "\uFEFFTipo;Fecha\r\n");
   expect(mockCreate).toHaveBeenCalledWith({ overwrite: true });
-  expect(mockWrite).toHaveBeenCalledWith("﻿Tipo;Fecha\r\n");
+  expect(mockWrite).toHaveBeenCalledWith("\uFEFFTipo;Fecha\r\n");
   expect(mockShare).toHaveBeenCalledWith("file:///cache/don-pipos-2026-11-01-2026-11-18.csv", {
     mimeType: "text/csv",
     UTI: "public.comma-separated-values-text",

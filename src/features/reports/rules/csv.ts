@@ -1,4 +1,4 @@
-import { businessDate, formatTime } from "@/lib/dates";
+import { formatTime } from "@/lib/dates";
 
 import type { ExportRow, OrderStatus, PaymentMethod } from "../schema/report";
 
@@ -11,7 +11,7 @@ export type CsvNames = {
 
 const KIND_LABELS = { order: "Pedido", payment: "Pago", refund: "Devolución", expense: "Gasto", income: "Ingreso" };
 const HEADER = "Tipo;Fecha;Hora;Pedido;Cliente;Detalle;Medio;Monto;Estado";
-const BOM = "﻿";
+const BOM = "\uFEFF";
 
 // Un texto que escribió alguien: con «'» delante si Excel lo leería como fórmula, y entre comillas si trae «;»,
 // comillas o saltos de línea
@@ -27,15 +27,15 @@ function amount({ kind, amountCents }: ExportRow): string {
 }
 
 // El archivo para Excel en español (reports.md §5): BOM UTF-8, separador «;», una fila por pedido, pago, devolución,
-// gasto o ingreso, con la columna «Tipo» para filtrar
+// gasto o ingreso, con su día y la columna «Tipo» para filtrar. Un pedido va con su día y su hora acordada (sin ella,
+// vacía)
 export function toCsv(rows: ExportRow[], names: CsvNames): string {
   const lines = rows.map((row) => {
-    const instant = new Date(row.at);
-    const [year, month, day] = businessDate(instant).split("-");
+    const [year, month, day] = row.day.split("-");
     return [
       KIND_LABELS[row.kind],
       `${day}/${month}/${year}`,
-      formatTime(instant),
+      row.at === null ? "" : formatTime(new Date(row.at)),
       row.orderNumber === null ? "" : names.orderNumber(row.orderNumber),
       text(row.customerName),
       text(row.detail),

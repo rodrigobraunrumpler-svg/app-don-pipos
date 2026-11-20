@@ -16,13 +16,14 @@ const LABELS = {
 };
 const base = { orderNumber: null, customerName: null, detail: null, method: null, status: null };
 
-test("el archivo para Excel en español: BOM, «;», montos «12.00» y una fila por cosa (reports.md §5)", () => {
+test("el archivo para Excel en español: BOM, «;», montos «12.00» y una fila por cosa con su día; sin hora acordada, la hora va vacía (reports.md §5)", () => {
   const csv = toCsv(
     [
       {
         ...base,
         kind: "order",
-        at: "2026-11-09T05:20:00.000Z",
+        day: "2026-11-09",
+        at: null,
         orderNumber: 3,
         customerName: "Rosa (DEMO)",
         detail: "2 Coquetas",
@@ -32,6 +33,7 @@ test("el archivo para Excel en español: BOM, «;», montos «12.00» y una fila
       {
         ...base,
         kind: "payment",
+        day: "2026-11-09",
         at: "2026-11-09T05:30:00.000Z",
         orderNumber: 3,
         customerName: "Rosa (DEMO)",
@@ -41,6 +43,7 @@ test("el archivo para Excel en español: BOM, «;», montos «12.00» y una fila
       {
         ...base,
         kind: "refund",
+        day: "2026-11-11",
         at: "2026-11-11T17:00:00.000Z",
         orderNumber: 4,
         customerName: "Rosa (DEMO)",
@@ -50,6 +53,7 @@ test("el archivo para Excel en español: BOM, «;», montos «12.00» y una fila
       {
         ...base,
         kind: "expense",
+        day: "2026-11-10",
         at: "2026-11-10T17:00:00.000Z",
         detail: 'Insumos: harina; azúcar "rubia"',
         method: "yape",
@@ -58,6 +62,7 @@ test("el archivo para Excel en español: BOM, «;», montos «12.00» y una fila
       {
         ...base,
         kind: "income",
+        day: "2026-11-12",
         at: "2026-11-12T17:00:00.000Z",
         detail: "Evento (DEMO)",
         method: "transfer",
@@ -66,10 +71,10 @@ test("el archivo para Excel en español: BOM, «;», montos «12.00» y una fila
     ],
     LABELS,
   );
-  expect(csv.startsWith("﻿")).toBe(true);
+  expect(csv.startsWith("\uFEFF")).toBe(true);
   expect(csv.slice(1).split("\r\n")).toEqual([
     "Tipo;Fecha;Hora;Pedido;Cliente;Detalle;Medio;Monto;Estado",
-    "Pedido;09/11/2026;00:20;#0003;Rosa (DEMO);2 Coquetas;;24.00;Entregado",
+    "Pedido;09/11/2026;;#0003;Rosa (DEMO);2 Coquetas;;24.00;Entregado",
     "Pago;09/11/2026;00:30;#0003;Rosa (DEMO);;Efectivo;24.00;",
     "Devolución;11/11/2026;12:00;#0004;Rosa (DEMO);;Efectivo;-12.00;",
     'Gasto;10/11/2026;12:00;;;"Insumos: harina; azúcar ""rubia""";Yape;1234.56;',
@@ -84,6 +89,7 @@ test("un nombre que empieza con «=», «+», «-» o «@» no se lee como fórm
       {
         ...base,
         kind: "order",
+        day: "2026-11-09",
         at: "2026-11-09T17:00:00.000Z",
         orderNumber: 5,
         customerName: '=HIPERVINCULO("x")',

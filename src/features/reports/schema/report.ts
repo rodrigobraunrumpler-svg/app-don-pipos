@@ -48,7 +48,10 @@ export type Ranking = z.infer<typeof rankingSchema>;
 
 export const exportRowSchema = z.object({
   kind: z.enum(["order", "payment", "refund", "expense", "income"]),
-  at: z.string(),
+  // El día de Lima de la fila; un pedido, el suyo (por eso entra al periodo)
+  day: z.string(),
+  // Cuándo pasó; en un pedido, la hora acordada (o null)
+  at: z.string().nullable(),
   orderNumber: count.nullable(),
   customerName: z.string().nullable(),
   detail: z.string().nullable(),

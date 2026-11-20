@@ -1,6 +1,6 @@
 -- Inicio y reportes (docs/spec/reports.md §3 y §8): el resumen de hoy, el periodo con el anterior, el ranking y lo que
 -- se exporta, con dos semanas de noviembre armadas a mano
-select plan(28);
+select plan(29);
 
 select tests.make_user('00000000-0000-4000-8000-0000000014c1');
 select tests.make_user('00000000-0000-4000-8000-0000000014c2');
@@ -54,7 +54,9 @@ select pg_temp.place(current_setting('t.o1'), '2026-11-03T10:00:00-05:00', '2026
 update public.orders set channel = 'local' where id = current_setting('t.o1')::uuid;
 select pg_temp.place(current_setting('t.o2'), '2026-11-08T20:00:00-05:00', '2026-11-08', '2026-11-08T23:30:00-05:00', '2026-11-08T23:30:00-05:00');
 select pg_temp.place(current_setting('t.o3'), '2026-11-09T00:20:00-05:00', '2026-11-09', '2026-11-09T10:00:00-05:00', '2026-11-09T00:30:00-05:00');
-select pg_temp.place(current_setting('t.o4'), '2026-11-10T09:00:00-05:00', '2026-11-10', '2026-11-10T12:00:00-05:00', '2026-11-10T12:00:00-05:00');
+-- #4 se anotó el viernes 6 para el martes 10, a recoger a las 11:00
+select pg_temp.place(current_setting('t.o4'), '2026-11-06T09:00:00-05:00', '2026-11-10', '2026-11-10T12:00:00-05:00', '2026-11-10T12:00:00-05:00');
+update public.orders set promised_at = '2026-11-10T11:00:00-05:00' where id = current_setting('t.o4')::uuid;
 update public.manual_incomes set received_at = '2026-11-12T12:00:00-05:00' where id = current_setting('t.m')::uuid;
 update public.orders set status = 'delivered', delivered_at = now() where id = current_setting('t.o5')::uuid;
 update public.orders set due_date = current_setting('t.today')::date - 1 where id = current_setting('t.o7')::uuid;
@@ -127,10 +129,14 @@ select is((select sum((e ->> 'units')::integer)::integer from jsonb_array_elemen
 select set_config('t.x', public.export_rows('2026-11-09', '2026-11-15')::text, true);
 select is(array(select e ->> 'kind' from jsonb_array_elements(current_setting('t.x')::jsonb) as e order by 1),
   array['expense', 'income', 'order', 'order', 'payment', 'payment', 'refund'], 'todo lo del periodo, cada cosa con su tipo');
-select is((current_setting('t.x')::jsonb -> 0) - 'at', '{"kind": "order", "orderNumber": 3, "customerName": "Rosa (DEMO)", "detail": "2 Coquetas", "method": null, "amountCents": 2400, "status": "delivered"}'::jsonb,
-  'del más viejo al más nuevo: primero el pedido #3, creado el lunes a las 00:20');
-select is((select e - 'at' from jsonb_array_elements(current_setting('t.x')::jsonb) as e where e ->> 'kind' = 'expense'),
-  '{"kind": "expense", "orderNumber": null, "customerName": null, "detail": "Insumos: Cajas", "method": "yape", "amountCents": 300, "status": null}'::jsonb,
+select is(current_setting('t.x')::jsonb -> 0, '{"kind": "order", "day": "2026-11-09", "at": null, "orderNumber": 3, "customerName": "Rosa (DEMO)", "detail": "2 Coquetas", "method": null, "amountCents": 2400, "status": "delivered"}'::jsonb,
+  'por día, del más viejo al más nuevo: primero el pedido #3, del lunes y sin hora acordada');
+select is((select e - 'kind' - 'orderNumber' - 'customerName' - 'detail' - 'method' - 'amountCents' from jsonb_array_elements(current_setting('t.x')::jsonb) as e
+    where e ->> 'kind' = 'order' and (e ->> 'orderNumber')::integer = 4),
+  '{"day": "2026-11-10", "at": "2026-11-10T16:00:00.000Z", "status": "cancelled"}'::jsonb,
+  'un pedido va con su día y su hora acordada, no con cuándo se anotó');
+select is((select e from jsonb_array_elements(current_setting('t.x')::jsonb) as e where e ->> 'kind' = 'expense'),
+  '{"kind": "expense", "day": "2026-11-10", "at": "2026-11-10T17:00:00.000Z", "orderNumber": null, "customerName": null, "detail": "Insumos: Cajas", "method": "yape", "amountCents": 300, "status": null}'::jsonb,
   'un gasto con su tipo y en qué');
 select throws_ok('select public.export_rows(''2025-01-01'', ''2026-11-30'')', 'P0001', 'invalid', 'hasta un año');
 

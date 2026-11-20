@@ -1,5 +1,5 @@
 import { onlineManager } from "@tanstack/react-query";
-import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 
 import { renderWithProviders } from "@/test/render";
 
@@ -14,6 +14,7 @@ jest.mock("@/lib/share-file", () => ({ shareCsv: (name: string, text: string) =>
 const month = periodRange("month", new Date());
 const ROW = {
   kind: "expense",
+  day: "2026-11-10",
   at: "2026-11-10T17:00:00.000Z",
   orderNumber: null,
   customerName: null,
@@ -40,7 +41,7 @@ test("exportar el mes pide sus filas, arma el archivo y lo comparte con su nombr
   expect(mockRows).toHaveBeenCalledWith(month.from, month.to);
   expect(mockShare).toHaveBeenCalledWith(
     `don-pipos-${month.from}-${month.to}.csv`,
-    "﻿Tipo;Fecha;Hora;Pedido;Cliente;Detalle;Medio;Monto;Estado\r\nGasto;10/11/2026;12:00;;;Insumos;Yape;12.00;\r\n",
+    "\uFEFFTipo;Fecha;Hora;Pedido;Cliente;Detalle;Medio;Monto;Estado\r\nGasto;10/11/2026;12:00;;;Insumos;Yape;12.00;\r\n",
   );
 });
 
@@ -56,11 +57,13 @@ test("sin nada en el periodo, lo dice y no comparte", async () => {
 
 test("desde Reportes llegan sus fechas, ya elegidas; sin señal no se puede", async () => {
   const initial = { from: "2026-11-01", to: "2026-11-15", label: "Del 1 nov al 15 nov" };
-  await renderWithProviders(<ExportSheet initial={initial} onClose={jest.fn()} />);
+  const onClose = jest.fn();
+  await renderWithProviders(<ExportSheet initial={initial} onClose={onClose} />);
   expect(screen.getByRole("radio", { name: "Del 1 nov al 15 nov", checked: true })).toBeOnTheScreen();
   await fireEvent.press(screen.getByRole("button", { name: "Compartir archivo" }));
-  await waitFor(() => expect(mockRows).toHaveBeenCalledWith("2026-11-01", "2026-11-15"));
-  onlineManager.setOnline(false);
+  await waitFor(() => expect(onClose).toHaveBeenCalled());
+  expect(mockRows).toHaveBeenCalledWith("2026-11-01", "2026-11-15");
+  await act(() => onlineManager.setOnline(false));
   await waitFor(() => expect(screen.getByRole("button", { name: "Compartir archivo" })).toBeDisabled());
 });
 
