@@ -38,6 +38,7 @@ export {
 export { receivableReason } from "./rules/receivable";
 export { OrderList } from "./components/order-list";
 export { Receivables } from "./components/receivables";
+export { ReceivablesRow } from "./components/receivables-row";
 export { NewMenu } from "./components/new-menu";
 export { OrderDraftProvider } from "./components/order-draft-provider";
 export { DraftItemsStep } from "./components/draft-items-step";

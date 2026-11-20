@@ -41,7 +41,7 @@ function Providers({ children }: { children: ReactNode }) {
 
 test("desde Más, «Productos y precios» abre la lista", async () => {
   await renderRouter({ more: More, "more/products": Products }, { initialUrl: "/more", wrapper: Providers });
-  await fireEvent.press(await screen.findByRole("button", { name: "Productos y precios" }));
+  await fireEvent.press(await screen.findByRole("button", { name: /^Productos y precios/ }));
   expect(await screen.findByRole("button", { name: /^Coqueta/ })).toBeOnTheScreen();
   expect(screen).toHavePathname("/more/products");
 });

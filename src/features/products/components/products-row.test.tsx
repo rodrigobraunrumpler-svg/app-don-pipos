@@ -2,7 +2,7 @@ import { fireEvent, screen } from "@testing-library/react-native";
 
 import { renderWithProviders } from "@/test/render";
 
-import { ProductsLink } from "./products-link";
+import { ProductsRow } from "./products-row";
 
 jest.mock("../api/products", () => ({
   listProducts: async () =>
@@ -24,8 +24,8 @@ jest.mock("../api/products", () => ({
 
 test("la fila de Más dice cuántos alfajores hay y lleva a la lista", async () => {
   const onPress = jest.fn();
-  await renderWithProviders(<ProductsLink onPress={onPress} />);
+  await renderWithProviders(<ProductsRow onPress={onPress} />);
   expect(await screen.findByText("5 alfajores")).toBeOnTheScreen();
-  await fireEvent.press(screen.getByRole("button", { name: "Productos y precios" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Productos y precios, 5 alfajores" }));
   expect(onPress).toHaveBeenCalledTimes(1);
 });

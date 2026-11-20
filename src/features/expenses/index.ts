@@ -12,3 +12,6 @@ export {
   useSetCategoryActive,
   useVoidExpense,
 } from "./hooks/use-expense-changes";
+export { iconFor } from "./rules/category";
+export { ExpenseCategoriesRow } from "./components/expense-categories-row";
+export { ExpenseCategoriesSheet } from "./components/expense-categories-sheet";
