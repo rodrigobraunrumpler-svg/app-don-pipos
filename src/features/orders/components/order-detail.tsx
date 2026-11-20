@@ -25,6 +25,7 @@ import { messageContext } from "../rules/message";
 import { orderNumber } from "../rules/number";
 import { nextStatus, nextStatusLabel } from "../rules/status";
 import type { OrderStatus } from "../schema/order";
+import { OrderCorrections, type OrderMessage } from "./order-corrections";
 import { OrderItems } from "./order-items";
 import { OrderPayments } from "./order-payments";
 import { OrderTimeline } from "./order-timeline";
@@ -32,11 +33,10 @@ import { PaymentSheet } from "./payment-sheet";
 import { StatusChip } from "./status-chip";
 
 type Props = { orderId: string; onBack: () => void };
-type Message = { text: string; undoStatus: OrderStatus | null };
 
 // Un pedido (PANTALLAS.pedido): su línea de tiempo y la acción que toca, fija abajo (el siguiente estado o, ya
 // entregado, cobrar lo que falta). Cambiar de estado se ve al instante, se puede deshacer en el aviso y vuelve atrás si
-// no se guardó. Abajo, el mensaje de WhatsApp del estado, lo que lleva, los pagos y el cliente
+// no se guardó. Abajo, el mensaje de WhatsApp del estado, lo que lleva, los pagos, el cliente y editar o anular
 export function OrderDetail({ orderId, onBack }: Props) {
   const online = useOnline();
   const { data: order, isError, refetch, dataUpdatedAt } = useQuery(orderQuery(orderId));
@@ -44,7 +44,7 @@ export function OrderDetail({ orderId, onBack }: Props) {
   const advance = useAdvanceOrder(orderId);
   const revert = useRevertStatus(orderId);
   const [sheet, setSheet] = useState<"pay" | "delivery" | null>(null);
-  const [message, setMessage] = useState<Message | null>(null);
+  const [message, setMessage] = useState<OrderMessage | null>(null);
   const hideMessage = useCallback(() => setMessage(null), []);
   const now = new Date();
 
@@ -71,7 +71,7 @@ export function OrderDetail({ orderId, onBack }: Props) {
   const customerName = order.customer?.name ?? order.customerName ?? "";
 
   function advanceTo(from: OrderStatus, to: OrderStatus) {
-    setMessage({ text: `${number}: ${STATUS_LABELS[to].toLowerCase()}`, undoStatus: to });
+    setMessage({ text: `${number}: ${STATUS_LABELS[to].toLowerCase()}`, onUndo: () => undo(to) });
     advance.mutate(
       { orderId, fromStatus: from },
       {
@@ -85,7 +85,6 @@ export function OrderDetail({ orderId, onBack }: Props) {
               toAppError(error).kind === "conflict"
                 ? errorMessage(error)
                 : `No se pudo guardar: el pedido volvió a «${STATUS_LABELS[from]}». Revisa la señal y vuelve a intentar.`,
-            undoStatus: null,
           }),
       },
     );
@@ -97,20 +96,18 @@ export function OrderDetail({ orderId, onBack }: Props) {
       { orderId, expectedStatus: status },
       {
         onSuccess: (updated) =>
-          setMessage({ text: `${number}: volvió a «${STATUS_LABELS[updated.status]}».`, undoStatus: null }),
+          setMessage({ text: `${number}: volvió a «${STATUS_LABELS[updated.status]}».` }),
         onError: (error) =>
           setMessage({
             text:
               toAppError(error).kind === "invalid"
                 ? "Ya no se puede deshacer: pasaron más de 10 minutos."
                 : errorMessage(error),
-            undoStatus: null,
           }),
       },
     );
   }
 
-  const undoStatus = message?.undoStatus ?? null;
   return (
     <View className="flex-1">
       <FormHeader title={`Pedido ${number}`} subtitle={orderHeadline(order, now)} onBack={onBack} />
@@ -118,6 +115,14 @@ export function OrderDetail({ orderId, onBack }: Props) {
         {online ? null : (
           <Notice>{`Sin conexión. Ves el pedido de las ${formatTime(new Date(dataUpdatedAt))}; para cambiarlo, espera la señal.`}</Notice>
         )}
+        {order.status === "cancelled" ? (
+          <View className="mt-3.5 flex-row gap-2.5 rounded-sm bg-danger-soft px-3 py-3">
+            <Icon name="close-circle-outline" size={17} tone="danger" />
+            <Text className="flex-1 font-semibold text-sm text-text">
+              {`Pedido anulado: ${(order.cancelReason ?? "sin motivo").toLowerCase()}. Los alfajores volvieron al stock.`}
+            </Text>
+          </View>
+        ) : null}
         <View className="mt-3 flex-row">
           <StatusChip status={order.status} />
         </View>
@@ -153,6 +158,7 @@ export function OrderDetail({ orderId, onBack }: Props) {
             </View>
           </View>
         ) : null}
+        <OrderCorrections order={order} methods={methods ?? []} online={online} onMessage={setMessage} />
       </ScrollView>
       {next || canPay ? (
         <View className="border-t border-border bg-background px-5 py-3">
@@ -181,15 +187,15 @@ export function OrderDetail({ orderId, onBack }: Props) {
           onClose={() => setSheet(null)}
           onSaved={(text) => {
             setSheet(null);
-            setMessage({ text, undoStatus: null });
+            setMessage({ text });
           }}
         />
       ) : null}
       {message ? (
         <Toast
           message={message.text}
-          actionLabel={undoStatus ? "Deshacer" : undefined}
-          onAction={undoStatus ? () => undo(undoStatus) : undefined}
+          actionLabel={message.onUndo ? "Deshacer" : undefined}
+          onAction={message.onUndo}
           onHide={hideMessage}
         />
       ) : null}

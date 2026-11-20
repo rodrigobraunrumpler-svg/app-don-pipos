@@ -11,11 +11,22 @@ const mockGet = jest.fn();
 const mockAdvance = jest.fn();
 const mockRevert = jest.fn();
 const mockPay = jest.fn();
+const mockEdit = jest.fn();
+const mockRevertEdit = jest.fn();
+const mockCancel = jest.fn();
+const mockRevertCancel = jest.fn();
 jest.mock("../api/orders", () => ({
   getOrder: () => mockGet(),
   advanceOrder: (input: unknown) => mockAdvance(input),
   revertStatus: (input: unknown) => mockRevert(input),
   addPayment: (input: unknown) => mockPay(input),
+  editOrder: (input: unknown) => mockEdit(input),
+  revertEdit: (input: unknown) => mockRevertEdit(input),
+  cancelOrder: (input: unknown) => mockCancel(input),
+  revertCancel: (input: unknown) => mockRevertCancel(input),
+}));
+jest.mock("@/features/products/api/products", () => ({
+  listProducts: async () => (jest.requireActual("@/test/products") as { TEST_PRODUCTS: unknown }).TEST_PRODUCTS,
 }));
 jest.mock("@/features/businesses/api/business", () => ({
   getBusiness: async () => ({
@@ -42,7 +53,11 @@ const open = async (order: Order) => {
   return renderWithProviders(<OrderDetail orderId={order.id} onBack={jest.fn()} />);
 };
 
-beforeEach(() => [mockGet, mockAdvance, mockRevert, mockPay].forEach((mock) => mock.mockReset()));
+beforeEach(() =>
+  [mockGet, mockAdvance, mockRevert, mockPay, mockEdit, mockRevertEdit, mockCancel, mockRevertCancel].forEach((mock) =>
+    mock.mockReset(),
+  ),
+);
 
 test("la acción de abajo cambia según el estado y la entrega", async () => {
   const cases: [Order, string | null][] = [
@@ -147,4 +162,36 @@ test("si ese pago ya se había guardado con otro monto, lo dice sin invitar a re
       "Este pago ya se había guardado antes de tu cambio. Revisa los pagos del pedido antes de registrarlo otra vez.",
     ),
   ).toBeOnTheScreen();
+});
+
+test("editar y anular desde el pedido, con sus «Deshacer»", async () => {
+  const edited = withStatus("new", { version: 2, totalCents: 5400 });
+  mockEdit.mockResolvedValue(edited);
+  mockRevertEdit.mockResolvedValue(withStatus("new", { version: 3 }));
+  await open(withStatus("new"));
+  await fireEvent.press(await screen.findByRole("button", { name: "Editar pedido" }));
+  await fireEvent.press(await screen.findByRole("button", { name: "Más Coqueta" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Guardar cambios" }));
+  expect(await screen.findByText("Pedido #0042 actualizado: S/ 54.00")).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: "Deshacer" }));
+  await waitFor(() => expect(mockRevertEdit).toHaveBeenCalledWith({ orderId: TEST_ORDER.id, version: 2 }));
+  expect(await screen.findByText("Pedido #0042: se deshizo el cambio.")).toBeOnTheScreen();
+
+  mockCancel.mockResolvedValue(withStatus("cancelled", { cancelReason: "Sin stock", version: 4 }));
+  mockRevertCancel.mockResolvedValue(withStatus("new", { version: 5 }));
+  await fireEvent.press(screen.getByRole("button", { name: "Anular" }));
+  await fireEvent.press(await screen.findByRole("button", { name: "Sin stock" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Anular pedido" }));
+  expect(await screen.findByText("Pedido #0042 anulado")).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: "Deshacer" }));
+  await waitFor(() => expect(mockRevertCancel).toHaveBeenCalledWith(TEST_ORDER.id));
+});
+
+test("un pedido anulado dice su motivo y ya no ofrece acciones", async () => {
+  await open(withStatus("cancelled", { cancelReason: "El cliente canceló" }));
+  expect(
+    await screen.findByText("Pedido anulado: el cliente canceló. Los alfajores volvieron al stock."),
+  ).toBeOnTheScreen();
+  for (const label of ["Editar pedido", "Anular", "Registrar pago de S/ 22.00"])
+    expect(screen.queryByRole("button", { name: label })).toBeNull();
 });

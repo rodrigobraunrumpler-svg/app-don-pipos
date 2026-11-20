@@ -29,3 +29,8 @@ export function nextStatus(fulfillment: Fulfillment, status: OrderStatus): Order
 export function nextStatusLabel(status: OrderStatus): string {
   return NEXT_LABELS[status] ?? "";
 }
+
+// Se edita antes de entregar y sin anular; el mostrador nace entregado, así que tampoco
+export function canEdit(status: OrderStatus): boolean {
+  return status !== "delivered" && status !== "cancelled";
+}

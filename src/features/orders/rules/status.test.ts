@@ -1,4 +1,4 @@
-import { nextStatus, nextStatusLabel } from "./status";
+import { canEdit, nextStatus, nextStatusLabel } from "./status";
 
 test.each([
   ["delivery", "new", "preparing"],
@@ -21,4 +21,10 @@ test("el botón dice a dónde va", () => {
   expect(nextStatusLabel("ready")).toBe("Marcar listo para recoger");
   expect(nextStatusLabel("delivered")).toBe("Marcar entregado");
   expect(nextStatusLabel("new")).toBe("");
+});
+
+test("se edita antes de entregar y sin anular (el mostrador nace entregado)", () => {
+  expect((["new", "preparing", "on_the_way", "ready"] as const).every(canEdit)).toBe(true);
+  expect(canEdit("delivered")).toBe(false);
+  expect(canEdit("cancelled")).toBe(false);
 });
