@@ -424,3 +424,15 @@ Un revisor nuevo leyó toda la rama: «lista para juntar, con correcciones». No
 - Pruebas que faltan: el día de Lima a las 04:30 UTC en la base, «Guardar» sin señal en el paso 2, «Guardando…» apagando el botón, y que los totales coincidan siempre con las líneas y los pagos.
 
 **Lo que el revisor dejó fuera y por qué queda así:** dos teléfonos anotando a la vez el mismo cliente nuevo (hay un solo dueño con un celular); «En 30 min» pasada la medianoche (fuera del horario); «X min tarde» que no corre con la pantalla quieta (se actualiza al volver y al tirar hacia abajo); los textos de WhatsApp en una línea (se editan en la fase 7); y otros casos sin efecto real en un negocio con un solo dueño.
+
+## Después de tu prueba en el celular (2026-11-19)
+
+**Volver de «Nuevo pedido» era brusco.** El + abría la pantalla sola dentro de la pestaña Pedidos, sin nada debajo. Al volver, la app cambiaba de pestaña (eso no tiene animación), y después Pedidos seguía mostrando «Nuevo pedido» en vez de la lista. Lo mismo pasaba con «La producción» y con «Ir a Ajustes». Ahora las pestañas van en su grupo (`(tabs)`), y todo lo que se abre desde ellas o desde el + (un pedido, una venta, la producción, un alfajor, Ajustes) se abre encima, sin la barra de pestañas, como en la maqueta. «Volver» regresa con su animación a la pantalla de antes. De paso, ya no se puede abrir una segunda copia de «Nuevo pedido» desde el + (era una de las observaciones menores de la revisión).
+
+**Textos y números que no entraban.** Las cuentas se hicieron para un celular de 360 dp de ancho:
+- El contador ahora es el de la maqueta: una píldora de 44 con botones de 38, de unos 116 de ancho (antes 148). El nombre del alfajor entra al lado: en el paso 1 del pedido, la venta de mostrador, la producción y el conteo.
+- En «Contar stock», «Deberías tener… en la nevera» va debajo y a lo ancho (al lado bajaba hasta 8 líneas).
+- La fila de un pedido va en tres líneas alineadas: número y entrega con su estado; quién con el total; qué pidió con lo que falta cobrar. A la izquierda, lo que no entra se corta con «…»; a la derecha, nada se corta. En la fila, «Listo para recoger» se lee «Listo» y el atraso, «Atrasado» (el día ya va junto al número). El lector de pantalla lee todo completo.
+- «Empezar de nuevo» va debajo del aviso del borrador, el pie del paso 1 cabe en una línea, y la hora acordada dice «Hora (opcional)».
+- Los botones nunca dejan que su texto se salga: si hace falta, la letra se achica un poco. Los medios de pago de la venta van en dos columnas («Transferencia» entra entera).
+- En los resúmenes y en lo que lleva un pedido, el monto nunca se empuja fuera: el texto largo se corta.
