@@ -1,21 +1,29 @@
-import { Text, View } from "react-native";
+import { useEffect } from "react";
+import { AccessibilityInfo, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/button";
 import { useFirstTip } from "@/lib/first-tip";
 
 // El consejo de la primera vez (la maqueta): sale una vez en Inicio, después de la puesta en marcha, sobre un velo y
 // justo encima de la barra, donde está el +. «Entendido» lo cierra para siempre
+const TITLE = "Anota tu primer pedido";
+const TEXT = "Toca + abajo: eliges los alfajores, quién los pide y cómo paga.";
+
 export function FirstTip() {
   const { visible, dismiss } = useFirstTip();
+  // TalkBack no anuncia solo una tarjeta que aparece: se le pide que la lea
+  useEffect(() => {
+    if (visible) AccessibilityInfo.announceForAccessibility(`Consejo: ${TITLE}. ${TEXT}`);
+  }, [visible]);
   if (!visible) return null;
   return (
     <View className="absolute inset-0 justify-end">
       <View className="absolute inset-0 bg-text opacity-40" />
       <View accessibilityRole="alert" className="m-4 gap-3 rounded-lg bg-background p-4">
         <Text className="text-base text-text">
-          <Text className="font-extrabold">Anota tu primer pedido</Text>
+          <Text className="font-extrabold">{TITLE}</Text>
           {"\n"}
-          <Text>Toca + abajo: eliges los alfajores, quién los pide y cómo paga.</Text>
+          <Text>{TEXT}</Text>
         </Text>
         <Button label="Entendido" onPress={dismiss} />
       </View>

@@ -165,6 +165,8 @@ test("los tres pasos: atrás no pierde lo puesto, «Terminar» guarda una vez y 
 
   expect(await screen.findByText("Todo listo")).toBeOnTheScreen();
   expect(screen).toHavePathname("/setup/done");
+  // El consejo ya queda marcado: si la app se cierra aquí, igual sale en Inicio
+  expect(await AsyncStorage.getItem("donpipos.firstTip")).toBe("pending");
   await fireEvent.press(screen.getByRole("button", { name: "Ir a Inicio" }));
   expect(await AsyncStorage.getItem("donpipos.firstTip")).toBe("pending");
   expect(client.getQueryData<Business>(businessesKeys.all)?.setupDone).toBe(true);
