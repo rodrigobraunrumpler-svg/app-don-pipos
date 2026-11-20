@@ -93,15 +93,24 @@ test("«Ver alfajores» lleva el periodo elegido", async () => {
   expect(on.onRanking).toHaveBeenCalledWith({ from: week.from, to: week.to, label: week.label });
 });
 
-test("sin pedidos ni gastos en el periodo, lo dice; sin señal, desde cuándo son los números", async () => {
-  mockSummary.mockResolvedValue({
-    ...SUMMARY,
-    incomeCents: 0,
-    expensesCents: 0,
-    profitCents: 0,
-    bars: [{ from: today, to: today, incomeCents: 0, expensesCents: 0 }],
-    byMethod: { cash: 0, yape: 0, plin: 0, transfer: 0 },
-  });
+const NOTHING: ReportSummary = {
+  ...SUMMARY,
+  incomeCents: 0,
+  expensesCents: 0,
+  profitCents: 0,
+  bars: [{ from: today, to: today, incomeCents: 0, expensesCents: 0 }],
+  byMethod: { cash: 0, yape: 0, plin: 0, transfer: 0 },
+};
+
+test("un lunes temprano, sin nada todavía, se ve en cero frente a la semana pasada, no «Todavía no hay datos»", async () => {
+  mockSummary.mockResolvedValue(NOTHING);
+  await renderWithProviders(<ReportsScreen {...handlers()} />);
+  expect(await screen.findAllByText("−100\u00a0% frente a la semana pasada")).toHaveLength(3);
+  expect(screen.queryByText("Todavía no hay datos")).toBeNull();
+});
+
+test("sin pedidos ni gastos en el periodo ni en el anterior, lo dice; sin señal, desde cuándo son los números", async () => {
+  mockSummary.mockResolvedValue({ ...NOTHING, previous: { incomeCents: 0, expensesCents: 0, profitCents: 0 } });
   await renderWithProviders(<ReportsScreen {...handlers()} />);
   expect(await screen.findByText("Todavía no hay datos")).toBeOnTheScreen();
   onlineManager.setOnline(false);

@@ -37,8 +37,14 @@ export function PeriodReport({ period, today, onRanking }: Props) {
         <SkeletonRows rows={4} />
       </View>
     );
+  // «Todavía no hay datos» solo si tampoco hubo nada antes: un lunes temprano se ve en cero, con su comparación
+  const { previous } = data;
   const empty =
-    !data.incomeCents && !data.expensesCents && data.bars.every((bar) => !bar.incomeCents && !bar.expensesCents);
+    !data.incomeCents &&
+    !data.expensesCents &&
+    !previous.incomeCents &&
+    !previous.expensesCents &&
+    data.bars.every((bar) => !bar.incomeCents && !bar.expensesCents);
   return (
     <>
       {online ? null : (
