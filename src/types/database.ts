@@ -620,6 +620,7 @@ export type Database = {
         };
         Returns: Json;
       };
+      change_payment_method: { Args: { p_method: string; p_payment_id: string; p_request_id: string }; Returns: Json };
       create_counter_sale: { Args: { p_items: Json; p_method: string; p_request_id: string }; Returns: Json };
       create_order: { Args: { p_draft: Json; p_request_id: string }; Returns: Json };
       edit_order: {
@@ -642,6 +643,7 @@ export type Database = {
       };
       list_product_movements: { Args: { p_cursor?: string; p_limit?: number; p_product_id: string }; Returns: Json };
       list_products: { Args: Record<PropertyKey, never>; Returns: Json };
+      list_receivables: { Args: { p_cursor?: string; p_limit?: number }; Returns: Json };
       list_templates: { Args: Record<PropertyKey, never>; Returns: Json };
       order_counts: { Args: Record<PropertyKey, never>; Returns: Json };
       register_production: { Args: { p_items: Json; p_request_id: string }; Returns: Json };

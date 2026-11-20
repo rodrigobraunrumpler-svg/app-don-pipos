@@ -107,6 +107,12 @@ export const cases = [
     tables: ["businesses", "orders"],
   })),
   { name: "order_counts", as: OWNER, sql: "select public.order_counts()", tables: ["businesses", "orders"] },
+  {
+    name: "list_receivables, primera página",
+    as: OWNER,
+    sql: "select public.list_receivables()",
+    tables: ["businesses", "orders", "customers"],
+  },
   { name: "get_order", as: OWNER, sql: `select public.get_order('${ORDER}')`, tables: ["businesses", ...ORDER_TABLES] },
   {
     name: "find_customer_by_phone",
