@@ -1059,6 +1059,7 @@ export type Database = {
       set_category_active: { Args: { p_active: boolean; p_expected_version: number; p_id: string }; Returns: Json };
       set_product_active: { Args: { p_active: boolean; p_id: string }; Returns: Json };
       stock_overview: { Args: Record<PropertyKey, never>; Returns: Json };
+      upcoming_orders: { Args: { p_limit?: number }; Returns: Json };
       update_customer: {
         Args: {
           p_accepts_promotions: boolean;

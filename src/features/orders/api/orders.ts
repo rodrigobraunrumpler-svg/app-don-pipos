@@ -18,6 +18,7 @@ import {
   type ReceivablesPage,
   type RefundInput,
   receivablesPageSchema,
+  upcomingOrdersSchema,
 } from "../schema/order";
 
 // Cada función de la base responde un pedido entero o avisa con su código (docs/spec/README.md, «Errores»)
@@ -40,6 +41,13 @@ export async function listOrders(input: {
   });
   if (error) throw toAppError(error);
   return parseResponse(pageSchema(orderSummarySchema), data);
+}
+
+// Los 50 pedidos que vienen más próximos (de mañana en adelante, sin entregar ni anular)
+export async function listUpcomingOrders(): Promise<OrderSummary[]> {
+  const { data, error } = await supabase().rpc("upcoming_orders", { p_limit: 50 });
+  if (error) throw toAppError(error);
+  return parseResponse(upcomingOrdersSchema, data).items;
 }
 
 export async function getOrderCounts(): Promise<OrderCounts> {

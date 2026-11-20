@@ -22,25 +22,23 @@ let mockEmpty = false;
 let mockOnHand = 4;
 jest.mock("@/features/businesses/api/business", () => ({ getBusiness: async () => mockBusiness }));
 jest.mock("@/features/orders/api/orders", () => ({
-  listOrders: async () =>
-    page(
-      mockEmpty
-        ? []
-        : [
-            {
-              id: "o1",
-              number: 44,
-              status: "new",
-              fulfillment: "pickup",
-              customerName: "Patricia V. (DEMO)",
-              itemsSummary: "12 Coquetas",
-              totalCents: 14400,
-              paidCents: 0,
-              promisedAt: "2026-11-19T15:00:00.000Z",
-              dueDate: "2026-11-19",
-            },
-          ],
-    ),
+  listUpcomingOrders: async () =>
+    mockEmpty
+      ? []
+      : [
+          {
+            id: "o1",
+            number: 44,
+            status: "new",
+            fulfillment: "pickup",
+            customerName: "Patricia V. (DEMO)",
+            itemsSummary: "12 Coquetas",
+            totalCents: 14400,
+            paidCents: 0,
+            promisedAt: "2026-11-19T15:00:00.000Z",
+            dueDate: "2026-11-19",
+          },
+        ],
   listReceivables: async () => ({
     ...page(
       mockEmpty

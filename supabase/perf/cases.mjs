@@ -116,6 +116,8 @@ export const cases = [
     tables: ["businesses", "orders"],
   })),
   { name: "order_counts", as: OWNER, sql: "select public.order_counts()", tables: ["businesses", "orders"] },
+  // Fase 7b: los pedidos que vienen, para los recordatorios
+  { name: "upcoming_orders", as: OWNER, sql: "select public.upcoming_orders(50)", tables: ["businesses", "orders"] },
   {
     name: "production_suggestion, con 3 años de pedidos",
     as: OWNER,

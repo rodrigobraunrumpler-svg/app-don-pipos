@@ -27,7 +27,14 @@ export {
   useRevertStatus,
 } from "./hooks/use-order-changes";
 export { ordersKeys } from "./queries/keys";
-export { customerOrdersQuery, orderCountsQuery, orderQuery, ordersQuery, receivablesQuery } from "./queries/orders";
+export {
+  customerOrdersQuery,
+  orderCountsQuery,
+  orderQuery,
+  ordersQuery,
+  receivablesQuery,
+  upcomingOrdersQuery,
+} from "./queries/orders";
 export {
   useCancelOrder,
   useChangePaymentMethod,

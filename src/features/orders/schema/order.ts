@@ -91,6 +91,9 @@ export const orderSummarySchema = orderSchema.pick({
 });
 export type OrderSummary = z.infer<typeof orderSummarySchema>;
 
+// Los pedidos que vienen, del más próximo al más lejano (upcoming_orders): para los recordatorios y la campana
+export const upcomingOrdersSchema = z.object({ items: z.array(orderSummarySchema) });
+
 export const orderCountsSchema = z.object({
   today: z.number().int(),
   toDeliver: z.number().int(),

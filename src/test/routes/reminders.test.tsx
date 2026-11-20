@@ -15,6 +15,7 @@ let mockState = "low";
 const emptyPage = { items: [], meta: { limit: 20, total: 0, hasMore: false, nextCursor: null, totalDueCents: 0 } };
 jest.mock("@/features/orders/api/orders", () => ({
   listOrders: async () => emptyPage,
+  listUpcomingOrders: async () => [],
   listReceivables: async () => emptyPage,
   getOrderCounts: async () => ({ today: 0, toDeliver: 0, upcoming: 0, toCollect: 0, all: 0 }),
 }));

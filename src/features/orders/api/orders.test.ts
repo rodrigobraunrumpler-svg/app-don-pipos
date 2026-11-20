@@ -11,6 +11,7 @@ import {
   getOrderCounts,
   listOrders,
   listReceivables,
+  listUpcomingOrders,
   revertCancel,
   revertEdit,
   revertStatus,
@@ -40,6 +41,12 @@ test("la lista pide su filtro, la búsqueda y el cursor; las cantidades llegan r
   expect(mockRpc).toHaveBeenLastCalledWith("list_orders", { p_filter: "today", p_search: "ana", p_cursor: "42" });
   respond({ today: 1, toDeliver: 1, upcoming: 0, toCollect: 1 });
   await expect(getOrderCounts()).rejects.toMatchObject({ kind: "unexpected" });
+});
+
+test("los pedidos que vienen llegan del más próximo al más lejano, revisados", async () => {
+  respond({ items: [summaryOf(TEST_ORDER)] });
+  await expect(listUpcomingOrders()).resolves.toEqual([summaryOf(TEST_ORDER)]);
+  expect(mockRpc).toHaveBeenLastCalledWith("upcoming_orders", { p_limit: 50 });
 });
 
 test("crear, avanzar, deshacer y cobrar mandan lo que pide cada función", async () => {

@@ -212,6 +212,7 @@ create function pg_temp.unlisted_functions_for_app() returns setof text language
       'public.update_template(text, integer, text)',
       'public.reset_template(text)',
       'public.complete_setup(uuid, jsonb, jsonb)',
+      'public.upcoming_orders(integer)',
       -- lo que usan por dentro las reglas de acceso y las funciones de arriba
       'private.owned_business_ids()',
       'private.fail(text)',
