@@ -185,6 +185,11 @@ create function pg_temp.unlisted_functions_for_app() returns setof text language
       'public.set_category_active(uuid, integer, boolean)',
       'public.create_expense(uuid, uuid, integer, text, text, timestamp with time zone)',
       'public.attach_receipt(uuid, text)',
+      'public.correct_expense(uuid, uuid, uuid, integer, text, text)',
+      'public.void_expense(uuid, text)',
+      'public.revert_expense_change(uuid)',
+      'public.list_expenses(date, date, integer, text)',
+      'public.expenses_summary(date, date)',
       -- lo que usan por dentro las reglas de acceso y las funciones de arriba
       'private.owned_business_ids()',
       'private.fail(text)',
@@ -216,7 +221,10 @@ create function pg_temp.unlisted_functions_for_app() returns setof text language
       'private.save_expense_category(uuid, integer, text, text)',
       'private.set_category_active(uuid, integer, boolean)',
       'private.create_expense(uuid, uuid, integer, text, text, timestamp with time zone)',
-      'private.attach_receipt(uuid, text)'
+      'private.attach_receipt(uuid, text)',
+      'private.correct_expense(uuid, uuid, uuid, integer, text, text)',
+      'private.void_expense(uuid, text)',
+      'private.revert_expense_change(uuid)'
     )
 $$;
 

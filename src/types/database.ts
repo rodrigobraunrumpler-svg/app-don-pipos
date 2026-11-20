@@ -738,6 +738,17 @@ export type Database = {
         Returns: Json;
       };
       change_payment_method: { Args: { p_method: string; p_payment_id: string; p_request_id: string }; Returns: Json };
+      correct_expense: {
+        Args: {
+          p_amount_cents: number;
+          p_category_id: string;
+          p_description: string;
+          p_id: string;
+          p_method: string;
+          p_request_id: string;
+        };
+        Returns: Json;
+      };
       create_counter_sale: { Args: { p_items: Json; p_method: string; p_request_id: string }; Returns: Json };
       create_expense: {
         Args: {
@@ -762,10 +773,12 @@ export type Database = {
         };
         Returns: Json;
       };
+      expenses_summary: { Args: { p_from: string; p_to: string }; Returns: Json };
       find_customer_by_phone: { Args: { p_phone: string }; Returns: Json };
       get_business: { Args: Record<PropertyKey, never>; Returns: Json };
       get_order: { Args: { p_order_id: string }; Returns: Json };
       list_expense_categories: { Args: Record<PropertyKey, never>; Returns: Json };
+      list_expenses: { Args: { p_cursor?: string; p_from?: string; p_limit?: number; p_to?: string }; Returns: Json };
       list_orders: {
         Args: { p_cursor?: string; p_filter: string; p_limit?: number; p_search?: string };
         Returns: Json;
@@ -785,6 +798,7 @@ export type Database = {
       };
       revert_cancel: { Args: { p_order_id: string }; Returns: Json };
       revert_edit: { Args: { p_order_id: string; p_version: number }; Returns: Json };
+      revert_expense_change: { Args: { p_expense_id: string }; Returns: Json };
       revert_status: { Args: { p_expected_status: string; p_order_id: string }; Returns: Json };
       revert_stock_change: { Args: { p_request_id: string }; Returns: Json };
       save_expense_category: {
@@ -807,6 +821,7 @@ export type Database = {
       set_product_active: { Args: { p_active: boolean; p_id: string }; Returns: Json };
       stock_overview: { Args: Record<PropertyKey, never>; Returns: Json };
       update_settings: { Args: { p_expected_version: number; p_patch: Json }; Returns: Json };
+      void_expense: { Args: { p_id: string; p_reason: string }; Returns: Json };
     };
     Enums: {
       [_ in never]: never;
