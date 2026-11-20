@@ -612,9 +612,17 @@ export type Database = {
       advance_order: { Args: { p_from_status: string; p_order_id: string }; Returns: Json };
       create_counter_sale: { Args: { p_items: Json; p_method: string; p_request_id: string }; Returns: Json };
       create_order: { Args: { p_draft: Json; p_request_id: string }; Returns: Json };
+      find_customer_by_phone: { Args: { p_phone: string }; Returns: Json };
       get_business: { Args: Record<PropertyKey, never>; Returns: Json };
+      get_order: { Args: { p_order_id: string }; Returns: Json };
+      list_orders: {
+        Args: { p_cursor?: string; p_filter: string; p_limit?: number; p_search?: string };
+        Returns: Json;
+      };
       list_product_movements: { Args: { p_cursor?: string; p_limit?: number; p_product_id: string }; Returns: Json };
       list_products: { Args: Record<PropertyKey, never>; Returns: Json };
+      list_templates: { Args: Record<PropertyKey, never>; Returns: Json };
+      order_counts: { Args: Record<PropertyKey, never>; Returns: Json };
       register_production: { Args: { p_items: Json; p_request_id: string }; Returns: Json };
       register_stock_count: { Args: { p_counts: Json; p_request_id: string }; Returns: Json };
       register_waste: {
