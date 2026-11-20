@@ -85,7 +85,7 @@ select throws_ok($$select public.create_order(gen_random_uuid(), pg_temp.draft('
 -- Venta de mostrador
 select set_config('t.v', public.create_counter_sale('00000000-0000-4000-8000-00000000e002', '[{"productId": "00000000-0000-4000-8000-000000000a02", "quantity": 2}]', 'cash')::text, true);
 select is(current_setting('t.v')::jsonb - 'id' - 'number' - 'createdAt' - 'deliveredAt' - 'dueDate' - 'lines' - 'payments' - 'timeline' - 'version',
-  '{"status": "delivered", "fulfillment": "counter", "channel": "local", "customerId": null, "customerName": null, "customer": null, "promisedAt": null, "scheduledFor": null, "deliveryAddress": null, "deliveryFeeCents": 0, "discountCents": 0, "discountReason": null, "subtotalCents": 2600, "totalCents": 2600, "paidCents": 2600, "note": null, "itemsSummary": "2 Pipo Crush", "itemsCount": 2}'::jsonb,
+  '{"status": "delivered", "fulfillment": "counter", "channel": "local", "customerId": null, "customerName": null, "customer": null, "promisedAt": null, "cancelReason": null, "scheduledFor": null, "deliveryAddress": null, "deliveryFeeCents": 0, "discountCents": 0, "discountReason": null, "subtotalCents": 2600, "totalCents": 2600, "paidCents": 2600, "note": null, "itemsSummary": "2 Pipo Crush", "itemsCount": 2}'::jsonb,
   'la venta de mostrador: entregada, sin cliente y pagada');
 select is(current_setting('t.v')::jsonb -> 'payments' -> 0 ->> 'method', 'cash', 'con un pago en efectivo por el total');
 select throws_ok($$select public.create_counter_sale('00000000-0000-4000-8000-00000000e002', '[{"productId": "00000000-0000-4000-8000-000000000a02", "quantity": 3}]', 'cash')$$, 'P0001', 'conflict', 'el mismo código con otros datos es un conflicto');
