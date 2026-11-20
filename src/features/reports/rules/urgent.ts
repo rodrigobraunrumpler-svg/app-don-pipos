@@ -28,13 +28,14 @@ const STOCK_ORDER: UrgentKind[] = ["out", "owed", "check", "low"];
 const PRODUCE = "Registrar producción";
 
 const lowerFirst = (text: string): string => text.charAt(0).toLowerCase() + text.slice(1);
-const compare = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
-
 // Lo atrasado de días anteriores primero, del día más viejo; después lo que va tarde hoy, lo prometido antes primero.
 // Pedidos los da al revés (del número más nuevo), y así lo más atrasado quedaba abajo
+const lateKey = (order: LateOrder): string =>
+  order.lateness === "overdue" ? `0 ${order.dueDate}` : `1 ${order.promisedAt ?? ""}`;
+
 function lateFirst(a: LateOrder, b: LateOrder): number {
-  if (a.lateness !== b.lateness) return a.lateness === "overdue" ? -1 : 1;
-  return a.lateness === "overdue" ? compare(a.dueDate, b.dueDate) : compare(a.promisedAt ?? "", b.promisedAt ?? "");
+  const [x, y] = [lateKey(a), lateKey(b)];
+  return x === y ? 0 : x < y ? -1 : 1;
 }
 
 // Más pedidos por entregar de los que se miraron: alguno puede ir tarde
