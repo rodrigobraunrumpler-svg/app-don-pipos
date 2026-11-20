@@ -1,11 +1,11 @@
 import { Image, View } from "react-native";
 
 // El logo redondo. El tamaño va en el contenedor: en la web, una imagen local impone su tamaño original sobre las clases
-export function Logo({ size = "large" }: { size?: "small" | "large" }) {
+const BOX = { tiny: "h-9 w-9", small: "h-16 w-16", large: "h-[92px] w-[92px]" } as const;
+
+export function Logo({ size = "large" }: { size?: keyof typeof BOX }) {
   return (
-    <View
-      className={`self-center overflow-hidden rounded-full ${size === "small" ? "h-16 w-16" : "h-[92px] w-[92px]"}`}
-    >
+    <View className={`self-center overflow-hidden rounded-full ${BOX[size]}`}>
       <Image
         source={require("../../../assets/icon.png")}
         style={{ width: "100%", height: "100%" }}

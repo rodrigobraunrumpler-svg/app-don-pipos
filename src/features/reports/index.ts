@@ -2,3 +2,4 @@
 export { homeSummaryQuery, rankingQuery, reportSummaryQuery } from "./queries/reports";
 export { reportsKeys } from "./queries/keys";
 export type { HomeSummary, Ranking, ReportSummary } from "./schema/report";
+export { HomeScreen } from "./components/home-screen";

@@ -37,9 +37,9 @@ const PAIRS = [
   ["statusCancelledText", "statusCancelledBg"],
 ] as const;
 
-test("claro y oscuro tienen los mismos 35 colores, todos en #rrggbb", () => {
+test("claro y oscuro tienen los mismos 39 colores, todos en #rrggbb", () => {
   expect(Object.keys(darkColors).sort()).toEqual(Object.keys(lightColors).sort());
-  expect(Object.keys(lightColors)).toHaveLength(35);
+  expect(Object.keys(lightColors)).toHaveLength(39);
   for (const value of [...Object.values(lightColors), ...Object.values(darkColors)])
     expect(value).toMatch(/^#[0-9a-f]{6}$/);
 });

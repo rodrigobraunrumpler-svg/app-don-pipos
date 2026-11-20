@@ -37,6 +37,7 @@ export {
 } from "./hooks/use-order-corrections";
 export { receivableReason } from "./rules/receivable";
 export { OrderList } from "./components/order-list";
+export { OrderRow } from "./components/order-row";
 export { Receivables } from "./components/receivables";
 export { ReceivablesRow } from "./components/receivables-row";
 export { NewMenu } from "./components/new-menu";

@@ -34,7 +34,11 @@
     "statusDeliveredBg": "#ecebe4",
     "statusDeliveredText": "#555a4c",
     "statusCancelledBg": "#fadfd7",
-    "statusCancelledText": "#a5371c"
+    "statusCancelledText": "#a5371c",
+    "methodCash": "#c9d6a8",
+    "methodYape": "#b89ad6",
+    "methodPlin": "#79d0c8",
+    "methodTransfer": "#d5ae88"
   },
   "dark": {
     "background": "#121710",
@@ -71,6 +75,10 @@
     "statusDeliveredBg": "#2a2e27",
     "statusDeliveredText": "#c7cbbd",
     "statusCancelledBg": "#3f2017",
-    "statusCancelledText": "#f3aa93"
+    "statusCancelledText": "#f3aa93",
+    "methodCash": "#c9d6a8",
+    "methodYape": "#b89ad6",
+    "methodPlin": "#79d0c8",
+    "methodTransfer": "#d5ae88"
   }
 }

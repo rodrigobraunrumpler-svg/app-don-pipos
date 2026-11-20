@@ -1,11 +1,16 @@
 import { Image } from "expo-image";
 import { Text, View } from "react-native";
 
-type Size = "small" | "medium" | "large";
+type Size = "mini" | "small" | "medium" | "large";
 
-const PIXELS: Record<Size, number> = { small: 40, medium: 48, large: 72 };
-const BOX: Record<Size, string> = { small: "h-10 w-10", medium: "h-12 w-12", large: "h-[72px] w-[72px]" };
-const LETTER: Record<Size, string> = { small: "text-base", medium: "text-lg", large: "text-3xl" };
+const PIXELS: Record<Size, number> = { mini: 28, small: 40, medium: 48, large: 72 };
+const BOX: Record<Size, string> = {
+  mini: "h-7 w-7",
+  small: "h-10 w-10",
+  medium: "h-12 w-12",
+  large: "h-[72px] w-[72px]",
+};
+const LETTER: Record<Size, string> = { mini: "text-xs", small: "text-base", medium: "text-lg", large: "text-3xl" };
 // El color de las iniciales sale del nombre: el mismo alfajor tiene siempre el mismo
 const TONES = [
   "bg-caramel-soft text-caramel-text",

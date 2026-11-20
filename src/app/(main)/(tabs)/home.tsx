@@ -1,18 +1,28 @@
-import { Text, View } from "react-native";
+import { router } from "expo-router";
 
-import { Logo } from "@/components/ui/logo";
 import { Screen } from "@/components/ui/screen";
-import { formatLongDate } from "@/lib/dates";
+import { ordersKeys } from "@/features/orders";
+import { HomeScreen, reportsKeys } from "@/features/reports";
+import { stockKeys } from "@/features/stock";
+import { useRefreshOnFocus } from "@/lib/use-refresh-on-focus";
 
-// Inicio: por ahora el nombre y la fecha de hoy. Lo urgente del día llega en la fase 6
+// Inicio: lo urgente, lo cobrado hoy, tu stock, qué producir y los pedidos del día. Al volver, recarga lo que envejeció
 export default function Home() {
+  useRefreshOnFocus(reportsKeys.all);
+  useRefreshOnFocus(ordersKeys.all);
+  useRefreshOnFocus(stockKeys.all);
   return (
     <Screen bottom={false}>
-      <View className="flex-1 items-center justify-center gap-3 px-6">
-        <Logo />
-        <Text className="font-extrabold text-3xl text-text">Don Pipos</Text>
-        <Text className="font-regular text-sm text-text-muted">{formatLongDate(new Date())}</Text>
-      </View>
+      <HomeScreen
+        onOpenOrder={(id) => router.navigate({ pathname: "/orders/[id]", params: { id } })}
+        onOrders={(filter) => router.navigate({ pathname: "/orders", params: { filter } })}
+        onReceivables={() => router.navigate("/orders/receivables")}
+        onCash={() => router.navigate("/cash")}
+        onStock={() => router.navigate("/stock")}
+        onProduct={(productId) => router.navigate({ pathname: "/stock/[productId]", params: { productId } })}
+        onProduction={() => router.navigate("/stock/production")}
+        onNewOrder={() => router.navigate("/orders/new")}
+      />
     </Screen>
   );
 }

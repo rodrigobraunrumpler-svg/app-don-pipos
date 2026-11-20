@@ -15,7 +15,7 @@ const resolveConfig = jest.requireActual("tailwindcss/resolveConfig") as (config
 
 test("cada color se vuelve una variable --color-<nombre-en-kebab>", () => {
   const vars = toCssVars(lightColors);
-  expect(Object.keys(vars)).toHaveLength(35);
+  expect(Object.keys(vars)).toHaveLength(39);
   expect(vars["--color-background"]).toBe("#faf7e9");
   expect(vars["--color-text-secondary"]).toBe("#4c5743");
   expect(vars["--color-status-on-the-way-bg"]).toBe("#dff0ec");
@@ -30,7 +30,7 @@ test("Tailwind tiene una clase por cada color, y apunta a su variable", () => {
 
 test("Tailwind no conoce más colores que los del tema: bg-red-500, text-white o text-black no existen", () => {
   const palette = resolveConfig(tailwind).theme.colors;
-  expect(Object.keys(palette)).toHaveLength(37); // los 35 del tema, transparent y current
+  expect(Object.keys(palette)).toHaveLength(41); // los 39 del tema, transparent y current
   for (const name of ["white", "black", "red", "gray", "slate", "green", "blue", "inherit"])
     expect(palette[name]).toBeUndefined();
   expect(palette.transparent).toBe("transparent");
