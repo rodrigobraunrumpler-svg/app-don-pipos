@@ -1,21 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { Pressable, Text, View } from "react-native";
 
-import { PAYMENT_METHOD_LABELS, PAYMENT_METHODS, type PaymentMethod } from "@/features/businesses";
+import { PAYMENT_METHOD_LABELS, PAYMENT_METHODS } from "@/features/businesses";
 import type { OrderFilter } from "@/features/orders";
 import { formatCents } from "@/lib/money";
 
+import { METHOD_COLORS } from "../constants";
 import { homeSummaryQuery } from "../queries/reports";
 import { DayNumber } from "./day-number";
 import { PartError } from "./part-error";
-
-// El color de cada medio en la barra (la maqueta)
-const METHOD_COLORS: Record<PaymentMethod, string> = {
-  cash: "bg-method-cash",
-  yape: "bg-method-yape",
-  plin: "bg-method-plin",
-  transfer: "bg-method-transfer",
-};
 
 type Props = { onCash: () => void; onOrders: (filter: OrderFilter) => void; onReceivables: () => void };
 

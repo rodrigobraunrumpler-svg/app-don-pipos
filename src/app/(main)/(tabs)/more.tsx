@@ -9,6 +9,7 @@ import { ExpenseCategoriesRow, ExpensesRow } from "@/features/expenses";
 import { IncomeRow } from "@/features/income";
 import { ReceivablesRow } from "@/features/orders";
 import { ProductsRow } from "@/features/products";
+import { ReportsRow } from "@/features/reports";
 
 // Más (la maqueta): «Tu negocio» y «Ajustes», y la cuenta. Cada fila lleva a su pantalla
 export default function More() {
@@ -18,6 +19,7 @@ export default function More() {
         <Text className="font-extrabold text-3xl text-text">Más</Text>
         <MenuSection title="Tu negocio">
           <ExpensesRow onPress={() => router.navigate("/expenses")} />
+          <ReportsRow onPress={() => router.navigate("/reports")} />
           <IncomeRow onPress={() => router.navigate("/income")} />
           <ReceivablesRow onPress={() => router.navigate("/orders/receivables")} />
           <CashRow onPress={() => router.navigate("/cash")} />

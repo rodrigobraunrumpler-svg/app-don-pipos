@@ -1,0 +1,68 @@
+import { useQuery } from "@tanstack/react-query";
+import { Text, View } from "react-native";
+
+import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icon";
+import { LoadError } from "@/components/ui/load-error";
+import { Notice } from "@/components/ui/notice";
+import { SkeletonRows } from "@/components/ui/skeleton";
+import { formatTime } from "@/lib/dates";
+import { useOnline } from "@/lib/use-online";
+
+import { reportSummaryQuery } from "../queries/reports";
+import { barUnit } from "../rules/bars";
+import type { Period } from "../rules/period";
+import { ByMethod } from "./by-method";
+import { InOutChart } from "./in-out-chart";
+import { ReportKpis } from "./report-kpis";
+
+type Props = {
+  period: Period;
+  today: string;
+  onRanking: (period: { from: string; to: string; label: string }) => void;
+};
+
+// Los números de un periodo: la ganancia con ingresos y gastos, «Entra y sale», por medio de pago y «Ver alfajores»
+export function PeriodReport({ period, today, onRanking }: Props) {
+  const online = useOnline();
+  const { data, isError, refetch, dataUpdatedAt } = useQuery(reportSummaryQuery(period));
+  if (!data && isError) return <LoadError what="los reportes" onRetry={() => void refetch()} />;
+  if (!data)
+    return (
+      <View className="mt-4">
+        <SkeletonRows rows={4} />
+      </View>
+    );
+  const empty =
+    !data.incomeCents && !data.expensesCents && data.bars.every((bar) => !bar.incomeCents && !bar.expensesCents);
+  return (
+    <>
+      {online ? null : (
+        <Notice>{`Sin conexión. Ves los números de las ${formatTime(new Date(dataUpdatedAt))}.`}</Notice>
+      )}
+      {empty ? (
+        <View className="items-center pt-10">
+          <Icon name="chart-bar" size={42} tone="textMuted" />
+          <Text className="mt-4 text-center font-extrabold text-xl text-text">Todavía no hay datos</Text>
+          <Text className="mt-1.5 text-center text-base text-text-secondary">
+            Cuando anotes pedidos y gastos, aquí verás cuánto entra, cuánto sale y cuánto ganas.
+          </Text>
+        </View>
+      ) : (
+        <>
+          <ReportKpis summary={data} against={period.previousLabel} />
+          <InOutChart bars={data.bars} unit={barUnit(period.from, period.to)} today={today} />
+          <ByMethod byMethod={data.byMethod} />
+          <View className="mt-6">
+            <Button
+              variant="secondary"
+              label="Ver alfajores"
+              icon={<Icon name="cookie-outline" size={18} />}
+              onPress={() => onRanking({ from: period.from, to: period.to, label: period.label })}
+            />
+          </View>
+        </>
+      )}
+    </>
+  );
+}
