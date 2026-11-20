@@ -429,6 +429,8 @@ Un revisor nuevo leyó toda la rama: «lista para juntar, con correcciones». No
 
 **Volver de «Nuevo pedido» era brusco.** El + abría la pantalla sola dentro de la pestaña Pedidos, sin nada debajo. Al volver, la app cambiaba de pestaña (eso no tiene animación), y después Pedidos seguía mostrando «Nuevo pedido» en vez de la lista. Lo mismo pasaba con «La producción» y con «Ir a Ajustes». Ahora las pestañas van en su grupo (`(tabs)`), y todo lo que se abre desde ellas o desde el + (un pedido, una venta, la producción, un alfajor, Ajustes) se abre encima, sin la barra de pestañas, como en la maqueta. «Volver» regresa con su animación a la pantalla de antes. De paso, ya no se puede abrir una segunda copia de «Nuevo pedido» desde el + (era una de las observaciones menores de la revisión).
 
+**Los botones de abajo quedaban tapados** (en Un alfajor: «Contar stock» y «Anotar merma»). Las pantallas que pasaron a abrirse encima de las pestañas seguían sin dejar el espacio de abajo, porque antes lo dejaba la barra de pestañas. Ahora lo dejan las siete (Nuevo pedido, Venta de mostrador, Un pedido, Registrar producción, Un alfajor, Productos y Cambiar PIN), y una prueba lo revisa con una barra del sistema de 48.
+
 **Textos y números que no entraban.** Las cuentas se hicieron para un celular de 360 dp de ancho:
 - El contador ahora es el de la maqueta: una píldora de 44 con botones de 38, de unos 116 de ancho (antes 148). El nombre del alfajor entra al lado: en el paso 1 del pedido, la venta de mostrador, la producción y el conteo.
 - En «Contar stock», «Deberías tener… en la nevera» va debajo y a lo ancho (al lado bajaba hasta 8 líneas).
