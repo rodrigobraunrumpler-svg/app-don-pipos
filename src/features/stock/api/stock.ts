@@ -1,7 +1,6 @@
-import type { z } from "zod";
-
-import { AppError, toAppError } from "@/lib/errors";
+import { toAppError } from "@/lib/errors";
 import { pageSchema, type Page } from "@/lib/page";
+import { parseResponse as parse } from "@/lib/parse";
 import { supabase } from "@/lib/supabase";
 
 import {
@@ -21,12 +20,6 @@ import {
   type WasteInput,
   type WasteResult,
 } from "../schema/stock";
-
-function parse<T>(schema: z.ZodType<T>, data: unknown): T {
-  const parsed = schema.safeParse(data);
-  if (!parsed.success) throw new AppError("unexpected", { cause: parsed.error });
-  return parsed.data;
-}
 
 export async function getStockOverview(): Promise<StockItem[]> {
   const { data, error } = await supabase().rpc("stock_overview");

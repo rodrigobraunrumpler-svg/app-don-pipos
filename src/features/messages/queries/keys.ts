@@ -1,1 +1,1 @@
-export const messagesKeys = { all: ["messages"] as const };
+export const messagesKeys = { all: ["messages"] as const, templates: ["messages", "templates"] as const };

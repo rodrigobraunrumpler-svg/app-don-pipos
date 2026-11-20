@@ -16,7 +16,7 @@ import { confirmTap } from "@/lib/haptics";
 import { useOnline } from "@/lib/use-online";
 
 import { STOCK_CONFLICT_TEXT } from "../constants";
-import { useRequestId } from "../hooks/use-request-id";
+import { useRequestId } from "@/lib/use-request-id";
 import { registerProductionMutation, revertStockChangeMutation } from "../queries/mutations";
 import { stockOverviewQuery } from "../queries/stock";
 import { productionSaveLabel, productionTotal } from "../rules/production";

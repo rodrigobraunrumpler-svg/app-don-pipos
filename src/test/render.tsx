@@ -8,7 +8,7 @@ import { ThemeProvider, type Scheme } from "@/theme";
 // Para las pruebas de pantallas y componentes: el tema pedido y un cliente de consultas nuevo en cada llamada.
 // Es el cliente de la app, con dos cambios: sin reintentos (una falla se ve al instante) y sin temporizadores
 // de caché que dejen a Jest esperando. Lo demás (cuánto dura fresco un dato, cómo se guarda) queda igual que en la app
-export async function renderWithProviders(ui: ReactElement, options?: { scheme?: Scheme }) {
+export function createTestQueryClient() {
   const queryClient = createQueryClient();
   const defaults = queryClient.getDefaultOptions();
   queryClient.setDefaultOptions({
@@ -16,6 +16,11 @@ export async function renderWithProviders(ui: ReactElement, options?: { scheme?:
     queries: { ...defaults.queries, retry: false, gcTime: Infinity },
     mutations: { ...defaults.mutations, gcTime: Infinity },
   });
+  return queryClient;
+}
+
+export async function renderWithProviders(ui: ReactElement, options?: { scheme?: Scheme }) {
+  const queryClient = createTestQueryClient();
   const result = await render(
     <QueryClientProvider client={queryClient}>
       <ThemeProvider forcedScheme={options?.scheme}>{ui}</ThemeProvider>
