@@ -143,6 +143,13 @@ Todas comprueban que el negocio sea del usuario y devuelven el pedido con sus to
 - **`get_order(order_id)`:** el pedido con sus líneas, pagos, línea de tiempo y los datos básicos del cliente.
 - **`list_receivables(limit, cursor)`:** los pedidos con saldo, sin los anulados. Cada uno dice si ya corresponde recordarle el saldo: está entregado o es un adelanto con fecha.
 
+**Decidido al planear la fase 4b (2026-11-19):**
+- Nuevo pedido son tres pantallas (qué lleva, entrega y pago, guardado); guardado reemplaza el recorrido, así «Volver» lleva a donde se empezó.
+- Editar por debajo de lo pagado devuelve exactamente la diferencia; si el total no baja de lo pagado, no se manda devolución (`invalid`).
+- «Recordar» aparece si el pedido está entregado o tiene un adelanto (la nota de la maqueta).
+- Por cobrar ordena del número mayor al menor (su índice), y se entra desde el filtro «Por cobrar» de Pedidos hasta que llegue Inicio (fase 6).
+- Los sellos (`remove_stamp`) llegan con la fidelidad (fase 7): anular todavía no toca sellos.
+
 ## 4. Permisos
 
 - El dueño lee los pedidos, líneas, eventos y pagos de su negocio.

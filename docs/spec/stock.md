@@ -78,6 +78,10 @@ Si algún día `stock_movements` pasa de millones de filas, un índice BRIN en `
 - **`list_product_movements(product_id, limit, cursor)`:** el historial, por páginas.
 - **`product_sales_by_weekday(product_id)` (fase 4):** el gráfico «Cómo se vende», de las últimas 4 semanas.
 
+**Decidido al planear la fase 4b (2026-11-19):**
+- La venta esperada cuenta desde mañana, como la maqueta: la sugerencia cubre de mañana a `production_interval_days` días y «alcanza hasta» cuenta días desde mañana. La historia termina ayer y empieza en la primera venta, hasta 4 semanas atrás.
+- «Los pedidos de eventos» son los pedidos para otro día (`scheduled_for`): no hay una marca aparte.
+
 ## 4. Permisos
 
 Los comunes: el dueño lee su stock y escribe solo con las funciones.

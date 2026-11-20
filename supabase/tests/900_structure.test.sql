@@ -172,6 +172,8 @@ create function pg_temp.unlisted_functions_for_app() returns setof text language
       'public.order_counts()',
       'public.find_customer_by_phone(text)',
       'public.list_templates()',
+      'public.edit_order(uuid, uuid, integer, jsonb, integer, text)',
+      'public.revert_edit(uuid, integer)',
       -- lo que usan por dentro las reglas de acceso y las funciones de arriba
       'private.owned_business_ids()',
       'private.fail(text)',
@@ -191,7 +193,9 @@ create function pg_temp.unlisted_functions_for_app() returns setof text language
       'private.revert_status(uuid, text)',
       'private.add_payment(uuid, uuid, text, integer)',
       'private.order_json(uuid)',
-      'private.iso_time(timestamp with time zone)'
+      'private.iso_time(timestamp with time zone)',
+      'private.edit_order(uuid, uuid, integer, jsonb, integer, text)',
+      'private.revert_edit(uuid, integer)'
     )
 $$;
 

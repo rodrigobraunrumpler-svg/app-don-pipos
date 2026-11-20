@@ -46,7 +46,7 @@ select throws_ok($$select pg_temp.order_with('{"number": 2, "items_count": 0}')$
 select throws_ok($$select pg_temp.order_with('{"number": 2, "customer_id": "00000000-0000-4000-8000-000000000c09"}')$$, '23503', null, 'el cliente es del mismo negocio');
 select ok((select reloptions from pg_catalog.pg_class where oid = 'public.orders'::regclass) @> array['fillfactor=85'], 'orders deja espacio libre en cada bloque (fillfactor 85)');
 
-select set_config('t.order', (select id::text from public.orders where number = 1), true);
+select set_config('t.order', (select id::text from public.orders where business_id = '00000000-0000-4000-8000-0000000009b1' and number = 1), true);
 -- Líneas, estados y pagos
 select throws_ok(format($$insert into public.order_lines (business_id, order_id, product_id, product_name, quantity, unit_price_cents) values ('00000000-0000-4000-8000-0000000009b1', %L, '00000000-0000-4000-8000-000000000a01', 'Coqueta', 0, 1200)$$, current_setting('t.order')), '23514', null, 'una línea lleva al menos un alfajor');
 select throws_ok(format($$insert into public.order_lines (business_id, order_id, product_id, product_name, quantity, unit_price_cents) values ('00000000-0000-4000-8000-0000000009b1', %L, '00000000-0000-4000-8000-000000000a01', 'Coqueta', 1, 0)$$, current_setting('t.order')), '23514', null, 'con un precio mayor que cero');
