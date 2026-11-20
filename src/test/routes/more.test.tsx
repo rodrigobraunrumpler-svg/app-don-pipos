@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 
 import More from "@/app/(main)/(tabs)/more";
 import Products from "@/app/(main)/more/products";
+import Cash from "@/app/(main)/cash";
 import Expenses from "@/app/(main)/expenses/index";
 import Receivables from "@/app/(main)/orders/receivables";
 import { createTestQueryClient } from "@/test/render";
@@ -24,6 +25,16 @@ jest.mock("@/features/expenses/api/expenses", () => ({
 jest.mock("@/features/income/api/income", () => ({
   getIncomeSummary: async () => ({ totalCents: 0, byMethod: { cash: 0, yape: 0, plin: 0, transfer: 0 }, byDay: [] }),
 }));
+jest.mock("@/features/cash/api/cash", () => ({
+  getLatestCashCount: async () => null,
+  getCashExpected: async (date: string) => ({
+    businessDate: date,
+    cashInCents: 0,
+    cashOutCents: 0,
+    otherMethods: { yape: 0, plin: 0, transfer: 0 },
+    lastOpeningCents: 0,
+  }),
+}));
 jest.mock("@/features/orders/api/orders", () => ({
   listReceivables: async () => ({
     items: [],
@@ -39,7 +50,13 @@ function Providers({ children }: { children: ReactNode }) {
   );
 }
 
-const ROUTES = { more: More, "more/products": Products, "orders/receivables": Receivables, "expenses/index": Expenses };
+const ROUTES = {
+  more: More,
+  "more/products": Products,
+  "orders/receivables": Receivables,
+  "expenses/index": Expenses,
+  cash: Cash,
+};
 
 test("Más ordena «Tu negocio» y «Ajustes»: Por cobrar con lo que te deben, y los tipos de gasto en su hoja", async () => {
   await renderRouter(ROUTES, { initialUrl: "/more", wrapper: Providers });
@@ -60,6 +77,15 @@ test("Más → Gastos, con lo gastado en el mes, y atrás vuelve", async () => {
   await fireEvent.press(await screen.findByRole("button", { name: /^Gastos, S\/.131\.00$/ }));
   expect(screen).toHavePathname("/expenses");
   expect(await screen.findByText("Todavía no hay gastos este mes")).toBeOnTheScreen();
+  await act(() => router.back());
+  expect(screen).toHavePathname("/more");
+});
+
+test("Más → Cuadre de caja, que dice «Hoy» mientras no se cierra, y atrás vuelve", async () => {
+  await renderRouter(ROUTES, { initialUrl: "/more", wrapper: Providers });
+  await fireEvent.press(await screen.findByRole("button", { name: "Cuadre de caja, Hoy" }));
+  expect(screen).toHavePathname("/cash");
+  expect(await screen.findByText("¿Cuánto hay en la caja?")).toBeOnTheScreen();
   await act(() => router.back());
   expect(screen).toHavePathname("/more");
 });
