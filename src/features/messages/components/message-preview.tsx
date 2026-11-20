@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Linking, Text, View } from "react-native";
+import { Linking, View } from "react-native";
 
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
@@ -7,6 +7,7 @@ import { waLink } from "@/lib/whatsapp";
 
 import { templatesQuery } from "../queries/templates";
 import { fillTemplate } from "../rules/fill";
+import { MessageBubble } from "./message-bubble";
 import type { Placeholder, TemplateKey } from "../rules/placeholders";
 
 type Props = {
@@ -25,11 +26,7 @@ export function MessagePreview({ templateKey, context, phone, actionLabel = "Env
   const text = fillTemplate(body, context);
   return (
     <View className="gap-3">
-      <View className="rounded-md bg-sunken px-3 py-3.5">
-        <View className="ml-auto max-w-[92%] rounded-sm rounded-tr bg-olive-soft px-3 py-2.5">
-          <Text className="text-sm leading-5 text-text">{text}</Text>
-        </View>
-      </View>
+      <MessageBubble text={text} />
       {phone ? (
         <Button
           variant="secondary"

@@ -10,6 +10,7 @@ import More from "@/app/(main)/(tabs)/more";
 import CustomerProfile from "@/app/(main)/customers/[id]";
 import OrderScreen from "@/app/(main)/orders/[id]";
 import Loyalty from "@/app/(main)/more/loyalty";
+import Messages from "@/app/(main)/more/messages";
 import Customers from "@/app/(main)/customers/index";
 import { createTestQueryClient } from "@/test/render";
 import { ThemeProvider } from "@/theme";
@@ -101,6 +102,7 @@ const ROUTES = {
   "customers/index": Customers,
   "customers/[id]": CustomerProfile,
   "more/loyalty": Loyalty,
+  "more/messages": Messages,
   "orders/[id]": OrderScreen,
 };
 
@@ -138,6 +140,16 @@ test("Más → Fidelidad (apagada) y atrás vuelve", async () => {
   await fireEvent.press(await screen.findByRole("button", { name: "Fidelidad, Apagada" }));
   expect(screen).toHavePathname("/more/loyalty");
   expect(await screen.findByText("La fidelidad está apagada")).toBeOnTheScreen();
+  await act(() => router.back());
+  expect(screen).toHavePathname("/more");
+});
+
+test("Más → Mensajes de WhatsApp, cada uno con su texto, y atrás vuelve", async () => {
+  await renderRouter(ROUTES, { initialUrl: "/more", wrapper: Providers });
+  await fireEvent.press(await screen.findByRole("button", { name: "Mensajes de WhatsApp, 1" }));
+  expect(screen).toHavePathname("/more/messages");
+  await fireEvent.press(await screen.findByRole("button", { name: "Te extrañamos (solo con permiso)" }));
+  expect(screen.getByLabelText("Texto del mensaje Te extrañamos (solo con permiso)")).toBeOnTheScreen();
   await act(() => router.back());
   expect(screen).toHavePathname("/more");
 });
