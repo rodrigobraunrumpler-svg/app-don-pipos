@@ -605,6 +605,11 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      add_payment: {
+        Args: { p_amount_cents: number; p_method: string; p_order_id: string; p_request_id: string };
+        Returns: Json;
+      };
+      advance_order: { Args: { p_from_status: string; p_order_id: string }; Returns: Json };
       create_counter_sale: { Args: { p_items: Json; p_method: string; p_request_id: string }; Returns: Json };
       create_order: { Args: { p_draft: Json; p_request_id: string }; Returns: Json };
       get_business: { Args: Record<PropertyKey, never>; Returns: Json };
@@ -616,6 +621,7 @@ export type Database = {
         Args: { p_product_id: string; p_quantity: number; p_reason: string; p_request_id: string };
         Returns: Json;
       };
+      revert_status: { Args: { p_expected_status: string; p_order_id: string }; Returns: Json };
       revert_stock_change: { Args: { p_request_id: string }; Returns: Json };
       save_product: {
         Args: {

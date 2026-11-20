@@ -164,6 +164,9 @@ create function pg_temp.unlisted_functions_for_app() returns setof text language
       'public.list_product_movements(uuid, integer, text)',
       'public.create_order(uuid, jsonb)',
       'public.create_counter_sale(uuid, jsonb, text)',
+      'public.advance_order(uuid, text)',
+      'public.revert_status(uuid, text)',
+      'public.add_payment(uuid, uuid, text, integer)',
       -- lo que usan por dentro las reglas de acceso y las funciones de arriba
       'private.owned_business_ids()',
       'private.fail(text)',
@@ -178,7 +181,10 @@ create function pg_temp.unlisted_functions_for_app() returns setof text language
       'private.register_stock_count(uuid, jsonb)',
       'private.revert_stock_change(uuid)',
       'private.create_order(uuid, jsonb)',
-      'private.create_counter_sale(uuid, jsonb, text)'
+      'private.create_counter_sale(uuid, jsonb, text)',
+      'private.advance_order(uuid, text)',
+      'private.revert_status(uuid, text)',
+      'private.add_payment(uuid, uuid, text, integer)'
     )
 $$;
 
