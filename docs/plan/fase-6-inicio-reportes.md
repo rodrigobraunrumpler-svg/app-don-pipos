@@ -168,14 +168,14 @@ cd /home/javier/var-mar/app && pnpm install && pnpm start --tunnel
 
 Ingresa con el dueño DEMO (900 000 101, el PIN de tu `.env.local`). Antes, anota dos o tres pedidos de hoy (uno a recoger con una hora que ya pasó, uno cobrado por Yape y uno sin cobrar), un gasto y una venta de mostrador en efectivo.
 
-1. **Inicio:** arriba, el saludo según la hora y la fecha. Debajo, lo urgente en este orden: el pedido que va tarde («#00xx de … va N min tarde»), lo agotado, lo que hay que revisar y lo que se acaba. Cada fila lleva a su pedido, a Registrar producción o al alfajor.
-2. **Cobrado hoy:** el total con la barra y cada medio con su monto (los que están en cero no salen) y «Cuadrar caja ›». Toca «por entregar»: se abre Pedidos con «Por entregar» elegido. Vuelve a Inicio y toca «entregados» (Pedidos en «Hoy») y «por cobrar» (Por cobrar).
+1. **Inicio:** arriba, el saludo según la hora y la fecha. Debajo, lo urgente en este orden: lo atrasado de días anteriores (lo más viejo arriba), el pedido que va tarde hoy («#00xx de … va N min tarde»), lo agotado, lo que hay que revisar y lo que se acaba. Cada fila lleva a su pedido, a Registrar producción o al alfajor.
+2. **Cobrado hoy:** el total con la barra y cada medio con su monto (los que están en cero no salen) y «Cuadrar caja ›». Toca «por entregar»: se abre Pedidos con «Por entregar» elegido. Vuelve a Inicio y toca «entregados» (Pedidos en «Hoy») y «por cobrar» (Por cobrar). Cobra un pedido o márcalo entregado y vuelve: los números de Inicio ya cambiaron.
 3. **Tu stock y qué producir:** toca un alfajor (su detalle) y «Ver stock». Si hay 7 días de ventas, sale cuánto conviene hacer con «Registrar producción»; si no, no dice nada.
 4. **Por entregar y Próximos:** las mismas filas de Pedidos. Tira hacia abajo para actualizar.
 5. **Reportes:** Más → «Reportes». En «Semana» va del lunes a hoy, comparado con los mismos días de la semana pasada. Toca las barras de «Entra y sale»: el texto de arriba cambia. Prueba «Mes» y después «Elegir fechas», con «1/11» y «15/11» → «Ver».
-6. **Alfajores:** «Ver alfajores», en «Unidades» y en «Soles», y «Por dónde llegan los pedidos». Sin costos en Productos, «Ganancia por alfajor» invita a ponerlos: «Ir a Productos».
-7. **Exportar a Excel:** Más → Ayuda → «Exportar a Excel» → «Este mes» → «Compartir archivo». Mándatelo por WhatsApp o guárdalo en Drive y ábrelo en Excel o en Hojas de cálculo: las tildes, los montos «12.00» y una fila por pedido, pago, gasto e ingreso. Desde Reportes, «Exportar» llega con las fechas del reporte ya elegidas.
-8. **Sin señal (modo avión):** Inicio dice «Sin conexión. Ves lo último que se cargó, a las …»; Reportes, «Ves los números de las …»; «Compartir archivo» se apaga.
+6. **Alfajores:** «Ver alfajores», en «Unidades» y en «Soles», y «Por dónde llegan los pedidos». Sin costos en Productos, «Ganancia por alfajor» invita a ponerlos: «Ir a Productos». Pon el costo de un alfajor, vuelve atrás y su ganancia ya sale.
+7. **Exportar a Excel:** Más → Ayuda → «Exportar a Excel» → «Este mes» → «Compartir archivo». Mándatelo por WhatsApp o guárdalo en Drive y ábrelo en Excel o en Hojas de cálculo: las tildes, los montos «12.00» y una fila por pedido, pago, gasto e ingreso. Desde Reportes, «Exportar» llega con las fechas del reporte ya elegidas. Si al abrirlo en Excel de una PC todo sale en una sola columna, avísame: es el separador «;» y se cambia a coma.
+8. **Sin señal (modo avión):** Inicio dice «Sin conexión. Ves lo último que se cargó, a las …»; Reportes, «Ves los números cargados a las …»; «Compartir archivo» se apaga.
 
 ### Lo que cambió respecto de este plan
 
@@ -210,3 +210,35 @@ Ingresa con el dueño DEMO (900 000 101, el PIN de tu `.env.local`). Antes, anot
 
 **Tarea 8**
 - Al escribir este resultado salió un error en la exportación: un pedido entraba al archivo por su día, pero la columna «Fecha» decía cuándo se anotó. Una migración nueva da a cada fila su día de Lima: un pedido va con su día y su hora acordada (sin hora, vacía).
+
+## Después de la revisión final (2026-11-20)
+
+Un revisor nuevo leyó la rama entera: «lista después de arreglos», sin nada crítico. Las cuentas de plata, los permisos y el formato del archivo estaban bien. Se arreglaron, cada uno con su prueba:
+
+- **Inicio y Reportes no se ponían al día** después de guardar algo en otra pantalla: «2 por entregar» y «Cobrado hoy» seguían viejos mientras no se saliera de Inicio. Ahora `reports` escucha todos los guardados y vuelve a pedir lo suyo; Alfajores también se recarga al volver.
+- **«Ganancia por alfajor» seguía pidiendo costos** después de ponerlos: las ventas del mes no tenían costo guardado. Una venta sin costo usa ahora el costo de hoy (migración `20261120151611_ranking_profit_today_cost`).
+- **Lo urgente ponía lo de hoy arriba de lo atrasado**, y con más de 20 pedidos por entregar escondía justo los más atrasados. Ahora va lo atrasado de días anteriores primero, del día más viejo, y una fila «N pedidos más por entregar» lleva a Pedidos.
+- **Un medio en negativo** (una devolución de hoy de algo cobrado ayer) no salía en «Cobrado hoy» y la suma no cuadraba. Ahora se ve.
+- **Reportes decía «Todavía no hay datos» cada lunes y cada día 1.** Ahora eso sale solo si tampoco hubo nada en el periodo anterior; si no, se ve en cero con su comparación.
+- **Sin señal al día siguiente**, lo cobrado ayer se leía como de hoy. Ahora el aviso dice de qué día es: «ayer a las 18:40». Sin nada guardado, Inicio dice que se carga con la señal.
+- **Cambiar de periodo hacía parpadear la pantalla.** Ahora los números de antes quedan atenuados hasta que llegan los nuevos.
+
+`reports.md` quedó al día con lo decidido en la fase.
+
+| Comprobación | Resultado |
+|---|---|
+| `pnpm test:coverage` | 621 pruebas, con el 100 % donde se pide |
+| `pnpm db:check` | 668 pruebas de la base en 32 archivos |
+| `pnpm db:perf` | 39 casos, todos con índice y en menos de 50 ms (`report_ranking` 7 ms) |
+| `pnpm lint`, `pnpm lint:rules`, `pnpm typecheck`, `pnpm test:scripts` | Pasan |
+
+**Quedan para después** (no cambian plata ni datos):
+- No hay una etiqueta «Sin comparación» cuando no hay con qué comparar.
+- Un rango de un solo día dice «frente a el día anterior».
+- «entregados» cuenta por la hora de entrega, pero abre «Hoy», que va por el día del pedido. El lector de pantalla dice «1 entregados hoy».
+- Las fechas elegidas no dicen el año, y una fecha futura con año recibe el mensaje general.
+- `home_summary` usa `order_counts` entero para un solo número (13 ms hoy).
+- Con todo entregado al final del día, Inicio muestra la invitación de la primera vez.
+- En Android, los campos «Desde» y «Hasta» abren el teclado de letras.
+- No hay caso de rendimiento para un año entero en Reportes o al exportar.
+- La línea `"expo-sharing"` de `app.config.ts` no hace nada.

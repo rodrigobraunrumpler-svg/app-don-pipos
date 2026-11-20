@@ -26,17 +26,19 @@ No tiene tablas propias. Lee pagos, ingresos, gastos, pedidos y stock con los í
   - si el cuadre de hoy ya se cerró.
 
   Las listas de Inicio salen de lo que ya existe (decidido en el plan de la fase 6): por entregar y próximos de `list_orders`, «Tu stock» de `stock_overview` y qué producir de `production_suggestion`. Así Inicio y Pedidos nunca difieren.
+
+  Ningún módulo que guarda (pedidos, pagos, gastos, ingresos, caja) conoce a `reports`: sería un círculo. Por eso `reports` escucha todos los guardados y, después de cada uno, vuelve a pedir lo suyo (`useRefreshAfterWrites`, montado en la pila principal). Al volver a Inicio, ya está al día.
 - **`report_summary(from, to)`:**
   - ingresos (por fecha de pago, D11), gastos y ganancia;
-  - los mismos datos del periodo anterior, del mismo largo, para comparar;
+  - los mismos datos del periodo anterior, del mismo largo, para comparar. La app dice desde cuándo empieza (`p_previous_from`): la semana se compara con los mismos días de la semana pasada y el mes con los mismos días del mes pasado. Sin ese dato, los días justo anteriores;
   - las barras: por día hasta 7 días, por semana hasta 62 días («1 al 7», «8 al 14», «15 a hoy») y por mes en un rango más largo. La base da el desde, el hasta y los montos de cada barra; el texto lo arma la app (`bars.ts`);
   - lo cobrado por medio de pago.
 - **`report_ranking(from, to)`:**
   - por alfajor, unidades y soles de los pedidos entregados, por fecha de entrega;
   - los pedidos por canal: WhatsApp, local y web;
-  - la ganancia por alfajor, si tiene costo;
+  - la ganancia por alfajor: con el costo guardado en cada venta y, si esa venta no lo tiene, con el costo de hoy (el aproximado que se pone en Productos). Sin ninguno de los dos, sin ganancia;
   - los clientes que más compran (la pantalla los muestra con la ficha del cliente, en la fase 7: la maqueta de Más vendidos no los tiene).
-- **`export_rows(from, to)`:** los pedidos, pagos, devoluciones, gastos e ingresos a mano del periodo, en un solo archivo con una columna «Tipo» para filtrar en Excel. Hasta un año. El celular arma el archivo (`rules/csv.ts`), lo guarda con expo-file-system y lo comparte con expo-sharing.
+- **`export_rows(from, to)`:** los pedidos, pagos, devoluciones, gastos e ingresos a mano del periodo, en un solo archivo con una columna «Tipo» para filtrar en Excel. Hasta un año. Cada fila lleva su día de Lima; un pedido, su día (por eso entra al periodo) y su hora acordada, si la tiene. El celular arma el archivo (`rules/csv.ts`), lo guarda con expo-file-system y lo comparte con expo-sharing. Las filas no se guardan en el celular.
 
 ## 4. Permisos
 
@@ -47,17 +49,17 @@ Los comunes: solo lectura, de los datos del negocio del dueño.
 - **`period.ts`:** el rango de cada periodo, en el día de Lima.
   - La semana va del lunes a hoy; el mes, del día 1 a hoy.
   - El periodo anterior tiene el mismo largo.
-  - Ejemplo: el miércoles 18 de noviembre, la semana es del lunes 16 al miércoles 18, y la anterior del lunes 9 al miércoles 11.
+  - Ejemplo: el miércoles 18 de noviembre, la semana es del lunes 16 al miércoles 18, y la anterior del lunes 9 al miércoles 11. El mes, del 1 al 18 frente al 1 al 18 de octubre. Si el mes pasado no tiene ese día (el 31 de marzo), se compara con los mismos días justo antes.
 - **`delta.ts`:** el porcentaje y su tono.
   - Ingresos S/ 3,486 frente a S/ 3,112 → «+12 %», bien.
   - Gastos +6 % → ojo.
   - 0 % → neutro.
   - Sin datos del periodo anterior → sin comparación.
 - **`bars.ts`:** el texto de la barra tocada: «Del 1 al 7 entró S/ 1,180.00 y salió S/ 410.00.».
-- **`csv.ts`:** el archivo para Excel, con separador «;» y BOM UTF-8, para que Excel en español lo abra bien. Los montos van como «12.00».
+- **`csv.ts`:** el archivo para Excel, con separador «;» y BOM UTF-8, para que Excel en español lo abra bien. Los montos van como «12.00». Un texto con «;», comillas o saltos va entre comillas, y uno que empieza con =, +, - o @ lleva «'» delante para que Excel nunca lo tome como fórmula.
 - **`urgent.ts`:** lo urgente de Inicio, en este orden:
-  1. lo atrasado de días anteriores y lo que va tarde hoy (`lateness`, de `orders`);
-  2. lo agotado;
+  1. lo atrasado de días anteriores (del día más viejo) y lo que va tarde hoy (lo prometido antes primero), con `lateness` de `orders`. Mira la primera página de «Por entregar»; si hay más pedidos, una fila «N pedidos más por entregar» lleva a Pedidos;
+  2. lo agotado, y lo que no alcanza para los pedidos;
   3. lo que hay que revisar;
   4. lo que se acaba.
 
@@ -67,7 +69,7 @@ Los comunes: solo lectura, de los datos del negocio del dueño.
 
 - **Inicio:**
   - lo urgente arriba, en filas que se tocan;
-  - «Cobrado hoy», sin los medios en cero, con «Cuadrar caja ›»;
+  - «Cobrado hoy», sin los medios en cero (uno en negativo, por una devolución de hoy, sí se ve), con «Cuadrar caja ›»;
   - los números del día, que abren Pedidos con el filtro puesto;
   - la bandeja de stock y qué producir;
   - por entregar y próximos;
@@ -80,7 +82,8 @@ Los comunes: solo lectura, de los datos del negocio del dueño.
   - ingresos y gastos;
   - «Entra y sale», con barras que se tocan;
   - lo cobrado por medio de pago;
-  - el título que se achica al bajar.
+  - la cabecera de las pantallas que se abren encima de las pestañas, con «Volver» (decidido en la fase 6, en vez de un título que se achica al bajar);
+  - al cambiar de periodo no parpadea: los números de antes quedan atenuados hasta que llegan los nuevos. «Todavía no hay datos» solo si tampoco hubo nada en el periodo anterior (un lunes temprano se ve en cero, con su comparación).
 - **Más vendidos:**
   - en unidades o en soles;
   - por canal;
