@@ -17,6 +17,7 @@ import { View } from "react-native";
 
 import { MissingConfig } from "@/components/ui/missing-config";
 import { UnlockConsumer, UnlockProvider } from "@/features/auth";
+import { SetupGate } from "@/features/businesses";
 import { appEnv } from "@/lib/env";
 import { createPersistOptions, createQueryClient, setupFocusManager, setupOnlineManager } from "@/lib/query";
 import { ThemeProvider } from "@/theme";
@@ -57,23 +58,32 @@ export default function RootLayout() {
                 if (sessionStatus === "loading" || !unlockReady) return <View className="flex-1 bg-background" />;
                 // Un ingreso en curso sigue en Ingresar hasta guardar el PIN local
                 const signedIn = sessionStatus === "signed-in" && !signingIn;
-                // Sin sesión, Ingresar; con sesión bloqueada, Entrar; recién ingresado, la huella; si no, las pestañas
+                const inside = signedIn && !locked && !offerBiometrics;
+                // Sin sesión, Ingresar; con sesión bloqueada, Entrar; recién ingresado, la huella; la primera vez, la
+                // puesta en marcha; si no, las pestañas. Mientras se sabe si falta, ninguna de las dos: la entrada espera
                 return (
-                  <Stack screenOptions={{ headerShown: false }}>
-                    <Stack.Screen name="index" />
-                    <Stack.Protected guard={signedIn && !locked && !offerBiometrics}>
-                      <Stack.Screen name="(main)" />
-                    </Stack.Protected>
-                    <Stack.Protected guard={signedIn && locked}>
-                      <Stack.Screen name="unlock" />
-                    </Stack.Protected>
-                    <Stack.Protected guard={signedIn && !locked && offerBiometrics}>
-                      <Stack.Screen name="biometrics" />
-                    </Stack.Protected>
-                    <Stack.Protected guard={!signedIn}>
-                      <Stack.Screen name="(auth)" />
-                    </Stack.Protected>
-                  </Stack>
+                  <SetupGate enabled={signedIn}>
+                    {(setup) => (
+                      <Stack screenOptions={{ headerShown: false }}>
+                        <Stack.Screen name="index" />
+                        <Stack.Protected guard={inside && setup === "done"}>
+                          <Stack.Screen name="(main)" />
+                        </Stack.Protected>
+                        <Stack.Protected guard={inside && setup === "needed"}>
+                          <Stack.Screen name="setup" />
+                        </Stack.Protected>
+                        <Stack.Protected guard={signedIn && locked}>
+                          <Stack.Screen name="unlock" />
+                        </Stack.Protected>
+                        <Stack.Protected guard={signedIn && !locked && offerBiometrics}>
+                          <Stack.Screen name="biometrics" />
+                        </Stack.Protected>
+                        <Stack.Protected guard={!signedIn}>
+                          <Stack.Screen name="(auth)" />
+                        </Stack.Protected>
+                      </Stack>
+                    )}
+                  </SetupGate>
                 );
               }}
             </UnlockConsumer>

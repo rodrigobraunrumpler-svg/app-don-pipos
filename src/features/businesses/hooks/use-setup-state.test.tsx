@@ -34,6 +34,17 @@ test("mientras lo pide por primera vez, espera", async () => {
   expect(result.current).toBe("loading");
 });
 
+test("después de un fallo no espera los reintentos: entra a Inicio", async () => {
+  const client = createTestQueryClient();
+  client.setDefaultOptions({ queries: { ...client.getDefaultOptions().queries, retry: 3, retryDelay: 60_000 } });
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={client}>{children}</QueryClientProvider>
+  );
+  mockGetBusiness.mockRejectedValue(new AppError("unexpected"));
+  const { result } = await renderHook(() => useSetupState(true), { wrapper });
+  await waitFor(() => expect(result.current).toBe("done"));
+});
+
 test("si no se puede saber (error) o no hay sesión, entra a Inicio: nunca se queda bloqueada", async () => {
   mockGetBusiness.mockRejectedValue(new AppError("offline"));
   const failed = await stateWith();
