@@ -8,6 +8,7 @@ const DRAFT: DraftState = {
   fulfillment: "pickup",
   address: "",
   scheduledFor: null,
+  otherDay: "",
   promisedTime: "",
   discountCents: 0,
   discountReason: "",
@@ -15,18 +16,22 @@ const DRAFT: DraftState = {
   paymentMethod: null,
   paymentCents: 0,
   note: "",
+  requestId: "00000000-0000-4000-8000-00000000d001",
   updatedAt: null,
 };
 const LINES = [{ productId: "a", quantity: 2 }];
 const TOTALS = { subtotalCents: 2400, deliveryFeeCents: 0, totalCents: 2400 };
 const problem = (changes: Partial<DraftState>, phone: string | null = "+51900000990", totals = TOTALS) =>
-  draftProblem({ ...DRAFT, ...changes }, { phone, hasItems: true, totals });
+  draftProblem(
+    { ...DRAFT, ...changes },
+    { phone, hasItems: true, totals, today: "2026-11-19", methods: ["cash", "yape"] },
+  );
 
 test("lo que falta para guardar, en el orden del formulario", () => {
   expect(problem({})).toBeNull();
-  expect(draftProblem(DRAFT, { phone: "+51900000990", hasItems: false, totals: TOTALS })).toBe(
-    "Elige al menos un alfajor.",
-  );
+  expect(
+    draftProblem(DRAFT, { phone: "+51900000990", hasItems: false, totals: TOTALS, today: "2026-11-19", methods: null }),
+  ).toBe("Elige al menos un alfajor.");
   expect(problem({}, null)).toBe("Escribe el celular del cliente: 9 dígitos.");
   expect(problem({ name: "  " })).toBe("Escribe el nombre del cliente.");
   expect(problem({ fulfillment: "delivery" })).toBe("Escribe la dirección de entrega.");
@@ -38,6 +43,16 @@ test("lo que falta para guardar, en el orden del formulario", () => {
   expect(problem({ paymentMode: "part", paymentMethod: "yape", paymentCents: 2401 })).toBe(
     "El adelanto no puede pasar del total.",
   );
+});
+
+test("un borrador recuperado con un día que ya pasó o con un medio apagado dice qué cambiar", () => {
+  expect(problem({ scheduledFor: "2026-11-18" })).toBe("El día elegido ya pasó: elige otro.");
+  expect(problem({ otherDay: "31/11" })).toBe("Escribe la fecha como 24/12.");
+  expect(problem({ otherDay: "24/12", scheduledFor: "2026-12-24" })).toBeNull();
+  expect(problem({ paymentMode: "all", paymentMethod: "plin" })).toBe("Ese medio de pago está apagado: elige otro.");
+  // Sin los ajustes cargados no se sabe qué medios están activos: no lo marca
+  const unknown = { phone: "+51900000990", hasItems: true, totals: TOTALS, today: "2026-11-19", methods: null };
+  expect(draftProblem({ ...DRAFT, paymentMode: "all", paymentMethod: "plin" }, unknown)).toBeNull();
 });
 
 test("el borrador como lo recibe create_order: sin lo vacío, con la hora en el día del pedido", () => {

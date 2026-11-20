@@ -118,3 +118,33 @@ test("el mensaje de «en camino» se llena con lo que falta pagar", async () => 
   ).toBeOnTheScreen();
   expect(screen.getByRole("button", { name: "Enviar por WhatsApp" })).toBeOnTheScreen();
 });
+
+test("un doble toque en la acción avanza un solo paso", async () => {
+  let resolve: (order: unknown) => void = () => undefined;
+  mockAdvance.mockImplementationOnce(() => new Promise((done) => (resolve = done)));
+  mockAdvance.mockResolvedValue(withStatus("on_the_way"));
+  await open(withStatus("new"));
+  await fireEvent.press(await screen.findByRole("button", { name: "Empezar a preparar" }));
+  await fireEvent.press(await screen.findByRole("button", { name: "Marcar en camino" }));
+  expect(screen.getByRole("button", { name: "Marcar en camino" })).toBeDisabled();
+  // La base ya quedó en «Preparando»: es lo que devuelve al volver a leer el pedido
+  mockGet.mockResolvedValue(withStatus("preparing"));
+  resolve(withStatus("preparing"));
+  // Mientras se guarda, la acción está apagada; vuelve cuando la base responde
+  await waitFor(() => expect(screen.getByRole("button", { name: "Marcar en camino" })).toBeEnabled());
+  await new Promise((wait) => setTimeout(wait, 50));
+  expect(mockAdvance).toHaveBeenCalledTimes(1);
+});
+
+test("si ese pago ya se había guardado con otro monto, lo dice sin invitar a registrarlo otra vez", async () => {
+  mockPay.mockRejectedValueOnce(new AppError("conflict"));
+  await open(withStatus("delivered"));
+  await fireEvent.press(await screen.findByRole("button", { name: "Registrar pago de S/ 22.00" }));
+  await fireEvent.press(await screen.findByRole("button", { name: "Yape" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Guardar pago" }));
+  expect(
+    await screen.findByText(
+      "Este pago ya se había guardado antes de tu cambio. Revisa los pagos del pedido antes de registrarlo otra vez.",
+    ),
+  ).toBeOnTheScreen();
+});

@@ -2,27 +2,38 @@ import { formatCents } from "@/lib/money";
 
 import { PAYMENT_METHOD_LABELS } from "../constants";
 import type { DraftState } from "../schema/draft";
-import type { OrderDraft, OrderLineInput } from "../schema/order";
+import type { OrderDraft, OrderLineInput, PaymentMethod } from "../schema/order";
+import { parseDayMonth } from "./day";
 
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 type Totals = { subtotalCents: number; deliveryFeeCents: number; totalCents: number };
 
+type Context = {
+  phone: string | null;
+  hasItems: boolean;
+  totals: Totals;
+  today: string;
+  methods: PaymentMethod[] | null;
+};
+
 // Lo que falta para guardar el pedido, en el orden del formulario; null si ya se puede. El teléfono llega normalizado
-// (null si no tiene sus 9 dígitos)
-export function draftProblem(
-  draft: DraftState,
-  { phone, hasItems, totals }: { phone: string | null; hasItems: boolean; totals: Totals },
-): string | null {
+// (null si no tiene sus 9 dígitos). Un borrador recuperado puede traer un día que ya pasó o un medio que se apagó;
+// sin los ajustes cargados (methods null) no se sabe qué medios están activos
+export function draftProblem(draft: DraftState, { phone, hasItems, totals, today, methods }: Context): string | null {
   if (!hasItems) return "Elige al menos un alfajor.";
   if (!phone) return "Escribe el celular del cliente: 9 dígitos.";
   if (!draft.name.trim()) return "Escribe el nombre del cliente.";
   if (draft.fulfillment === "delivery" && !draft.address.trim()) return "Escribe la dirección de entrega.";
+  if (draft.otherDay.trim() && !parseDayMonth(draft.otherDay, today)) return "Escribe la fecha como 24/12.";
+  if (draft.scheduledFor && draft.scheduledFor < today) return "El día elegido ya pasó: elige otro.";
   if (draft.promisedTime && !TIME.test(draft.promisedTime)) return "Escribe la hora como 13:00.";
   if (draft.discountCents > 0 && !draft.discountReason) return "Elige el motivo del descuento.";
   if (draft.discountCents > totals.subtotalCents + totals.deliveryFeeCents)
     return "El descuento no puede pasar del total.";
   if (draft.paymentMode !== "none" && !draft.paymentMethod) return "Elige con qué pagó.";
+  if (draft.paymentMode !== "none" && methods && draft.paymentMethod && !methods.includes(draft.paymentMethod))
+    return "Ese medio de pago está apagado: elige otro.";
   if (draft.paymentMode === "part" && draft.paymentCents < 1) return "Escribe cuánto adelantó.";
   if (draft.paymentMode === "part" && draft.paymentCents > totals.totalCents)
     return "El adelanto no puede pasar del total.";

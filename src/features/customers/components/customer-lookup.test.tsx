@@ -10,9 +10,17 @@ jest.mock("../api/customers", () => ({ findCustomerByPhone: (phone: string) => m
 
 beforeEach(() => mockFind.mockReset());
 
-function Lookup({ onRepeat = jest.fn(), onName = jest.fn() }: { onRepeat?: jest.Mock; onName?: jest.Mock }) {
-  const [phone, setPhone] = useState("");
-  const [name, setName] = useState("");
+function Lookup({
+  onRepeat = jest.fn(),
+  onName = jest.fn(),
+  initial = { phone: "", name: "" },
+}: {
+  onRepeat?: jest.Mock;
+  onName?: jest.Mock;
+  initial?: { phone: string; name: string };
+}) {
+  const [phone, setPhone] = useState(initial.phone);
+  const [name, setName] = useState(initial.name);
   return (
     <CustomerLookup
       phone={phone}
@@ -60,4 +68,16 @@ test("un teléfono nuevo pide el nombre", async () => {
   await fireEvent.changeText(await screen.findByLabelText("Nombre del cliente"), "Luis");
   expect(onName).toHaveBeenLastCalledWith("Luis");
   expect(screen.queryByRole("button", { name: "Repetir" })).toBeNull();
+});
+
+test("al volver a la pantalla con un cliente ya completado, cambiar a un teléfono nuevo borra su nombre", async () => {
+  mockFind.mockImplementation(async (phone: string) =>
+    phone === "+51900000990"
+      ? { id: "c1", name: "Ana (DEMO)", address: null, ordersCount: 1, lastOrderAt: null, lastOrder: null }
+      : null,
+  );
+  await renderWithProviders(<Lookup initial={{ phone: "900000990", name: "Ana (DEMO)" }} />);
+  expect(await screen.findByText("Ana (DEMO)")).toBeOnTheScreen();
+  await fireEvent.changeText(screen.getByLabelText("Teléfono del cliente"), "900000991");
+  expect(await screen.findByLabelText("Nombre del cliente")).toHaveDisplayValue("");
 });

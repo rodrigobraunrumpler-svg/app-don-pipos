@@ -23,6 +23,8 @@ import { useCreateCounterSale } from "../hooks/use-order-changes";
 import { orderNumber } from "../rules/number";
 import type { PaymentMethod } from "../schema/order";
 
+// El mismo código ya se guardó con otros alfajores (una respuesta perdida y después un cambio): no invita a cobrar otra vez
+const CONFLICT_TEXT = "Esta venta ya se había guardado antes de tu cambio. Revisa Pedidos antes de cobrarla otra vez.";
 // En el orden de PAYMENT_METHOD_LABELS: en el mostrador, efectivo primero
 const METHODS = Object.keys(PAYMENT_METHOD_LABELS) as PaymentMethod[];
 
@@ -57,8 +59,9 @@ export function CounterSale({ onBack }: { onBack: () => void }) {
       setQuantities({});
       setToast(`Venta guardada: ${orderNumber(order.number)}, ${formatCents(order.totalCents)}.`);
     } catch (error) {
-      if (toAppError(error).kind === "conflict") renew();
-      setToast(errorMessage(error));
+      const conflict = toAppError(error).kind === "conflict";
+      if (conflict) renew();
+      setToast(conflict ? CONFLICT_TEXT : errorMessage(error));
     }
   }
 

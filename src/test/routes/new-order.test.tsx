@@ -15,9 +15,12 @@ import NewOrder from "@/app/(main)/orders/new";
 import StockLayout from "@/app/(main)/stock/_layout";
 import Stock from "@/app/(main)/stock/index";
 import Production from "@/app/(main)/stock/production";
+import { AppError } from "@/lib/errors";
+import { TEST_ORDER } from "@/test/orders";
 import { createTestQueryClient } from "@/test/render";
 import { ThemeProvider } from "@/theme";
 
+const mockCreate = jest.fn();
 jest.mock("@/features/products/api/products", () => ({
   listProducts: async () => (jest.requireActual("@/test/products") as { TEST_PRODUCTS: unknown }).TEST_PRODUCTS,
   saveProduct: jest.fn(),
@@ -28,7 +31,7 @@ jest.mock("@/features/stock/api/stock", () => ({
 jest.mock("@/features/orders/api/orders", () => ({
   listOrders: async () => ({ items: [], meta: { limit: 20, total: 0, hasMore: false, nextCursor: null } }),
   getOrderCounts: async () => ({ today: 0, toDeliver: 0, upcoming: 0, toCollect: 0, all: 0 }),
-  createOrder: async () => (jest.requireActual("@/test/orders") as { TEST_ORDER: unknown }).TEST_ORDER,
+  createOrder: (input: unknown) => mockCreate(input),
 }));
 jest.mock("@/features/customers/api/customers", () => ({ findCustomerByPhone: async () => null }));
 jest.mock("@/features/businesses/api/business", () => ({
@@ -52,7 +55,11 @@ function Providers({ children }: { children: ReactNode }) {
   );
 }
 
-beforeEach(() => AsyncStorage.clear());
+beforeEach(async () => {
+  await AsyncStorage.clear();
+  mockCreate.mockReset();
+  mockCreate.mockResolvedValue(TEST_ORDER);
+});
 
 const openNewOrder = () => renderRouter({ "orders/new": NewOrder }, { initialUrl: "/orders/new", wrapper: Providers });
 
@@ -138,4 +145,26 @@ test("el botón + abre «¿Qué quieres anotar?» y cada opción lleva a su pant
   expect(screen).toHavePathname("/orders/counter");
   await choose("La producción");
   expect(screen).toHavePathname("/stock/production");
+});
+
+test("si la respuesta se pierde, el pedido recuperado se vuelve a guardar con el mismo código (no se duplica)", async () => {
+  mockCreate.mockRejectedValueOnce(new AppError("offline"));
+  const first = await openNewOrder();
+  await fireEvent.press(await screen.findByRole("button", { name: "Más Coqueta" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Seguir" }));
+  await fireEvent.changeText(await screen.findByLabelText("Teléfono del cliente"), "900000990");
+  await fireEvent.changeText(await screen.findByLabelText("Nombre del cliente"), "Ana (DEMO)");
+  await fireEvent.press(screen.getByRole("button", { name: "Guardar pedido de S/ 12.00" }));
+  expect(
+    await screen.findByText("No se pudo guardar el pedido. Tus datos siguen aquí: vuelve a intentar."),
+  ).toBeOnTheScreen();
+  await first.unmount();
+
+  await openNewOrder();
+  expect(await screen.findByText("1 alfajor")).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: "Seguir" }));
+  await fireEvent.press(await screen.findByRole("button", { name: "Guardar pedido de S/ 12.00" }));
+  expect(await screen.findByText("Pedido #0042 guardado")).toBeOnTheScreen();
+  expect(mockCreate).toHaveBeenCalledTimes(2);
+  expect(mockCreate.mock.calls[1][0].requestId).toBe(mockCreate.mock.calls[0][0].requestId);
 });

@@ -24,6 +24,9 @@ type Props = {
   onSaved: (message: string) => void;
 };
 
+const CONFLICT_TEXT =
+  "Este pago ya se había guardado antes de tu cambio. Revisa los pagos del pedido antes de registrarlo otra vez.";
+
 // Registrar un pago (o «¿Ya cobraste?» al entregar con saldo): todo lo que falta por defecto, nunca más, y el medio.
 // Al entregar, el efectivo viene marcado
 export function PaymentSheet({ order, atDelivery, methods, onClose, onSaved }: Props) {
@@ -53,9 +56,10 @@ export function PaymentSheet({ order, atDelivery, methods, onClose, onSaved }: P
       confirmTap();
       onSaved(`Pago guardado: ${formatCents(amount)} con ${PAYMENT_METHOD_LABELS[method]}`);
     } catch (error) {
-      // El mismo código ya se usó con otro monto: el siguiente intento es otro pago
-      if (toAppError(error).kind === "conflict") renew();
-      setFailure(errorMessage(error));
+      // El mismo código ya se usó con otro monto: lo dice, y el siguiente intento es otro pago
+      const conflict = toAppError(error).kind === "conflict";
+      if (conflict) renew();
+      setFailure(conflict ? CONFLICT_TEXT : errorMessage(error));
     }
   }
 

@@ -1,12 +1,13 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { useState } from "react";
 
+import { businessDate } from "@/lib/dates";
 import { AppError } from "@/lib/errors";
 import { TEST_ORDER } from "@/test/orders";
 import { renderWithProviders } from "@/test/render";
 import { COQUETA_ID } from "@/test/stock-items";
 
-import { EMPTY_DRAFT } from "../hooks/use-order-draft";
+import { emptyDraft } from "../hooks/use-order-draft";
 import type { DraftState } from "../schema/draft";
 import { DraftDetails } from "./draft-details";
 
@@ -27,7 +28,7 @@ jest.mock("@/features/customers/api/customers", () => ({ findCustomerByPhone: as
 beforeEach(() => mockCreate.mockReset());
 
 function Details({ onSaved = jest.fn() }: { onSaved?: jest.Mock }) {
-  const [draft, setDraft] = useState<DraftState>({ ...EMPTY_DRAFT, quantities: { [COQUETA_ID]: 2 } });
+  const [draft, setDraft] = useState<DraftState>({ ...emptyDraft(), quantities: { [COQUETA_ID]: 2 } });
   return (
     <DraftDetails
       draft={draft}
@@ -95,4 +96,19 @@ test("con un conflicto lo explica, y el siguiente intento usa otro código", asy
   await fireEvent.press(screen.getByRole("button", { name: "Guardar pedido de S/ 24.00" }));
   await waitFor(() => expect(onSaved).toHaveBeenCalled());
   expect(mockCreate.mock.calls[1][0].requestId).not.toBe(mockCreate.mock.calls[0][0].requestId);
+});
+
+test("una fecha más allá de la semana se escribe como día/mes", async () => {
+  mockCreate.mockResolvedValue(TEST_ORDER);
+  const target = businessDate(new Date(Date.now() + 20 * 86_400_000));
+  await renderWithProviders(<Details />);
+  await customer();
+  await fireEvent.changeText(
+    screen.getByLabelText("Otra fecha"),
+    `${Number(target.slice(8))}/${Number(target.slice(5, 7))}`,
+  );
+  expect(screen.getByText("Aparece en «Próximos» hasta ese día.")).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: "Guardar pedido de S/ 24.00" }));
+  await waitFor(() => expect(mockCreate).toHaveBeenCalled());
+  expect(mockCreate.mock.calls[0][0].draft.scheduledFor).toBe(target);
 });

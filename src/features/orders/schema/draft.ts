@@ -11,6 +11,8 @@ export const draftStateSchema = z.object({
   fulfillment: z.enum(["pickup", "delivery"]),
   address: z.string(),
   scheduledFor: z.string().nullable(),
+  // «Otra fecha» tal como se escribió (día/mes), para avisar si no es una fecha
+  otherDay: z.string(),
   promisedTime: z.string(),
   discountCents: z.number().int().min(0),
   discountReason: z.string(),
@@ -18,6 +20,8 @@ export const draftStateSchema = z.object({
   paymentMethod: paymentMethodSchema.nullable(),
   paymentCents: z.number().int().min(0),
   note: z.string(),
+  // El código del pedido: el mismo en cada reintento, aunque se cierre la app; se renueva al guardar o con un conflicto
+  requestId: z.string(),
   updatedAt: z.string().nullable(),
 });
 export type DraftState = z.infer<typeof draftStateSchema>;

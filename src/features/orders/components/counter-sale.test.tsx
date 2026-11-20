@@ -1,6 +1,7 @@
 import { onlineManager } from "@tanstack/react-query";
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 
+import { AppError } from "@/lib/errors";
 import { TEST_ORDER } from "@/test/orders";
 import { renderWithProviders } from "@/test/render";
 import { COQUETA_ID } from "@/test/stock-items";
@@ -64,4 +65,17 @@ test("sin señal, cobrar se apaga y lo dice", async () => {
   onlineManager.setOnline(false);
   expect(await screen.findByText("Sin conexión. Para cobrar, espera la señal.")).toBeOnTheScreen();
   expect(screen.getByRole("button", { name: "Efectivo" })).toBeDisabled();
+});
+
+test("si esa venta ya se había guardado con otros alfajores, lo dice sin invitar a cobrarla otra vez", async () => {
+  mockSale.mockReset();
+  mockSale.mockRejectedValueOnce(new AppError("conflict"));
+  await renderWithProviders(<CounterSale onBack={jest.fn()} />);
+  await fireEvent.press(await screen.findByRole("button", { name: "Sumar un Coqueta" }));
+  await fireEvent.press(await screen.findByRole("button", { name: "Efectivo" }));
+  expect(
+    await screen.findByText(
+      "Esta venta ya se había guardado antes de tu cambio. Revisa Pedidos antes de cobrarla otra vez.",
+    ),
+  ).toBeOnTheScreen();
 });

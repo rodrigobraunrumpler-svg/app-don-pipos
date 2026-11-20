@@ -32,10 +32,11 @@ export function CustomerLookup({ phone, onPhoneChange, name, onNameChange, onRep
   const filled = useRef<string | null>(null);
 
   useEffect(() => {
-    if (found && name !== found.name) {
+    if (found) {
+      // También al volver a la pantalla con el nombre ya completado: así un teléfono corregido lo borra
       filled.current = found.name;
-      onNameChange(found.name);
-    } else if (!found && filled.current !== null && name === filled.current) {
+      if (name !== found.name) onNameChange(found.name);
+    } else if (filled.current !== null && name === filled.current) {
       filled.current = null;
       onNameChange("");
     }

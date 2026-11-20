@@ -160,7 +160,7 @@ export function OrderDetail({ orderId, onBack }: Props) {
             <Button
               label={nextStatusLabel(next)}
               icon={<Icon name={STATUS_ICONS[next]} size={18} tone={online ? "onPrimary" : "textMuted"} />}
-              disabled={!online}
+              disabled={!online || advance.isPending || revert.isPending}
               onPress={() => advanceTo(order.status, next)}
             />
           ) : (

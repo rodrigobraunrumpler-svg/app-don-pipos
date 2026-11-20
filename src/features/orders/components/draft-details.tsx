@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { randomUUID } from "expo-crypto";
 import { useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 
@@ -16,7 +17,6 @@ import { toAppError } from "@/lib/errors";
 import { confirmTap } from "@/lib/haptics";
 import { formatCents } from "@/lib/money";
 import { useOnline } from "@/lib/use-online";
-import { useRequestId } from "@/lib/use-request-id";
 
 import { PAYMENT_METHOD_LABELS } from "../constants";
 import { useCreateOrder } from "../hooks/use-order-changes";
@@ -47,8 +47,8 @@ export function DraftDetails({ draft, onChange, onBack, onSaved }: Props) {
   const products = useQuery({ ...productsQuery, select: (list) => list.filter((product) => product.isActive) });
   const settings = useQuery({ ...businessQuery, select: (business) => business.settings });
   const create = useCreateOrder();
-  const { requestId, renew } = useRequestId();
   const [failure, setFailure] = useState<string | null>(null);
+  const today = businessDate(new Date());
 
   const phone = normalizePhone(draft.phone);
   const lines = (products.data ?? [])
@@ -65,33 +65,36 @@ export function DraftDetails({ draft, onChange, onBack, onSaved }: Props) {
     deliveryFeeCents: fee,
     discountCents: draft.discountCents,
   });
+  const methods = METHODS.filter((method) => settings.data?.activePaymentMethods.includes(method));
   const missing = draftProblem(draft, {
     phone,
     hasItems: lines.length > 0,
     totals: { subtotalCents, deliveryFeeCents: fee, totalCents },
+    today,
+    methods: settings.data ? methods : null,
   });
-  const methods = METHODS.filter((method) => settings.data?.activePaymentMethods.includes(method));
 
   async function save() {
     if (!phone || missing) return;
     setFailure(null);
     try {
+      // El código viaja con el borrador: el reintento después de una respuesta perdida, aunque se haya cerrado la app,
+      // devuelve el mismo pedido. Al guardar, el borrador se vacía y el siguiente trae otro código
       const order = await create.mutateAsync({
-        requestId,
+        requestId: draft.requestId,
         draft: toOrderDraft(draft, {
           phone,
-          today: businessDate(new Date()),
+          today,
           totalCents,
           lines: lines.map(({ productId, quantity }) => ({ productId, quantity })),
         }),
       });
-      renew();
       confirmTap();
       onSaved(order);
     } catch (error) {
       // El mismo código ya se guardó con otros datos: se explica y el siguiente intento es otro pedido
       const conflict = toAppError(error).kind === "conflict";
-      if (conflict) renew();
+      if (conflict) onChange({ requestId: randomUUID() });
       setFailure(conflict ? CONFLICT_TEXT : "No se pudo guardar el pedido. Tus datos siguen aquí: vuelve a intentar.");
     }
   }
@@ -140,7 +143,12 @@ export function DraftDetails({ draft, onChange, onBack, onSaved }: Props) {
             </>
           ) : null}
         </Section>
-        <DraftSchedule scheduledFor={draft.scheduledFor} promisedTime={draft.promisedTime} onChange={onChange} />
+        <DraftSchedule
+          scheduledFor={draft.scheduledFor}
+          otherDay={draft.otherDay}
+          promisedTime={draft.promisedTime}
+          onChange={onChange}
+        />
         <DraftDiscount discountCents={draft.discountCents} discountReason={draft.discountReason} onChange={onChange} />
         <DraftPayment draft={draft} methods={methods} onChange={onChange} />
         <View accessibilityLabel="Resumen" className="mt-5 rounded-md border border-border bg-surface px-4 py-3">

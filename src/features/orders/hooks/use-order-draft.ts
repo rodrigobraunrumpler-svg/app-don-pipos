@@ -1,17 +1,20 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { randomUUID } from "expo-crypto";
 import { useCallback, useEffect, useState } from "react";
 
 import { draftStateSchema, type DraftState } from "../schema/draft";
 
 const KEY = "orders.draft";
 
-export const EMPTY_DRAFT: DraftState = {
+// Un borrador vacío, con su propio código de pedido
+export const emptyDraft = (): DraftState => ({
   quantities: {},
   phone: "",
   name: "",
   fulfillment: "pickup",
   address: "",
   scheduledFor: null,
+  otherDay: "",
   promisedTime: "",
   discountCents: 0,
   discountReason: "",
@@ -19,14 +22,15 @@ export const EMPTY_DRAFT: DraftState = {
   paymentMethod: null,
   paymentCents: 0,
   note: "",
+  requestId: randomUUID(),
   updatedAt: null,
-};
+});
 
 const hasItems = (draft: DraftState) => Object.values(draft.quantities).some((quantity) => quantity > 0);
 
 // El pedido a medio anotar vive en el celular: sobrevive a cerrar la app y se borra al guardarlo (orders.md §6)
 export function useOrderDraft() {
-  const [draft, setDraft] = useState<DraftState>(EMPTY_DRAFT);
+  const [draft, setDraft] = useState<DraftState>(emptyDraft);
   const [ready, setReady] = useState(false);
   const [recoveredAt, setRecoveredAt] = useState<string | null>(null);
 
@@ -70,7 +74,7 @@ export function useOrderDraft() {
   );
 
   const clear = useCallback(() => {
-    setDraft(EMPTY_DRAFT);
+    setDraft(emptyDraft());
     setRecoveredAt(null);
     void AsyncStorage.removeItem(KEY);
   }, []);
