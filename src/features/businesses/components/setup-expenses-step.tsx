@@ -20,20 +20,20 @@ import { SetupTitle } from "./setup-title";
 export function SetupExpensesStep({ onBack, onDone }: { onBack: () => void; onDone: () => void }) {
   const online = useOnline();
   const products = useQuery(productsQuery).data?.filter((product) => product.isActive);
-  const { counts, chosen, toggle, requestId } = useSetupDraft();
+  const { countOf, chosen, toggle, requestId, stock } = useSetupDraft();
   const complete = useCompleteSetup();
   const [failure, setFailure] = useState<string | null>(null);
   // Dos toques seguidos llegan antes de que se vea «Guardando…»: el segundo no hace nada
   const busy = useRef(false);
 
   async function finish() {
-    if (busy.current || !products) return;
+    if (busy.current || !products || !stock.ready) return;
     busy.current = true;
     setFailure(null);
     try {
       await complete.mutateAsync({
         requestId,
-        stock: products.map((product) => ({ productId: product.id, counted: counts[product.id] ?? 0 })),
+        stock: products.map((product) => ({ productId: product.id, counted: countOf(product.id) })),
         categories: SETUP_EXPENSE_CATEGORIES.filter((category) => chosen[category.name]).map(({ name, icon }) => ({
           name,
           icon,
@@ -71,7 +71,7 @@ export function SetupExpensesStep({ onBack, onDone }: { onBack: () => void; onDo
       <View className="px-5 pb-3 pt-2">
         <Button
           label={complete.isPending ? "Guardando…" : "Terminar"}
-          disabled={!online || complete.isPending || !products}
+          disabled={!online || complete.isPending || !products || !stock.ready}
           onPress={() => void finish()}
         />
       </View>

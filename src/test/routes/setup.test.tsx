@@ -2,7 +2,7 @@
 // sin perder lo puesto, «Terminar» una sola vez y «Todo listo»
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
-import { act, fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import * as SecureStore from "expo-secure-store";
 import { router } from "expo-router";
 import { renderRouter } from "expo-router/testing-library";
@@ -47,11 +47,23 @@ jest.mock("@/features/businesses/api/business", () => ({
 jest.mock("@/features/products/api/products", () => ({
   listProducts: async () => jest.requireActual("@/test/products").TEST_PRODUCTS,
 }));
+// Un negocio nuevo no tiene stock; cada prueba lo cambia si necesita
+let mockStock: unknown[] = [];
+jest.mock("@/features/stock/api/stock", () => ({ getStockOverview: async () => mockStock }));
 
 beforeEach(() => {
   mockGetBusiness.mockReset();
   mockComplete.mockReset();
+  mockStock = [];
 });
+
+// «Siguiente» del paso 2 y «Terminar» esperan a que llegue el stock de antes: se tocan cuando se puede
+async function pressWhenReady(name: string) {
+  const button = await screen.findByRole("button", { name });
+  await waitFor(() => expect(button).toBeEnabled());
+  await fireEvent.press(button);
+}
+const finish = () => pressWhenReady("Terminar");
 
 async function type(digits: string) {
   for (const digit of digits) await fireEvent.press(screen.getByRole("button", { name: digit }));
@@ -76,8 +88,9 @@ test("ingresar → la puesta en marcha → Inicio, con la app de verdad", async 
   expect(await screen.findByText("Tus productos")).toBeOnTheScreen();
   expect(screen).toHavePathname("/setup");
   await fireEvent.press(screen.getByRole("button", { name: "Siguiente" }));
-  await fireEvent.press(await screen.findByRole("button", { name: "Siguiente" }));
-  await fireEvent.press(await screen.findByRole("button", { name: "Terminar" }));
+  expect(await screen.findByText("Tu stock de hoy")).toBeOnTheScreen();
+  await pressWhenReady("Siguiente");
+  await finish();
   await fireEvent.press(await screen.findByRole("button", { name: "Ir a Inicio" }));
   expect(await screen.findByText("Don Pipos")).toBeOnTheScreen();
   expect(screen).toHavePathname("/home");
@@ -161,7 +174,7 @@ test("si ya estaba hecha (conflict), «Terminar» lleva a «Todo listo» igual",
   mockComplete.mockRejectedValue(new AppError("conflict"));
   await renderSetup();
   await act(() => router.navigate("/setup/expenses"));
-  await fireEvent.press(await screen.findByRole("button", { name: "Terminar" }));
+  await finish();
   expect(await screen.findByText("Todo listo")).toBeOnTheScreen();
 });
 
@@ -169,7 +182,26 @@ test("sin señal, «Terminar» lo dice y no sale nada", async () => {
   mockComplete.mockRejectedValue(new AppError("offline"));
   await renderSetup();
   await act(() => router.navigate("/setup/expenses"));
-  await fireEvent.press(await screen.findByRole("button", { name: "Terminar" }));
+  await finish();
   expect(await screen.findByText("Sin conexión. Revisa tu señal y vuelve a intentar.")).toBeOnTheScreen();
   expect(screen).toHavePathname("/setup/expenses");
+});
+
+test("con stock de antes, el paso 2 empieza en lo que hay en la nevera: «Terminar» sin tocar nada no lo cambia", async () => {
+  mockStock = jest.requireActual("@/test/stock-items").TEST_ITEMS;
+  mockComplete.mockResolvedValue({ adjustments: 0, categories: 4 });
+  await renderSetup();
+  await act(() => router.navigate("/setup/stock"));
+  expect(await screen.findByLabelText("Cantidad de Coqueta")).toHaveDisplayValue("13");
+  expect(screen.getByLabelText("Cantidad de Limon Kiss")).toHaveDisplayValue("11");
+  await act(() => router.navigate("/setup/expenses"));
+  await finish();
+  expect(mockComplete).toHaveBeenCalledWith(
+    expect.objectContaining({
+      stock: [
+        { productId: COQUETA_ID, counted: 13 },
+        { productId: LIMON_ID, counted: 11 },
+      ],
+    }),
+  );
 });
