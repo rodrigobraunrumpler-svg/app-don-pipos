@@ -53,3 +53,19 @@ jest.mock("expo-local-authentication", () => {
 
 // Las áreas seguras de la pantalla (muesca, barra del sistema): en las pruebas, todas en cero
 jest.mock("react-native-safe-area-context", () => require("react-native-safe-area-context/jest/mock").default);
+
+// Los avisos del celular: en Jest no hay sistema de notificaciones. Por defecto, con permiso y sin nada programado;
+// cada prueba lo cambia si necesita
+jest.mock("expo-notifications", () => ({
+  SchedulableTriggerInputTypes: { DATE: "date" },
+  AndroidImportance: { HIGH: 4 },
+  setNotificationHandler: jest.fn(),
+  setNotificationChannelAsync: jest.fn(async () => null),
+  getPermissionsAsync: jest.fn(async () => ({ status: "granted", granted: true, canAskAgain: true })),
+  requestPermissionsAsync: jest.fn(async () => ({ status: "granted", granted: true, canAskAgain: true })),
+  scheduleNotificationAsync: jest.fn(async () => "id"),
+  cancelAllScheduledNotificationsAsync: jest.fn(async () => undefined),
+  dismissAllNotificationsAsync: jest.fn(async () => undefined),
+  useLastNotificationResponse: jest.fn(() => undefined),
+  clearLastNotificationResponseAsync: jest.fn(async () => undefined),
+}));

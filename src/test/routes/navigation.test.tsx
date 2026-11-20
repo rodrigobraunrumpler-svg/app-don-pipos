@@ -2,6 +2,7 @@
 // entrar con el PIN, volver a Ingresar cuando la sesión se cierra desde el servidor, y una sesión que reaparece sola.
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { act, fireEvent, screen } from "@testing-library/react-native";
+import * as Notifications from "expo-notifications";
 import { renderRouter } from "expo-router/testing-library";
 import { AppState, type AppStateStatus } from "react-native";
 
@@ -105,8 +106,13 @@ test("ingresar, la huella, las pestañas, el bloqueo al volver y la sesión que 
   await type("197346");
   expect(await screen.findByText("Don Pipos")).toBeOnTheScreen();
 
+  // Cerrar la sesión borra los avisos del celular: llevan nombres de clientes
+  jest.mocked(Notifications.cancelAllScheduledNotificationsAsync).mockClear();
+  jest.mocked(Notifications.dismissAllNotificationsAsync).mockClear();
   await act(() => mockStore(false));
   expect(await screen.findByText("Ingresa a tu app")).toBeOnTheScreen();
+  expect(Notifications.cancelAllScheduledNotificationsAsync).toHaveBeenCalled();
+  expect(Notifications.dismissAllNotificationsAsync).toHaveBeenCalled();
 
   // Una sesión que reaparece sin ingresar en este celular pide el PIN: nunca abre las pestañas
   await act(() => mockStore(true));

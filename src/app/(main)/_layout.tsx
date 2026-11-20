@@ -1,5 +1,6 @@
-import { Stack } from "expo-router";
+import { router, Stack, type Href } from "expo-router";
 
+import { useNotificationTaps, useReminderSync } from "@/features/reminders";
 import { useRefreshAfterWrites } from "@/features/reports";
 
 // Las pestañas abajo y, encima, cada pantalla que se abre desde ellas o desde el + (un pedido, una venta, la
@@ -9,5 +10,8 @@ import { useRefreshAfterWrites } from "@/features/reports";
 export default function MainLayout() {
   // Inicio y Reportes se ponen al día después de cada guardado, se haga en la pantalla que se haga
   useRefreshAfterWrites();
+  // Los avisos del celular, al día con lo último que la app supo; al tocar uno, su pantalla
+  useReminderSync();
+  useNotificationTaps((url) => router.navigate(url as Href));
   return <Stack screenOptions={{ headerShown: false, animation: "ios_from_right" }} />;
 }

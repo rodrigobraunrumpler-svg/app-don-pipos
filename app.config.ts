@@ -33,6 +33,9 @@ const config: ExpoConfig = {
         microphonePermission: false,
       },
     ],
+    // Los recordatorios: avisos del propio celular. El ícono de Don Pipos para Android (blanco sobre transparente) llega
+    // con la APK (fase 8); en Expo Go salen con el de Expo Go
+    "expo-notifications",
   ],
   experiments: { typedRoutes: true, reactCompiler: true },
 };

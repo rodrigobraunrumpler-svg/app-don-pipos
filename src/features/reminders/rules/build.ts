@@ -23,9 +23,10 @@ function orderReminder(order: UpcomingOrder, now: Date): Reminder | null {
 
 // El alfajor que se acaba (estado low de Stock): ahora, salvo que ya haya avisado hoy
 function stockReminder(item: StockLevel, notified: string[]): Reminder | null {
-  if (item.state !== "low" || notified.includes(item.productId)) return null;
+  const id = `stock:${item.productId}`;
+  if (item.state !== "low" || notified.includes(id)) return null;
   return {
-    id: `stock:${item.productId}`,
+    id,
     kind: "stock",
     title: `${item.name} se está acabando`,
     body: `${item.onHand === 1 ? "Queda 1" : `Quedan ${item.onHand}`}. Toca para ver cuánto conviene producir.`,
@@ -65,7 +66,7 @@ function balancesReminder(rows: Debt[], now: Date): Reminder | null {
 export function buildReminders(data: ReminderData, settings: ReminderSwitches, now: Date): Reminder[] {
   const reminders = [
     ...(settings.scheduled ? data.upcoming.map((order) => orderReminder(order, now)) : []),
-    ...(settings.stock ? data.stock.map((item) => stockReminder(item, data.notifiedStock)) : []),
+    ...(settings.stock ? data.stock.map((item) => stockReminder(item, data.notifiedToday)) : []),
     ...(settings.balances ? [balancesReminder(data.receivables, now)] : []),
   ].filter((reminder) => reminder !== null);
   return reminders.sort((a, b) => (a.at?.getTime() ?? 0) - (b.at?.getTime() ?? 0));

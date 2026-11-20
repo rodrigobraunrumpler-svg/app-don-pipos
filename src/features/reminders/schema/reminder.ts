@@ -29,8 +29,8 @@ export type ReminderData = {
   upcoming: UpcomingOrder[];
   stock: StockLevel[];
   receivables: Debt[];
-  // Los alfajores que ya avisaron hoy que se acaban
-  notifiedStock: string[];
+  // Los avisos de «ahora» que ya salieron hoy (sus ids: «stock:<alfajor>»)
+  notifiedToday: string[];
 };
 
 export type ReminderTarget =

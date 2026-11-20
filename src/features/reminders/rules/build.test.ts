@@ -32,7 +32,7 @@ const data = (changes: Partial<ReminderData>): ReminderData => ({
   upcoming: [],
   stock: [],
   receivables: [],
-  notifiedStock: [],
+  notifiedToday: [],
   ...changes,
 });
 
@@ -83,7 +83,7 @@ test("un alfajor que se acaba avisa ahora, una vez por día", () => {
       target: { screen: "production" },
     },
   ]);
-  expect(buildReminders(data({ stock: [LOW], notifiedStock: ["p1"] }), ALL_ON, WED_1140)).toEqual([]);
+  expect(buildReminders(data({ stock: [LOW], notifiedToday: ["stock:p1"] }), ALL_ON, WED_1140)).toEqual([]);
   const [one] = buildReminders(data({ stock: [{ ...LOW, onHand: 1 }] }), ALL_ON, WED_1140);
   expect(one?.body).toBe("Queda 1. Toca para ver cuánto conviene producir.");
   const others = [
