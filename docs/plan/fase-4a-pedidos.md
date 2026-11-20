@@ -344,6 +344,7 @@ Ingresa con el dueño DEMO (900 000 101, el PIN de tu `.env.local`):
 5. + → Un pedido con el mismo teléfono: aparece Ana, con su último pedido y «Repetir».
 6. Deja un pedido a medio anotar, cierra la app del todo y ábrela: «Recuperamos el pedido que dejaste a medias…».
 7. Con el modo avión: Pedidos dice desde qué hora es lo que ves, y «Guardar» y «Cobrar con» se apagan.
+8. Otro pedido para dentro de unas semanas: en «Cuándo», escribe la fecha en «Otra fecha» (por ejemplo 24/12); sale el día escrito y, al guardar, el pedido aparece en «Próximos».
 
 ### Lo que cambió respecto de este plan
 
@@ -401,3 +402,25 @@ Ingresa con el dueño DEMO (900 000 101, el PIN de tu `.env.local`):
 
 **Tarea 14**
 - Para el 100 % de las cuentas, pruebas nuevas: la hora acordada de hoy, el mensaje de un pedido de mostrador o con un solo medio de pago, y el encabezado sin nombre.
+
+## Después de la revisión final (2026-11-19)
+
+Un revisor nuevo leyó toda la rama: «lista para juntar, con correcciones». No encontró nada crítico y sí una falla importante. Cinco de sus observaciones menores se subieron a correcciones, por lo que le pasaría a quien usa la app.
+
+**Lo que se corrigió** (cada corrección con su prueba, que primero falló):
+- **El código del pedido viaja con el borrador.** Antes, si la respuesta se perdía y el dueño volvía al paso 1 o cerraba la app, al guardar otra vez se creaba un segundo pedido (con su venta en el stock y su pago). Ahora el reintento devuelve el mismo pedido; el código se renueva al guardar o con un conflicto.
+- **Un doble toque avanza un solo paso.** La acción de abajo se apaga mientras se guarda el cambio: «Marcar en camino» tocado dos veces ya no deja el pedido «Entregado».
+- **Un conflicto en la venta de mostrador o en un pago se explica** sin invitar a registrarlo otra vez (antes decía «Alguien cambió esto antes. Actualiza y vuelve a intentar.»).
+- **Un teléfono corregido borra el nombre del cliente anterior** también después de volver al paso 1 o de recuperar el borrador.
+- **Un borrador recuperado dice qué cambiar:** «El día elegido ya pasó: elige otro.» o «Ese medio de pago está apagado: elige otro.», en vez de fallar siempre con «vuelve a intentar».
+- **Un pedido se puede anotar para cualquier fecha:** además de hoy y los 6 días siguientes, «Otra fecha» se escribe como día/mes (24/12) y vale la próxima vez que llega. Una fecha que no existe no deja guardar («Escribe la fecha como 24/12.»). Sin librerías nuevas. Si prefieres un calendario para elegir la fecha, se puede agregar con `@react-native-community/datetimepicker`, que Expo Go ya trae: instalarlo es tu decisión.
+
+**Lo que queda para después** (menor):
+- «Guardar» se activa antes de que carguen los ajustes del negocio: un instante, la primera vez; después vienen de la caché.
+- Pagar todo al anotar falla por encima de S/ 10,000 (el pago después no tiene ese límite).
+- Sin señal, el nombre de un cliente nuevo no se puede escribir hasta que vuelva la señal (guardar la necesita igual).
+- Tocar + → «Un pedido» estando ya en Nuevo pedido abre una segunda copia de la pantalla. Con el código en el borrador, guardar desde las dos ya no duplica el pedido.
+- Todos los cambios de pedidos van en una sola fila, y el cliente de Supabase no corta una petición colgada (viene de fases anteriores). Una petición colgada detiene las demás hasta que termina. Se ve antes de producción, en la fase 8.
+- Pruebas que faltan: el día de Lima a las 04:30 UTC en la base, «Guardar» sin señal en el paso 2, «Guardando…» apagando el botón, y que los totales coincidan siempre con las líneas y los pagos.
+
+**Lo que el revisor dejó fuera y por qué queda así:** dos teléfonos anotando a la vez el mismo cliente nuevo (hay un solo dueño con un celular); «En 30 min» pasada la medianoche (fuera del horario); «X min tarde» que no corre con la pantalla quieta (se actualiza al volver y al tirar hacia abajo); los textos de WhatsApp en una línea (se editan en la fase 7); y otros casos sin efecto real en un negocio con un solo dueño.
