@@ -3,6 +3,8 @@ import {
   addDays,
   businessDate,
   businessDayRange,
+  businessTime,
+  daysBetween,
   formatLongDate,
   formatMonth,
   formatShortDate,
@@ -163,4 +165,15 @@ test("sumar o restar días a un día de Lima", () => {
   expect(addDays("2026-11-30", 1)).toBe("2026-12-01");
   expect(addDays("2026-03-01", -1)).toBe("2026-02-28");
   expect(addDays("2026-11-18", -7)).toBe("2026-11-11");
+});
+
+test("un día de Lima a una hora, como instante", () => {
+  expect(businessTime("2026-11-18", "18:00").toISOString()).toBe("2026-11-18T23:00:00.000Z");
+  expect(businessTime("2026-11-19", "09:30").toISOString()).toBe("2026-11-19T14:30:00.000Z");
+});
+
+test("cuántos días hay entre dos días de Lima", () => {
+  expect(daysBetween("2026-11-17", "2026-11-18")).toBe(1);
+  expect(daysBetween("2026-11-28", "2026-12-02")).toBe(4);
+  expect(daysBetween("2026-11-18", "2026-11-18")).toBe(0);
 });

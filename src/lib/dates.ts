@@ -73,3 +73,14 @@ export function addDays(date: string, days: number): string {
 
 // El día anterior a un día de Lima («2026-11-01» → «2026-10-31»)
 export const previousDay = (date: string): string => addDays(date, -1);
+
+// Un día de Lima a una hora («2026-11-18», «18:00» → 23:00 UTC), como instante
+export function businessTime(date: string, time: string): Date {
+  const [hours, minutes] = time.split(":").map(Number) as [number, number];
+  return new Date(businessDayRange(date).from.getTime() + (hours * 60 + minutes) * 60_000);
+}
+
+// Cuántos días van de un día de Lima a otro («2026-11-17» → «2026-11-18»: 1)
+export function daysBetween(from: string, to: string): number {
+  return Math.round((Date.parse(to) - Date.parse(from)) / DAY_MS);
+}
