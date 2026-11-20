@@ -249,13 +249,13 @@ cd /home/javier/var-mar/app && pnpm start --tunnel
 
 Ingresa con el dueño DEMO (900 000 101, el PIN de tu `.env.local`):
 
-1. **Moverte por la app:** cambia de pestaña (se deslizan de lado). + → Un pedido: elige alfajores → «Seguir»: el paso 2 entra desde la derecha. La flecha de arriba y el botón atrás del celular vuelven al paso 1 con lo que elegiste y, otra vez atrás, a donde estabas. Guarda el pedido: desde «Pedido guardado», atrás ya no vuelve al formulario.
+1. **Moverte por la app:** cambia de pestaña (se deslizan de lado). + → Un pedido: elige alfajores → «Seguir»: el paso 2 entra desde la derecha. La flecha de arriba y el botón atrás del celular vuelven al paso 1 con lo que elegiste y, otra vez atrás, a donde estabas. Guarda el pedido: mientras dice «Guardando…», atrás espera; desde «Pedido guardado», atrás ya no vuelve al formulario. Dos toques seguidos en una fila o un botón abren una sola pantalla.
 2. **Editar y deshacer:** abre un pedido sin entregar → «Editar pedido» → suma una Limon Kiss → «Guardar cambios». Sale «Pedido #000X actualizado: S/ …»; «Deshacer» lo deja como estaba.
 3. **Anular devolviendo una parte:** un pedido con adelanto (por ejemplo S/ 20 con Yape) → «Anular» → «El cliente canceló» → baja el monto devuelto a 10 → «Anular pedido». El pedido dice «Pedido anulado: el cliente canceló…», en Pagos aparece «Devolución: Yape» con −S/ 10.00 y, en Stock, los alfajores volvieron.
 4. **Cambiar el medio:** en un pago, «Cambiar medio» → Efectivo → «Guardar medio». Sale «Medio cambiado: Efectivo».
 5. **Por cobrar:** Pedidos → filtro «Por cobrar» → «Ver por cobrar». En un pedido entregado con saldo, o con adelanto, «Recordar a …» abre WhatsApp con el recordatorio del saldo. Una fila abre su pedido; atrás vuelve a Por cobrar y, otra vez atrás, a Pedidos.
 6. **Deshacer una venta de mostrador:** + → Una venta de mostrador → cobra → «Deshacer» en el aviso. Sale «Venta #000X anulada, con su devolución.» y en Pedidos se ve anulada.
-7. **La sugerencia y «Cómo se vende»** necesitan 7 días de pedidos. Hoy, Stock no muestra la sugerencia, Registrar producción dice «Todavía no hay ventas suficientes…» y un alfajor no muestra «le alcanza» ni el gráfico. Desde el séptimo día con pedidos aparecen solos.
+7. **La sugerencia y «Cómo se vende»** necesitan 7 días de pedidos. Hoy, Stock no muestra la sugerencia, Registrar producción dice «Todavía no hay ventas suficientes…» y un alfajor no muestra el gráfico; «le alcanza» solo aparece si está sin stock («0 días») o hay que revisarlo. Desde el séptimo día con pedidos aparecen solos.
 
 ### Lo que cambió respecto de este plan
 
@@ -305,3 +305,29 @@ Ingresa con el dueño DEMO (900 000 101, el PIN de tu `.env.local`):
 - La sugerencia de Stock abre Registrar producción también sin señal: ahí se ve lo sugerido que quedó guardado.
 - Registrar producción espera la sugerencia solo mientras se pide: sin señal y sin nada guardado, abre como sin historia.
 - La nota del gráfico dice «según las últimas 4 semanas» aunque la historia sea más corta (de 7 a 27 días).
+
+## Después de la revisión final (2026-11-20)
+
+Un revisor nuevo revisó toda la rama: «listo para juntar, con correcciones», sin nada crítico. Se corrigió en una pasada, cada cosa con la prueba que la mostraba fallar:
+
+- **Salir de Nuevo pedido mientras dice «Guardando…»** podía dejarte en «Pedido guardado» sin pestañas ni salida, o reemplazar la venta de mostrador que abriste mientras tanto. Ahora atrás espera a que termine de guardar. En Expo Router 58 no existe el aviso `beforeRemove`: se usa `usePreventRemove`.
+- **«Deshacer»:** un segundo toque con la señal lenta decía «ya no se puede deshacer» aunque sí se había deshecho. Ahora el aviso se cierra al tocarlo; y si falla por la señal, vuelve a ofrecer «Deshacer», porque la base lo acepta por 10 minutos.
+- **Un pedido anulado decía «Falta cobrar»** en Pagos. Ahora dice «Anulado: no se cobra.» y, si no devolviste todo, «Te quedaste con S/ X».
+- **Anular y cambiar el medio,** ante un cambio que ya se había guardado con otros datos, decían «vuelve a intentar». Ahora piden cerrar la hoja para ver cómo quedó.
+- **En Por cobrar,** un adelanto para un día que ya pasó decía «entrega el ayer»; ahora dice «era para ayer» o «era para el lunes 16».
+- **Dos toques seguidos** en una fila, un botón o el + abrían dos pantallas iguales. Ahora todo se abre con `router.navigate` y queda una sola.
+- **Reglas del proyecto:** las cuentas de la vista previa de editar y de la sugerencia pasaron a `rules/`, con sus pruebas (la vista previa de editar ya no muestra un total negativo), y los conceptos nuevos están en el glosario.
+- **Pruebas:**
+  - Una prueba del gráfico esperaba una consulta y leía otra: fallaba solo con la máquina ocupada. Ahora espera lo que lee.
+  - Otra daba por hecho que el pedido de ejemplo era de hoy, y falló pasada la medianoche en Lima. Ahora usa la fecha del día.
+  - Dos archivos de prueba que pasaban de 250 líneas se dividieron.
+
+Comprobado: 521 pruebas de la app (100 % en las cuentas), `lint`, `lint:rules`, `typecheck`, `test:scripts` y el formato. La base no cambió en esta pasada; sus 543 pruebas pasaron al cerrar la tarea 12.
+
+**Quedan para después (menores):**
+- La vista previa del stock después de un cambio conserva el alcance anterior hasta recargar, y su comentario no menciona el «poco» por alcance.
+- «Cámbialo en Ajustes» en Registrar producción, aunque todavía no hay pantalla para los días de producción, y «los próximos 1 días» si un día se elige 1.
+- La nota del gráfico dice «según las últimas 4 semanas» aunque la historia sea más corta.
+- Faltan pruebas de la base para «el mismo código con otros datos» al editar, anular y cambiar el medio, y para cambiar el medio de la devolución antes de deshacer una anulación.
+- Después de una respuesta perdida al editar, la hoja sigue diciendo «Sin conexión» y no ofrece «Deshacer».
+- Detalles del corte de 20 s, la prueba de los bordes de pantalla sin las rutas nuevas, y los totales del cliente al deshacer una anulación que los había dejado en cero.

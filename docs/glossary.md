@@ -53,6 +53,9 @@ Un concepto nuevo se agrega aquí antes de usarlo en el código.
 | Enlazado a la web | `linkedToWeb` | `products.sanity_id` con valor | Solo lo enlazado se copia a la web |
 | Stock mínimo | `minStock` | `min_stock` | |
 | Sugerencia de producción | `productionSuggestion` | función `production_suggestion` | D16 |
+| Venta esperada | `expectedSales` | función `private.expected_sales` | Lo que se vende cada día de la semana: el promedio de hasta 4 semanas, sin anulados ni pedidos para otro día. Con menos de 7 días de historia no hay |
+| Le alcanza, alcanza hasta | `coverageDays` | `stock_overview.coverageDays` | Los días desde mañana que cubre lo libre con la venta esperada (hasta 7); alcanzar para un día o menos es «poco» |
+| Cómo se vende | `weekdaySales` | función `product_sales_by_weekday` | El gráfico de Un alfajor: la venta esperada de cada día de la semana |
 | Produces cada… días | `productionIntervalDays` | `production_interval_days` | En los ajustes |
 
 ## Pedidos
@@ -82,6 +85,9 @@ Un concepto nuevo se agrega aquí antes de usarlo en el código.
 | Venta de mostrador | `counterSale` | función `create_counter_sale` | Pedido entregado y pagado, sin cliente |
 | Cliente de mostrador | `walkIn` | `customer_id is null` | |
 | Descuento | `discountCents`, `discountReason` | `discount_cents`, `discount_reason` | |
+| Editar pedido | `editOrder` | función `edit_order` | Antes de entregar; lo que ya estaba conserva su precio. Por debajo de lo pagado, devuelve la diferencia |
+| Anular pedido | `cancelOrder` | función `cancel_order` | En cualquier estado menos anulado, con motivo y devolución opcional |
+| Deshacer una edición, una anulación | `revertEdit`, `revertCancel` | funciones `revert_edit`, `revert_cancel` | Solo el último cambio del pedido, hasta 10 minutos después |
 | Costo del delivery | `deliveryFeeCents` | `delivery_fee_cents` | |
 | Motivo de anulación | `cancelReason` | `cancel_reason` | |
 
@@ -96,6 +102,7 @@ Un concepto nuevo se agrega aquí antes de usarlo en el código.
 | Devolución | `refund` | `payments.kind = 'refund'` | La plata que se devuelve: resta en su día y en su caja; no se borra el pago original |
 | Falta cobrar | `amountDueCents` | — | Total menos pagos; lo calcula la base |
 | Por cobrar | `receivables` | función `list_receivables` | |
+| Recordar (el saldo a un cliente) | `remind` | — | El mensaje `balance_reminder` por WhatsApp, desde Por cobrar; solo si ya se entregó o hubo un adelanto. No es un «Recordatorio» (aviso del celular) |
 | Ingreso | `income` | — | Pagos recibidos más ingresos anotados a mano, por fecha de pago (D11) |
 | Ingreso anotado a mano | `manualIncome` | `manual_incomes` | Una venta a un café, un evento |
 
