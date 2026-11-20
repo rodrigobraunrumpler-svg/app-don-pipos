@@ -1,6 +1,8 @@
 import { act, renderHook } from "@testing-library/react-native";
 import { AppState, type AppStateStatus } from "react-native";
 
+import { holdAutoLock } from "@/lib/auto-lock-hold";
+
 import { useAutoLock } from "./use-auto-lock";
 
 // Todos los que escuchan los cambios de AppState (React Native también escucha): la prueba les avisa a todos
@@ -53,4 +55,17 @@ test("sin sesión no bloquea", async () => {
   await act(() => change("background"));
   await act(() => change("active"));
   expect(onLock).not.toHaveBeenCalled();
+});
+
+test("mientras la cámara está abierta (la app queda en segundo plano), volver no bloquea", async () => {
+  const { onLock, move } = await setup(0);
+  const release = holdAutoLock();
+  await move("background", 0);
+  await move("active", 3);
+  release();
+  expect(onLock).not.toHaveBeenCalled();
+  // Soltado, vuelve a cuidar como siempre
+  await move("background", 4);
+  await move("active", 5);
+  expect(onLock).toHaveBeenCalledTimes(1);
 });

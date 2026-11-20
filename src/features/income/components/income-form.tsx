@@ -58,6 +58,8 @@ export function IncomeForm({ onBack }: { onBack: () => void }) {
       confirmTap();
       setText("");
       setDescription("");
+      // El siguiente vuelve a ser de hoy: «Ayer» puesto sin que se note fechaba mal el siguiente y el cuadre
+      setYesterday(false);
       setMessage(`Ingreso guardado: ${formatCents(income.amountCents)}`);
     } catch (error) {
       const conflict = toAppError(error).kind === "conflict";

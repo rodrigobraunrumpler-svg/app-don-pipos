@@ -4,6 +4,7 @@ import { ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/button";
 import { FormHeader } from "@/components/ui/form-header";
+import { LoadError } from "@/components/ui/load-error";
 import { MoneyInput } from "@/components/ui/money-input";
 import { Notice } from "@/components/ui/notice";
 import { Section } from "@/components/ui/section";
@@ -31,7 +32,8 @@ const CONFLICT_TEXT = "Ese cierre ya se había guardado con otros números. Vuel
 export function CashCountView({ onBack }: { onBack: () => void }) {
   const online = useOnline();
   const today = businessDate(new Date());
-  const expected = useQuery(cashExpectedQuery(today)).data;
+  const expectedQuery = useQuery(cashExpectedQuery(today));
+  const expected = expectedQuery.data;
   const latest = useQuery(latestCashCountQuery(today));
   const close = useCloseCashDay();
   const { requestId, renew } = useRequestId();
@@ -41,11 +43,13 @@ export function CashCountView({ onBack }: { onBack: () => void }) {
   const [recount, setRecount] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
   const longDate = formatLongDate(new Date());
-  const opening = openingText === null ? (expected?.lastOpeningCents ?? 0) : (parseSoles(openingText) ?? 0);
+  const lastCount = closed ?? latest.data ?? null;
+  // «Abriste con»: lo de hoy si ya se contó (al volver a contar), si no lo del último cierre de un día anterior
+  const defaultOpening = lastCount?.openingCents ?? expected?.lastOpeningCents ?? 0;
+  const opening = openingText === null ? defaultOpening : (parseSoles(openingText) ?? 0);
   const counted = parseSoles(countedText);
   const shouldHave = expected ? expectedCash(opening, expected.cashInCents, expected.cashOutCents) : 0;
   const result = counted === null ? null : cashDifference(counted, shouldHave);
-  const lastCount = closed ?? latest.data ?? null;
 
   async function closeDay() {
     if (counted === null) return;
@@ -76,7 +80,21 @@ export function CashCountView({ onBack }: { onBack: () => void }) {
       onBack={onBack}
     />
   );
-  if (!expected || latest.isPending)
+  // Sin los números del día: el error con «Reintentar», o sin señal, que se ven cuando vuelva (nunca cargando para siempre)
+  if (!expected && (expectedQuery.isError || !online))
+    return (
+      <View className="flex-1">
+        {header}
+        {expectedQuery.isError ? (
+          <LoadError what="el cuadre de caja" onRetry={() => void expectedQuery.refetch()} />
+        ) : (
+          <View className="px-5">
+            <Notice>Sin conexión. El cuadre de hoy se ve cuando vuelva la señal.</Notice>
+          </View>
+        )}
+      </View>
+    );
+  if (!expected || latest.isLoading)
     return (
       <View className="flex-1">
         {header}
@@ -117,7 +135,7 @@ export function CashCountView({ onBack }: { onBack: () => void }) {
             <Text className="font-bold text-sm text-text">{`+ ${formatCents(expected.cashInCents)}`}</Text>
           </View>
           <View className="flex-row justify-between">
-            <Text className="text-sm text-text-secondary">Gastos pagados en efectivo</Text>
+            <Text className="text-sm text-text-secondary">Gastos y devoluciones en efectivo</Text>
             <Text className="font-bold text-sm text-text">{`− ${formatCents(expected.cashOutCents)}`}</Text>
           </View>
           <View className="flex-row justify-between border-t border-border pt-2.5">

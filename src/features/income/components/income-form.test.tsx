@@ -43,4 +43,6 @@ test("uno de ayer: manda el código, en qué, el monto, el medio y el día; qued
   expect(await screen.findByText("Ingreso guardado: S/ 70.00")).toBeOnTheScreen();
   expect(screen.getByLabelText("Monto del ingreso en soles")).toHaveDisplayValue("");
   expect(screen.getByLabelText("En qué entró")).toHaveDisplayValue("");
+  // El siguiente vuelve a ser de hoy: «Ayer» no queda puesto sin que se note
+  expect(screen.getByRole("button", { name: "Hoy" })).toBeSelected();
 });

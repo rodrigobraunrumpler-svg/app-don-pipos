@@ -56,20 +56,19 @@ export function ExpenseForm({ onBack }: { onBack: () => void }) {
     online && Boolean(business) && amount >= 1 && Boolean(categoryId) && Boolean(method) && !create.isPending;
   const today = formatLongDate(new Date());
 
-  function upload(expenseId: string, taken: Photo, done: string, failed: string) {
+  // Cada foto sube con su propia promesa: si se guarda otro gasto (u otra foto) mientras tanto, igual avisa cómo terminó
+  // esta. Si se sale de la pantalla, la que falla queda avisada en Gastos
+  function upload(expenseId: string, amountCents: number, taken: Photo) {
     if (!business) return;
-    setMessage({ text: "Subiendo la foto de la boleta…" });
-    attach.mutate(
-      { businessId: business.id, expenseId, photo: taken },
-      {
-        onSuccess: () => setMessage({ text: done }),
-        onError: () =>
-          setMessage({
-            text: failed,
-            onRetry: () => upload(expenseId, taken, "Foto de la boleta guardada.", "La foto no se subió."),
-          }),
-      },
-    );
+    attach
+      .mutateAsync({ businessId: business.id, expenseId, photo: taken })
+      .then(() => setMessage({ text: "Foto de la boleta guardada." }))
+      .catch(() =>
+        setMessage({
+          text: `La foto del gasto de ${formatCents(amountCents)} no se subió.`,
+          onRetry: () => upload(expenseId, amountCents, taken),
+        }),
+      );
   }
 
   async function save() {
@@ -90,8 +89,9 @@ export function ExpenseForm({ onBack }: { onBack: () => void }) {
       setText("");
       setDescription("");
       setPhoto(null);
-      if (taken) upload(expense.id, taken, saved, `${saved}. La foto no se subió.`);
-      else setMessage({ text: saved });
+      // El gasto se confirma enseguida; la foto sigue subiendo
+      setMessage({ text: taken ? `${saved}. Subiendo la foto…` : saved });
+      if (taken) upload(expense.id, expense.amountCents, taken);
     } catch (error) {
       const conflict = toAppError(error).kind === "conflict";
       if (conflict) renew();

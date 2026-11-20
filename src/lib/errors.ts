@@ -44,7 +44,9 @@ const ABORTED_MESSAGE = /^AbortError\b/;
 function isOffline(error: unknown): boolean {
   if (error instanceof TypeError) return NETWORK_MESSAGE.test(error.message);
   if (typeof error !== "object" || error === null) return false;
-  const { name, message } = error as { name?: unknown; message?: unknown };
+  const { name, message, originalError } = error as { name?: unknown; message?: unknown; originalError?: unknown };
+  // Storage envuelve la falla de red o el corte de los 60 s en StorageUnknownError, con la original adentro
+  if (originalError !== undefined && isOffline(originalError)) return true;
   // PostgREST devuelve la falla de red como un objeto: { message: "TypeError: Network request failed", code: "" }
   return (
     (typeof name === "string" && NETWORK_ERROR_NAMES.has(name)) ||

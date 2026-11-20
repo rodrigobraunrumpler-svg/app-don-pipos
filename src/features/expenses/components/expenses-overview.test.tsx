@@ -1,5 +1,6 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 
+import { AppError } from "@/lib/errors";
 import { renderWithProviders } from "@/test/render";
 
 import { ExpensesOverview } from "./expenses-overview";
@@ -136,4 +137,18 @@ test("la foto de la boleta también se agrega después, desde la hoja del gasto"
   await waitFor(() => expect(mockAttach).toHaveBeenCalledWith({ expenseId: "e1", receiptPath: `${BUSINESS}/e1.jpg` }));
   expect(mockUpload).toHaveBeenCalledWith({ path: `${BUSINESS}/e1.jpg`, base64: "QUJD" });
   expect(await screen.findByText("Foto de la boleta guardada.")).toBeOnTheScreen();
+});
+
+test("una foto que no se subió queda avisada en Gastos, con «Reintentar», aunque se cierre la hoja", async () => {
+  mockUpload.mockReset().mockRejectedValueOnce(new AppError("offline")).mockResolvedValueOnce(undefined);
+  await open();
+  await fireEvent.press(await screen.findByRole("button", { name: /^Chocolate/ }));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Agregar foto de la boleta" })).toBeEnabled());
+  await fireEvent.press(screen.getByRole("button", { name: "Agregar foto de la boleta" }));
+  expect(await screen.findByText("Sin conexión. Revisa tu señal y vuelve a intentar.")).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: "Cerrar" }));
+  expect(await screen.findByText("La foto de 1 gasto no se subió.")).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: "Reintentar las fotos" }));
+  await waitFor(() => expect(mockAttach).toHaveBeenCalledWith({ expenseId: "e1", receiptPath: `${BUSINESS}/e1.jpg` }));
+  await waitFor(() => expect(screen.queryByText("La foto de 1 gasto no se subió.")).toBeNull());
 });

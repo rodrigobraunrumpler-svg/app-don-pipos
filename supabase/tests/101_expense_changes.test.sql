@@ -1,5 +1,5 @@
 -- Gastos: corregir, anular, el «Deshacer» de cada uno, la lista y el resumen por tipo (docs/spec/expenses.md §3 y §8)
-select plan(26);
+select plan(27);
 
 select tests.make_user('00000000-0000-4000-8000-0000000011c1');
 select tests.make_user('00000000-0000-4000-8000-0000000011c2');
@@ -47,8 +47,8 @@ select throws_ok(format('select public.correct_expense(gen_random_uuid(), %L, %L
 
 -- Anular
 select is(public.void_expense(current_setting('t.g2')::uuid, 'Anulado') ->> 'voidedAt' is not null, true, 'un gasto se anula');
-select throws_ok(format('select public.void_expense(%L, %L)', current_setting('t.g2'), 'Otra vez'), 'P0001', 'invalid',
-  'y no se anula dos veces');
+select ok(public.void_expense(current_setting('t.g2')::uuid, 'Otra vez') ->> 'voidedAt' is not null,
+  'anular otra vez (un reintento con mala señal) devuelve el gasto anulado');
 select throws_ok(format('select public.attach_receipt(%L, %L)', current_setting('t.g2'),
   '00000000-0000-4000-8000-0000000011d1/' || current_setting('t.g2') || '.jpg'), 'P0001', 'invalid', 'a un gasto anulado no se le pone foto');
 
@@ -74,12 +74,14 @@ select is(pg_temp.amounts(public.list_expenses(null, null, 1, current_setting('t
 
 -- Deshacer
 select is(public.revert_expense_change(current_setting('t.g2')::uuid) ->> 'voidedAt', null, 'deshacer una anulación la quita');
-select throws_ok(format('select public.revert_expense_change(%L)', current_setting('t.g2')), 'P0001', 'conflict',
-  'y no se deshace dos veces');
+select is(public.revert_expense_change(current_setting('t.g2')::uuid) ->> 'voidedAt', null,
+  'deshacer otra vez (la respuesta se perdió) devuelve el gasto como quedó, sin error');
 select is(public.revert_expense_change((current_setting('t.n1')::jsonb ->> 'id')::uuid) ->> 'amountCents', '8600',
   'deshacer una corrección vuelve a dejar el gasto de antes');
 select is((select e.void_reason from public.expenses e where e.id = (current_setting('t.n1')::jsonb ->> 'id')::uuid),
   'deshacer corrección', 'y anula el nuevo');
+select is(public.revert_expense_change((current_setting('t.n1')::jsonb ->> 'id')::uuid) ->> 'amountCents', '8600',
+  'deshacer la corrección otra vez devuelve el gasto de antes');
 select throws_ok(format('select public.revert_expense_change(%L)', current_setting('t.g1')), 'P0001', 'conflict',
   'el de antes no tiene nada que deshacer');
 

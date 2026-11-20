@@ -81,17 +81,24 @@ test("guardar manda el gasto y después la foto achicada a su ruta; queda listo 
     description: "Chocolate",
   });
   expect(mockUpload).toHaveBeenCalledWith({ path: PATH, base64: "QUJD" });
-  expect(await screen.findByText("Gasto guardado: S/ 86.00")).toBeOnTheScreen();
+  expect(await screen.findByText("Foto de la boleta guardada.")).toBeOnTheScreen();
   expect(screen.getByLabelText("Monto del gasto en soles")).toHaveDisplayValue("");
   expect(screen.getByRole("button", { name: "Insumos" })).toBeSelected();
   expect(screen.getByRole("button", { name: "Tomar foto de la boleta" })).toBeOnTheScreen();
 });
 
 test("si la foto no sube, el gasto queda y el aviso deja reintentar con la misma foto", async () => {
-  mockUpload.mockReset().mockRejectedValueOnce(new AppError("offline")).mockResolvedValueOnce(undefined);
+  let fail: (error: unknown) => void = () => undefined;
+  mockUpload
+    .mockReset()
+    .mockImplementationOnce(() => new Promise((_resolve, reject) => (fail = reject)))
+    .mockResolvedValueOnce(undefined);
   await fillWithPhoto();
   await fireEvent.press(screen.getByRole("button", { name: "Guardar gasto de S/ 86.00" }));
-  expect(await screen.findByText("Gasto guardado: S/ 86.00. La foto no se subió.")).toBeOnTheScreen();
+  // El gasto se confirma enseguida; la foto sigue subiendo
+  expect(await screen.findByText("Gasto guardado: S/ 86.00. Subiendo la foto…")).toBeOnTheScreen();
+  fail(new AppError("offline"));
+  expect(await screen.findByText("La foto del gasto de S/ 86.00 no se subió.")).toBeOnTheScreen();
   await fireEvent.press(screen.getByRole("button", { name: "Reintentar" }));
   expect(await screen.findByText("Foto de la boleta guardada.")).toBeOnTheScreen();
   expect(mockCreate).toHaveBeenCalledTimes(1);
@@ -103,4 +110,24 @@ test("sin tipos de gasto, lo dice y abre la hoja para agregarlos", async () => {
   await renderWithProviders(<ExpenseForm onBack={jest.fn()} />);
   await fireEvent.press(await screen.findByRole("button", { name: "Agregar tipos de gasto" }));
   expect(await screen.findByText("Los que eliges al anotar un gasto.")).toBeOnTheScreen();
+});
+
+test("dos gastos con foto seguidos: si la primera foto falla después, igual lo dice", async () => {
+  let fail: (error: unknown) => void = () => undefined;
+  mockUpload
+    .mockReset()
+    .mockImplementationOnce(() => new Promise((_resolve, reject) => (fail = reject)))
+    .mockResolvedValueOnce(undefined);
+  mockCreate
+    .mockReset()
+    .mockResolvedValueOnce(EXPENSE)
+    .mockResolvedValueOnce({ ...EXPENSE, id: "e2", amountCents: 4500 });
+  await fillWithPhoto();
+  await fireEvent.press(screen.getByRole("button", { name: "Guardar gasto de S/ 86.00" }));
+  await fireEvent.changeText(screen.getByLabelText("Monto del gasto en soles"), "45");
+  await fireEvent.press(screen.getByRole("button", { name: "Tomar foto de la boleta" }));
+  await fireEvent.press(await screen.findByRole("button", { name: "Guardar gasto de S/ 45.00" }));
+  expect(await screen.findByText("Foto de la boleta guardada.")).toBeOnTheScreen();
+  fail(new AppError("offline"));
+  expect(await screen.findByText("La foto del gasto de S/ 86.00 no se subió.")).toBeOnTheScreen();
 });

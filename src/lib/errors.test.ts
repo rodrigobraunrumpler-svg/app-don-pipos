@@ -114,3 +114,19 @@ test("una petición cortada por tiempo llega como sin conexión, venga como veng
   // PostgREST la devuelve como objeto: { message: "AbortError: Aborted", code: "" }
   expect(toAppError({ message: "AbortError: Aborted", code: "" }).kind).toBe("offline");
 });
+
+test("la subida de una foto cortada por tiempo (Storage la envuelve) también es sin conexión", () => {
+  const storage = {
+    name: "StorageUnknownError",
+    message: "Aborted",
+    originalError: { name: "AbortError", message: "Aborted" },
+  };
+  expect(toAppError(storage).kind).toBe("offline");
+  expect(
+    toAppError({ name: "StorageUnknownError", message: "x", originalError: new TypeError("Network request failed") })
+      .kind,
+  ).toBe("offline");
+  expect(toAppError({ name: "StorageUnknownError", message: "x", originalError: { name: "Error" } }).kind).toBe(
+    "unexpected",
+  );
+});

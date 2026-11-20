@@ -22,6 +22,7 @@ import type { Expense } from "../schema/expense";
 import { CategoryBars } from "./category-bars";
 import { ExpenseRow } from "./expense-row";
 import { ExpenseSheet, type ExpenseDone } from "./expense-sheet";
+import { FailedPhotos } from "./failed-photos";
 
 type Props = { onBack: () => void; onNew: () => void };
 type Message = { text: string; onUndo?: () => void };
@@ -66,6 +67,7 @@ export function ExpensesOverview({ onBack, onNew }: Props) {
       {online ? null : (
         <Notice>{`Sin conexión. Ves los gastos de las ${formatTime(new Date(list.dataUpdatedAt))}.`}</Notice>
       )}
+      <FailedPhotos />
       <View className="mt-3 rounded-md border border-border bg-surface px-4 py-4">
         <Text className="text-sm text-text-secondary">{`Gastado en ${month.label}`}</Text>
         <Text className="font-extrabold text-3xl text-text">{formatCents(summary?.totalCents ?? 0)}</Text>

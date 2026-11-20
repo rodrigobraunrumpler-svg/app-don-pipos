@@ -91,8 +91,8 @@ select ok(public.void_manual_income((current_setting('t.m1')::jsonb ->> 'id')::u
   'un ingreso a mano se anula');
 select is((public.income_summary(current_setting('t.today')::date, current_setting('t.today')::date) ->> 'totalCents')::integer, 400,
   'y deja de contar');
-select throws_ok(format('select public.void_manual_income(%L, %L)', current_setting('t.m1')::jsonb ->> 'id', 'Otra vez'), 'P0001', 'invalid',
-  'no se anula dos veces');
+select ok(public.void_manual_income((current_setting('t.m1')::jsonb ->> 'id')::uuid, 'Otra vez') ->> 'voidedAt' is not null,
+  'anular otra vez (un reintento) devuelve el ingreso anulado');
 
 -- Otro negocio
 select tests.login_as('00000000-0000-4000-8000-0000000012c2');

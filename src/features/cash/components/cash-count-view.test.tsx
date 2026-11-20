@@ -7,14 +7,9 @@ import { CashCountView } from "./cash-count-view";
 
 const mockLatest = jest.fn();
 const mockClose = jest.fn();
+const mockExpected = jest.fn();
 jest.mock("../api/cash", () => ({
-  getCashExpected: async (date: string) => ({
-    businessDate: date,
-    cashInCents: 6300,
-    cashOutCents: 6900,
-    otherMethods: { yape: 2400, plin: 0, transfer: 1000 },
-    lastOpeningCents: 5000,
-  }),
+  getCashExpected: (date: string) => mockExpected(date),
   getLatestCashCount: () => mockLatest(),
   closeCashDay: (input: unknown) => mockClose(input),
 }));
@@ -33,6 +28,13 @@ const count = (changes: object = {}) => ({
 });
 
 beforeEach(() => {
+  mockExpected.mockReset().mockImplementation(async (date: string) => ({
+    businessDate: date,
+    cashInCents: 6300,
+    cashOutCents: 6900,
+    otherMethods: { yape: 2400, plin: 0, transfer: 1000 },
+    lastOpeningCents: 5000,
+  }));
   mockLatest.mockReset().mockResolvedValue(null);
   mockClose.mockReset().mockResolvedValue(count());
 });
@@ -42,6 +44,8 @@ test("lo que debería haber y el resultado mientras se cuenta; cerrar el día gu
   expect(await screen.findByLabelText("Con cuánto abriste la caja, en soles")).toHaveDisplayValue("50.00");
   expect(screen.getByText("+ S/ 63.00")).toBeOnTheScreen();
   expect(screen.getByText("− S/ 69.00")).toBeOnTheScreen();
+  // Lo que sale incluye las devoluciones en efectivo: el nombre lo dice
+  expect(screen.getByText("Gastos y devoluciones en efectivo")).toBeOnTheScreen();
   expect(screen.getByText("S/ 44.00")).toBeOnTheScreen();
   expect(screen.getByText("Yape")).toBeOnTheScreen();
   expect(screen.getByText("Transferencia")).toBeOnTheScreen();
@@ -71,4 +75,30 @@ test("un día ya cerrado muestra cómo quedó", async () => {
   await renderWithProviders(<CashCountView onBack={jest.fn()} />);
   expect(await screen.findByText("Día cerrado")).toBeOnTheScreen();
   expect(screen.getByText("La caja cuadró: S/ 44.00 en efectivo.")).toBeOnTheScreen();
+});
+
+test("volver a contar arranca con lo que se abrió en el conteo de hoy", async () => {
+  mockLatest.mockResolvedValue(
+    count({ openingCents: 6000, expectedCents: 5400, countedCents: 5400, differenceCents: 0 }),
+  );
+  await renderWithProviders(<CashCountView onBack={jest.fn()} />);
+  await fireEvent.press(await screen.findByRole("button", { name: "Volver a contar" }));
+  expect(screen.getByLabelText("Con cuánto abriste la caja, en soles")).toHaveDisplayValue("60.00");
+});
+
+test("si no se pudo traer el cuadre, lo dice y deja reintentar (no se queda cargando)", async () => {
+  mockExpected
+    .mockReset()
+    .mockRejectedValueOnce(new Error("x"))
+    .mockResolvedValue({
+      businessDate: businessDate(new Date()),
+      cashInCents: 0,
+      cashOutCents: 0,
+      otherMethods: { yape: 0, plin: 0, transfer: 0 },
+      lastOpeningCents: 0,
+    });
+  await renderWithProviders(<CashCountView onBack={jest.fn()} />);
+  expect(await screen.findByText("No se pudo cargar el cuadre de caja")).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: "Reintentar" }));
+  expect(await screen.findByText("¿Cuánto hay en la caja?")).toBeOnTheScreen();
 });
