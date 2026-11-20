@@ -5,6 +5,7 @@ export { useRefreshAfterWrites } from "./hooks/use-refresh-after-writes";
 export { periodRange } from "./rules/period";
 export type { HomeSummary, Ranking, ReportSummary } from "./schema/report";
 export { HomeScreen } from "./components/home-screen";
+export { FirstTip } from "./components/first-tip";
 export { ReportsScreen } from "./components/reports-screen";
 export { RankingScreen } from "./components/ranking-screen";
 export { ReportsRow } from "./components/reports-row";

@@ -81,6 +81,9 @@ test("ingresar → la puesta en marcha → Inicio, con la app de verdad", async 
   await fireEvent.press(await screen.findByRole("button", { name: "Ir a Inicio" }));
   expect(await screen.findByText("Don Pipos")).toBeOnTheScreen();
   expect(screen).toHavePathname("/home");
+  expect(await screen.findByText("Anota tu primer pedido")).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: "Entendido" }));
+  expect(screen.queryByText("Anota tu primer pedido")).toBeNull();
 });
 
 const ROUTES = {
