@@ -197,6 +197,10 @@ create function pg_temp.unlisted_functions_for_app() returns setof text language
       'public.cash_expected(date)',
       'public.close_cash_day(uuid, date, integer, integer)',
       'public.latest_cash_count(date)',
+      'public.home_summary()',
+      'public.report_summary(date, date)',
+      'public.report_ranking(date, date)',
+      'public.export_rows(date, date)',
       -- lo que usan por dentro las reglas de acceso y las funciones de arriba
       'private.owned_business_ids()',
       'private.fail(text)',
@@ -237,7 +241,8 @@ create function pg_temp.unlisted_functions_for_app() returns setof text language
       'private.income_rows(uuid, timestamp with time zone, timestamp with time zone)',
       'private.close_cash_day(uuid, date, integer, integer)',
       'private.cash_totals(uuid, date)',
-      'private.cash_count_json(cash_counts)'
+      'private.cash_count_json(cash_counts)',
+      'private.report_totals(uuid, date, date)'
     )
 $$;
 

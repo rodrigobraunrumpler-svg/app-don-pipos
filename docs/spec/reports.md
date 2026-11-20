@@ -24,17 +24,19 @@ No tiene tablas propias. Lee pagos, ingresos, gastos, pedidos y stock con los í
   - los entregados hoy y los que faltan entregar: los de hoy y los atrasados, por `due_date`, con el mismo número que el filtro «Por entregar»;
   - el total por cobrar;
   - si el cuadre de hoy ya se cerró.
+
+  Las listas de Inicio salen de lo que ya existe (decidido en el plan de la fase 6): por entregar y próximos de `list_orders`, «Tu stock» de `stock_overview` y qué producir de `production_suggestion`. Así Inicio y Pedidos nunca difieren.
 - **`report_summary(from, to)`:**
   - ingresos (por fecha de pago, D11), gastos y ganancia;
   - los mismos datos del periodo anterior, del mismo largo, para comparar;
-  - las barras: por día si es una semana, por semana si es un mes («1 al 7», «8 al 14», «15 a hoy»);
+  - las barras: por día hasta 7 días, por semana hasta 62 días («1 al 7», «8 al 14», «15 a hoy») y por mes en un rango más largo. La base da el desde, el hasta y los montos de cada barra; el texto lo arma la app (`bars.ts`);
   - lo cobrado por medio de pago.
 - **`report_ranking(from, to)`:**
   - por alfajor, unidades y soles de los pedidos entregados, por fecha de entrega;
   - los pedidos por canal: WhatsApp, local y web;
   - la ganancia por alfajor, si tiene costo;
-  - los clientes que más compran.
-- **`export_rows(from, to)`:** los pedidos, pagos y gastos del periodo. El celular arma el archivo (`rules/csv.ts`), lo guarda con expo-file-system y lo comparte con expo-sharing.
+  - los clientes que más compran (la pantalla los muestra con la ficha del cliente, en la fase 7: la maqueta de Más vendidos no los tiene).
+- **`export_rows(from, to)`:** los pedidos, pagos, devoluciones, gastos e ingresos a mano del periodo, en un solo archivo con una columna «Tipo» para filtrar en Excel. Hasta un año. El celular arma el archivo (`rules/csv.ts`), lo guarda con expo-file-system y lo comparte con expo-sharing.
 
 ## 4. Permisos
 
@@ -70,9 +72,10 @@ Los comunes: solo lectura, de los datos del negocio del dueño.
   - la bandeja de stock y qué producir;
   - por entregar y próximos;
   - el consejo de la primera vez.
-  - Vistas: cargando, actualizando, sin datos, error, sin internet y servidor en pausa.
+  - Vistas: cargando, actualizando, sin datos, error, sin internet y servidor en pausa. El consejo de la primera vez llega con la puesta en marcha (fase 7) y «servidor en pausa» con el proyecto de producción (fase 8): saber que está en pausa necesita uno de verdad para confirmar cómo responde.
+  - El saludo cambia con la hora de Lima: «Buenos días» hasta las 12:00, «Buenas tardes» hasta las 19:00 y «Buenas noches» después.
 - **Reportes:**
-  - Semana, Mes o Elegir fechas;
+  - Semana, Mes o Elegir fechas («Desde» y «Hasta» escritos como día/mes, cada uno la última vez que llegó ese día; hasta un año);
   - la ganancia con su comparación;
   - ingresos y gastos;
   - «Entra y sale», con barras que se tocan;

@@ -149,6 +149,13 @@ Un concepto nuevo se agrega aquí antes de usarlo en el código.
 | En pantalla | En el código | En la base | Nota |
 |---|---|---|---|
 | Reportes | `report` | funciones `report_*` | Calculados en la base (§14.3) |
+| Inicio, el resumen de hoy | `homeSummary` | función `home_summary` | Cobrado hoy, entregados, por entregar, por cobrar y si se cerró la caja |
+| Periodo, periodo anterior | `period`, `previous` | `p_from`, `p_to` | Semana (lunes a hoy), mes (día 1 a hoy) o fechas elegidas; el anterior tiene el mismo largo |
+| Comparación | `delta` | — | «+12 %» frente al periodo anterior, con su tono (bien, ojo o neutro) |
+| Entra y sale | `bars` | `report_summary.bars` | Ingresos y gastos por día, semana o mes del periodo |
+| Más vendidos, alfajores | `ranking` | función `report_ranking` | Por pedidos entregados, por fecha de entrega |
+| Lo urgente | `urgent` | — | Lo atrasado o tarde, lo agotado, lo que hay que revisar y lo que se acaba, en ese orden |
+| Exportar a Excel | `exportRows` | función `export_rows` | Un archivo CSV con «;» para Excel en español |
 | Ventas | `sales` | — | Pedidos entregados, por fecha de entrega (D11) |
 | Ganancia | `profit` | — | Ingresos menos gastos |
 | Más vendidos | `ranking` | función `report_ranking` | En unidades y en soles |

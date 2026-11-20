@@ -891,9 +891,11 @@ export type Database = {
         Returns: Json;
       };
       expenses_summary: { Args: { p_from: string; p_to: string }; Returns: Json };
+      export_rows: { Args: { p_from: string; p_to: string }; Returns: Json };
       find_customer_by_phone: { Args: { p_phone: string }; Returns: Json };
       get_business: { Args: Record<PropertyKey, never>; Returns: Json };
       get_order: { Args: { p_order_id: string }; Returns: Json };
+      home_summary: { Args: Record<PropertyKey, never>; Returns: Json };
       income_summary: { Args: { p_from: string; p_to: string }; Returns: Json };
       latest_cash_count: { Args: { p_business_date: string }; Returns: Json };
       list_expense_categories: { Args: Record<PropertyKey, never>; Returns: Json };
@@ -916,6 +918,8 @@ export type Database = {
         Args: { p_product_id: string; p_quantity: number; p_reason: string; p_request_id: string };
         Returns: Json;
       };
+      report_ranking: { Args: { p_from: string; p_to: string }; Returns: Json };
+      report_summary: { Args: { p_from: string; p_to: string }; Returns: Json };
       revert_cancel: { Args: { p_order_id: string }; Returns: Json };
       revert_edit: { Args: { p_order_id: string; p_version: number }; Returns: Json };
       revert_expense_change: { Args: { p_expense_id: string }; Returns: Json };
