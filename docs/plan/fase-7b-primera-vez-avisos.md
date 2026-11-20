@@ -470,7 +470,8 @@ Ingresa con el dueño DEMO (900 000 101, el PIN de tu `.env.local`).
    - «Producción»: cada cuántos días; la nota cambia, y Stock e Inicio sugieren para ese periodo.
    - «Recordatorios»: apaga uno.
    - «Clientes que no vuelven»: cambia los días; «No vuelven» de Clientes sigue el número nuevo.
-   - Si en Ajustes del celular le quitas el permiso de avisos a Expo Go, la hoja Recordatorios lo dice y «Abrir ajustes del celular» te lleva ahí.
+   - Si en Ajustes del celular le quitas el permiso de avisos a Expo Go, la hoja Recordatorios lo dice y «Abrir ajustes del celular» te lleva ahí. Devuélvele el permiso y vuelve a la app: con un pedido para mañana anotado antes de las 18:00, el aviso queda programado.
+9. **«Todo listo» es el final:** en «Todo listo», el botón atrás del celular hace lo mismo que «Ir a Inicio» (no vuelve a los pasos). Mira que el paso a Inicio se vea suave.
 
 En Expo Go los avisos salen con el ícono de Expo Go; el de Don Pipos llega con la APK (fase 8). En algunos celulares Android, un aviso programado puede llegar unos minutos tarde: el sistema junta las alarmas para ahorrar batería.
 
@@ -511,3 +512,25 @@ En Expo Go los avisos salen con el ícono de Expo Go; el de Don Pipos llega con 
 - La campana usa su propia cuenta (`listReminders`), dicha a hoy. Los textos programados están escritos para cuando salen («Mañana…» el día antes, «desde hace N días» el día del aviso).
 - Por eso la campana lista el pedido de mañana (aunque ya pasaron las 18:00), cada alfajor bajo y los saldos contados desde hoy.
 - La campana sigue los interruptores: un tipo apagado tampoco sale ahí.
+
+## Después de la revisión final (2026-11-20)
+
+Un revisor aparte leyó toda la rama: nada crítico, tres arreglos importantes y trece detalles menores. Lo importante se corrigió en una sola pasada, cada arreglo con una prueba que primero falló. Gates después de la pasada: 745 pruebas de Jest y lint, tipos y formato limpios.
+
+**Arreglado**
+- **La puerta de la puesta en marcha desarmaba Inicio.** Si `get_business` no podía cargar, cada recarga del negocio (volver a la app, abrir Más) volvía a «esperando» y dejaba la pantalla en blanco. Ahora las pestañas solo se cierran si falta la puesta en marcha: «esperando» le importa solo a la entrada.
+- **«Todo listo» no era el final.** Atrás volvía al paso 3, y un número corregido ahí no se guardaba (la app decía «Todo listo» igual). Ahora atrás hace lo mismo que «Ir a Inicio». Si la base dice que ya estaba hecha, «Todo listo» lo explica: «no se guardó nada nuevo… corrígelo en Stock con «Contar stock»».
+- **El primer permiso podía dejar los avisos sin programar.** Una recarga con el diálogo de permiso abierto cancelaba todo, y al tocar «Permitir» no se programaba nada. Ahora las corridas van de a una y comparten el mismo pedido de permiso.
+- **El permiso se pedía aunque no hubiera nada que avisar,** encima del consejo de la primera vez. Ahora se pide la primera vez que hay algo que avisar.
+- **Dar el permiso después no programaba nada** hasta que cambiaran los datos. Ahora los avisos se recalculan al volver a la app.
+
+**Quedó para después** (detalles menores, en orden de lo que más se notaría)
+1. Con más de 20 pedidos futuros abiertos, los avisos miran los 20 más nuevos y no los más próximos: un pedido anotado temprano para mañana podría quedarse sin aviso.
+2. Un aviso que llega con la app abierta antes de la primera sincronización (por ejemplo, en la pantalla del PIN recién abierta) no se muestra como banner.
+3. Si Por cobrar no carga y no está guardado, los avisos de pedidos y stock también esperan.
+4. Después de un `conflict` en Delivery, Producción o «Clientes que no vuelven», la hoja no muestra el valor nuevo que llegó antes.
+5. Delivery acepta más de S/ 10,000 y la base responde un error general.
+6. El consejo de la primera vez puede perderse si la app se cierra en «Todo listo» y al volver el negocio ya dice que está hecha.
+7. El consejo no se anuncia solo con TalkBack.
+8. Faltan pruebas de dos interruptores seguidos y de la recarga después de un `conflict`. La prueba de Delivery espera «5.00» sin esperar a que lleguen los datos (puede fallar de vez en cuando).
+9. Si preparar el canal de avisos falla una vez, no se reintenta hasta reabrir la app.
