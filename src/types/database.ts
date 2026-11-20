@@ -1032,6 +1032,7 @@ export type Database = {
       };
       report_ranking: { Args: { p_from: string; p_to: string }; Returns: Json };
       report_summary: { Args: { p_from: string; p_previous_from?: string; p_to: string }; Returns: Json };
+      reset_template: { Args: { p_key: string }; Returns: Json };
       revert_cancel: { Args: { p_order_id: string }; Returns: Json };
       revert_edit: { Args: { p_order_id: string; p_version: number }; Returns: Json };
       revert_expense_change: { Args: { p_expense_id: string }; Returns: Json };
@@ -1081,6 +1082,7 @@ export type Database = {
         Returns: Json;
       };
       update_settings: { Args: { p_expected_version: number; p_patch: Json }; Returns: Json };
+      update_template: { Args: { p_body: string; p_expected_version: number; p_key: string }; Returns: Json };
       void_expense: { Args: { p_id: string; p_reason: string }; Returns: Json };
       void_manual_income: { Args: { p_id: string; p_reason: string }; Returns: Json };
     };
