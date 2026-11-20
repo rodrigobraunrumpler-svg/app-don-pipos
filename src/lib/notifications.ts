@@ -9,23 +9,30 @@ export type NotificationPermission = "granted" | "denied" | "undetermined";
 const CHANNEL = "reminders";
 let prepared: Promise<void> | null = null;
 
-// Una vez por arranque: los avisos se ven también con la app abierta y, en Android, van en su canal «Recordatorios»
+// Al abrir la app (layout raíz): un aviso que llega con la app abierta se muestra igual, también en la pantalla del PIN
+export function setupNotifications(): void {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+    }),
+  });
+}
+
+// En Android los avisos van en su canal «Recordatorios», que se crea una vez. Si falla, la próxima vez se intenta otra vez
 function prepare(): Promise<void> {
   prepared ??= (async () => {
-    Notifications.setNotificationHandler({
-      handleNotification: async () => ({
-        shouldShowBanner: true,
-        shouldShowList: true,
-        shouldPlaySound: true,
-        shouldSetBadge: false,
-      }),
-    });
     if (Platform.OS === "android")
       await Notifications.setNotificationChannelAsync(CHANNEL, {
         name: "Recordatorios",
         importance: AndroidImportance.HIGH,
       });
-  })();
+  })().catch((error: unknown) => {
+    prepared = null;
+    throw error;
+  });
   return prepared;
 }
 

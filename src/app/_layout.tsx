@@ -19,6 +19,7 @@ import { MissingConfig } from "@/components/ui/missing-config";
 import { UnlockConsumer, UnlockProvider } from "@/features/auth";
 import { SetupGate } from "@/features/businesses";
 import { appEnv } from "@/lib/env";
+import { setupNotifications } from "@/lib/notifications";
 import { createPersistOptions, createQueryClient, setupFocusManager, setupOnlineManager } from "@/lib/query";
 import { ThemeProvider } from "@/theme";
 
@@ -29,6 +30,7 @@ const queryClient = createQueryClient();
 const persistOptions = createPersistOptions(Constants.expoConfig?.version ?? "0");
 setupOnlineManager();
 setupFocusManager();
+setupNotifications();
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
