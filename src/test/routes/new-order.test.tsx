@@ -5,15 +5,14 @@ import { fireEvent, screen } from "@testing-library/react-native";
 import { renderRouter } from "expo-router/testing-library";
 import type { ReactNode } from "react";
 
+import TabsLayout from "@/app/(main)/(tabs)/_layout";
+import Home from "@/app/(main)/(tabs)/home";
+import New from "@/app/(main)/(tabs)/new";
+import Orders from "@/app/(main)/(tabs)/orders";
+import Stock from "@/app/(main)/(tabs)/stock";
 import MainLayout from "@/app/(main)/_layout";
-import Home from "@/app/(main)/home";
-import New from "@/app/(main)/new";
-import OrdersLayout from "@/app/(main)/orders/_layout";
 import Counter from "@/app/(main)/orders/counter";
-import Orders from "@/app/(main)/orders/index";
 import NewOrder from "@/app/(main)/orders/new";
-import StockLayout from "@/app/(main)/stock/_layout";
-import Stock from "@/app/(main)/stock/index";
 import Production from "@/app/(main)/stock/production";
 import { AppError } from "@/lib/errors";
 import { TEST_ORDER } from "@/test/orders";
@@ -91,16 +90,16 @@ test("pedir más de lo que queda avisa, pero deja seguir", async () => {
   expect(screen.getByRole("button", { name: "Seguir" })).toBeEnabled();
 });
 
+// Como en la app: las pestañas y, encima, las pantallas que se abren desde ellas
 const ROUTES = {
   _layout: MainLayout,
-  home: Home,
-  new: New,
-  "orders/_layout": OrdersLayout,
-  "orders/index": Orders,
+  "(tabs)/_layout": TabsLayout,
+  "(tabs)/home": Home,
+  "(tabs)/new": New,
+  "(tabs)/orders": Orders,
+  "(tabs)/stock": Stock,
   "orders/new": NewOrder,
   "orders/counter": Counter,
-  "stock/_layout": StockLayout,
-  "stock/index": Stock,
   "stock/production": Production,
 };
 
@@ -119,32 +118,23 @@ test("el recorrido: + → Un pedido → qué lleva → entrega y pago → guarda
 });
 
 test("el botón + abre «¿Qué quieres anotar?» y cada opción lleva a su pantalla", async () => {
-  await renderRouter(
-    {
-      _layout: MainLayout,
-      home: Home,
-      new: New,
-      "orders/_layout": OrdersLayout,
-      "orders/index": Orders,
-      "orders/new": NewOrder,
-      "orders/counter": Counter,
-      "stock/_layout": StockLayout,
-      "stock/index": Stock,
-      "stock/production": Production,
-    },
-    { initialUrl: "/home", wrapper: Providers },
-  );
+  await renderRouter(ROUTES, { initialUrl: "/home", wrapper: Providers });
   const choose = async (option: string) => {
     await fireEvent.press(await screen.findByRole("button", { name: "Anotar" }));
     expect(await screen.findByText("¿Qué quieres anotar?")).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole("button", { name: new RegExp(`^${option}`) }));
   };
-  await choose("Un pedido");
-  expect(screen).toHavePathname("/orders/new");
-  await choose("Una venta de mostrador");
-  expect(screen).toHavePathname("/orders/counter");
-  await choose("La producción");
-  expect(screen).toHavePathname("/stock/production");
+  // Cada pantalla se abre encima, sin la barra de pestañas: se vuelve a Inicio para elegir la siguiente
+  for (const [option, path] of [
+    ["Un pedido", "/orders/new"],
+    ["Una venta de mostrador", "/orders/counter"],
+    ["La producción", "/stock/production"],
+  ]) {
+    await choose(option!);
+    expect(screen).toHavePathname(path!);
+    await fireEvent.press(await screen.findByRole("button", { name: "Volver" }));
+    expect(screen).toHavePathname("/home");
+  }
 });
 
 test("si la respuesta se pierde, el pedido recuperado se vuelve a guardar con el mismo código (no se duplica)", async () => {
@@ -167,4 +157,41 @@ test("si la respuesta se pierde, el pedido recuperado se vuelve a guardar con el
   expect(await screen.findByText("Pedido #0042 guardado")).toBeOnTheScreen();
   expect(mockCreate).toHaveBeenCalledTimes(2);
   expect(mockCreate.mock.calls[1][0].requestId).toBe(mockCreate.mock.calls[0][0].requestId);
+});
+
+// La pestaña elegida debajo de lo que se ve
+type NavState = { type?: string; index?: number; routes?: { name: string; state?: NavState }[] };
+function selectedTab(state: NavState | undefined): string | undefined {
+  if (!state) return undefined;
+  if (state.type === "tab") return state.routes?.[state.index ?? 0]?.name;
+  for (const route of state.routes ?? []) {
+    const found = selectedTab(route.state);
+    if (found) return found;
+  }
+  return undefined;
+}
+
+test("Nuevo pedido abierto con el + se abre encima de Inicio: «Volver» regresa a Inicio y Pedidos sigue con su lista", async () => {
+  const view = await renderRouter(ROUTES, { initialUrl: "/home", wrapper: Providers });
+  await fireEvent.press(await screen.findByRole("button", { name: "Anotar" }));
+  await fireEvent.press(await screen.findByRole("button", { name: /^Un pedido/ }));
+  expect(await screen.findByText("Paso 1 de 2: qué lleva")).toBeOnTheScreen();
+  // Sin cambiar de pestaña: al volver, la pantalla sale con su animación y deja ver Inicio
+  expect(selectedTab(view.getRouterState() as NavState)).toBe("home");
+  await fireEvent.press(screen.getByRole("button", { name: "Volver" }));
+  expect(screen).toHavePathname("/home");
+  await fireEvent.press(screen.getByRole("button", { name: /Pedidos/ }));
+  expect(screen).toHavePathname("/orders");
+});
+
+test("La producción abierta con el + vuelve a Inicio, y Stock sigue con su lista", async () => {
+  const view = await renderRouter(ROUTES, { initialUrl: "/home", wrapper: Providers });
+  await fireEvent.press(await screen.findByRole("button", { name: "Anotar" }));
+  await fireEvent.press(await screen.findByRole("button", { name: /^La producción/ }));
+  expect(await screen.findByText("Registrar producción")).toBeOnTheScreen();
+  expect(selectedTab(view.getRouterState() as NavState)).toBe("home");
+  await fireEvent.press(screen.getByRole("button", { name: "Volver" }));
+  expect(screen).toHavePathname("/home");
+  await fireEvent.press(screen.getByRole("button", { name: /Stock/ }));
+  expect(screen).toHavePathname("/stock");
 });

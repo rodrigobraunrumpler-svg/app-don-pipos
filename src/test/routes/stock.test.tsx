@@ -5,7 +5,7 @@ import { renderRouter } from "expo-router/testing-library";
 import type { ReactNode } from "react";
 
 import ProductStockScreen from "@/app/(main)/stock/[productId]";
-import Stock from "@/app/(main)/stock/index";
+import Stock from "@/app/(main)/(tabs)/stock";
 import { createQueryClient } from "@/lib/query";
 import { ThemeProvider } from "@/theme";
 
@@ -45,7 +45,7 @@ function Providers({ children }: { children: ReactNode }) {
 
 test("tocar un alfajor abre su pantalla", async () => {
   await renderRouter(
-    { "stock/index": Stock, "stock/[productId]": ProductStockScreen },
+    { stock: Stock, "stock/[productId]": ProductStockScreen },
     { initialUrl: "/stock", wrapper: Providers },
   );
   await fireEvent.press(await screen.findByRole("button", { name: "Coqueta: 13 en stock. Alcanza. Ver detalle" }));
@@ -54,10 +54,7 @@ test("tocar un alfajor abre su pantalla", async () => {
 });
 
 const open = () =>
-  renderRouter(
-    { "stock/index": Stock, "stock/[productId]": ProductStockScreen },
-    { initialUrl: "/stock", wrapper: Providers },
-  );
+  renderRouter({ stock: Stock, "stock/[productId]": ProductStockScreen }, { initialUrl: "/stock", wrapper: Providers });
 
 test("anotar una merma desde Stock, y deshacerla desde el aviso", async () => {
   mockWaste.mockResolvedValue({ productId: "00000000-0000-4000-8000-000000000a01", onHand: 12, outOnWeb: false });

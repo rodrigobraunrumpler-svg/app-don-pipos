@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react-native";
 
-import Home from "@/app/(main)/home";
+import Home from "@/app/(main)/(tabs)/home";
 
 afterEach(() => jest.useRealTimers());
 

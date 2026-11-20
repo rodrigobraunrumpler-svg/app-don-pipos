@@ -5,8 +5,8 @@ import { renderRouter } from "expo-router/testing-library";
 import type { ReactNode } from "react";
 
 import OrderScreen from "@/app/(main)/orders/[id]";
-import OrdersLayout from "@/app/(main)/orders/_layout";
-import Orders from "@/app/(main)/orders/index";
+import Orders from "@/app/(main)/(tabs)/orders";
+import MainLayout from "@/app/(main)/_layout";
 import { businessDate } from "@/lib/dates";
 import { createTestQueryClient } from "@/test/render";
 import { ThemeProvider } from "@/theme";
@@ -44,7 +44,7 @@ function Providers({ children }: { children: ReactNode }) {
 test("tocar un pedido de la lista lo abre", async () => {
   expect(businessDate(new Date())).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   await renderRouter(
-    { "orders/_layout": OrdersLayout, "orders/index": Orders, "orders/[id]": OrderScreen },
+    { _layout: MainLayout, orders: Orders, "orders/[id]": OrderScreen },
     { initialUrl: "/orders", wrapper: Providers },
   );
   await fireEvent.press(await screen.findByRole("button", { name: /^#0042/ }));

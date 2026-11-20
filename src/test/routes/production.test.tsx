@@ -5,8 +5,8 @@ import { renderRouter } from "expo-router/testing-library";
 import type { ReactNode } from "react";
 
 import ProductStockScreen from "@/app/(main)/stock/[productId]";
-import StockLayout from "@/app/(main)/stock/_layout";
-import Stock from "@/app/(main)/stock/index";
+import Stock from "@/app/(main)/(tabs)/stock";
+import MainLayout from "@/app/(main)/_layout";
 import Production from "@/app/(main)/stock/production";
 import { createQueryClient } from "@/lib/query";
 import { ThemeProvider } from "@/theme";
@@ -34,7 +34,7 @@ function Providers({ children }: { children: ReactNode }) {
 
 test("registrar una producción desde Stock y deshacerla", async () => {
   await renderRouter(
-    { "stock/index": Stock, "stock/production": Production, "stock/[productId]": ProductStockScreen },
+    { stock: Stock, "stock/production": Production, "stock/[productId]": ProductStockScreen },
     { initialUrl: "/stock", wrapper: Providers },
   );
   await fireEvent.press(await screen.findByRole("button", { name: "Registrar producción" }));
@@ -48,11 +48,11 @@ test("registrar una producción desde Stock y deshacerla", async () => {
 });
 
 test("volver de Registrar producción no vuelve a pedir el stock recién cargado ni muestra la rueda de recarga", async () => {
-  // Con el Stack de Stock, como en la app: la pantalla de Stock queda montada y vuelve a tener el foco
+  // Con la pila de la app: la pantalla de Stock queda montada debajo y vuelve a tener el foco
   await renderRouter(
     {
-      "stock/_layout": StockLayout,
-      "stock/index": Stock,
+      _layout: MainLayout,
+      stock: Stock,
       "stock/production": Production,
       "stock/[productId]": ProductStockScreen,
     },

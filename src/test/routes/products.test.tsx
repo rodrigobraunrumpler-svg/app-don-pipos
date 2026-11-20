@@ -4,7 +4,7 @@ import { fireEvent, screen } from "@testing-library/react-native";
 import { renderRouter } from "expo-router/testing-library";
 import type { ReactNode } from "react";
 
-import More from "@/app/(main)/more/index";
+import More from "@/app/(main)/(tabs)/more";
 import Products from "@/app/(main)/more/products";
 import { createQueryClient } from "@/lib/query";
 import { ThemeProvider } from "@/theme";
@@ -40,7 +40,7 @@ function Providers({ children }: { children: ReactNode }) {
 }
 
 test("desde Más, «Productos y precios» abre la lista", async () => {
-  await renderRouter({ "more/index": More, "more/products": Products }, { initialUrl: "/more", wrapper: Providers });
+  await renderRouter({ more: More, "more/products": Products }, { initialUrl: "/more", wrapper: Providers });
   await fireEvent.press(await screen.findByRole("button", { name: "Productos y precios" }));
   expect(await screen.findByRole("button", { name: /^Coqueta/ })).toBeOnTheScreen();
   expect(screen).toHavePathname("/more/products");
