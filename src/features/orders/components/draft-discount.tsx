@@ -12,7 +12,8 @@ import type { DraftState } from "../schema/draft";
 
 type Props = { discountCents: number; discountReason: string; onChange: (patch: Partial<DraftState>) => void };
 
-const REASONS = ["Caja", "Cliente frecuente", "Fidelidad", "Otro"];
+// «Fidelidad» no va aquí: el premio se aplica con la tarjeta de sellos («Aplicar»), que gasta los sellos
+const REASONS = ["Caja", "Cliente frecuente", "Otro"];
 
 // El descuento, con su motivo (la maqueta): cerrado hasta que se pide
 export function DraftDiscount({ discountCents, discountReason, onChange }: Props) {

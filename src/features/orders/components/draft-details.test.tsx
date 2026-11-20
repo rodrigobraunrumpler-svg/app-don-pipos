@@ -167,3 +167,10 @@ test("sin sellos suficientes o con la fidelidad apagada, no aparece el premio", 
   await screen.findByText("Sofía L. (DEMO)");
   expect(screen.queryByText("Sofía tiene su premio listo")).toBeNull();
 });
+
+test("el descuento a mano no ofrece «Fidelidad»: el premio solo se aplica con su tarjeta de sellos", async () => {
+  await renderWithProviders(<Details />);
+  await fireEvent.press(await screen.findByRole("button", { name: "Agregar descuento" }));
+  expect(screen.getByRole("button", { name: "Cliente frecuente" })).toBeOnTheScreen();
+  expect(screen.queryByRole("button", { name: "Fidelidad" })).toBeNull();
+});
