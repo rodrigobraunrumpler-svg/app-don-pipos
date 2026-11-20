@@ -12,6 +12,7 @@ import { IncomeRow } from "@/features/income";
 import { LoyaltyRow } from "@/features/loyalty";
 import { MessagesRow } from "@/features/messages";
 import { ReceivablesRow } from "@/features/orders";
+import { RemindersRow } from "@/features/reminders";
 import { ProductsRow } from "@/features/products";
 import { ExportRow, ReportsRow } from "@/features/reports";
 
@@ -35,6 +36,7 @@ export default function More() {
           <PaymentMethodsRow />
           <DeliveryRow />
           <ProductionRow />
+          <RemindersRow />
           <LapsedRow />
           <MessagesRow onPress={() => router.navigate("/more/messages")} />
           <LoyaltyRow onPress={() => router.navigate("/more/loyalty")} />

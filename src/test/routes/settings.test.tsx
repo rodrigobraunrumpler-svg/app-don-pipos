@@ -56,6 +56,7 @@ test.each([
   ["Delivery, S/ 5.00", "Lo que cobras por llevar un pedido. Se suma solo al elegir delivery."],
   ["Producción, Cada 7 días", "La sugerencia cubre los días hasta tu siguiente tanda."],
   ["Clientes que no vuelven, 30 días", "Si un cliente no pide en 30 días, sale en «No vuelven»."],
+  ["Recordatorios, 3 activos", "Avisos del propio celular, aunque la app esté cerrada."],
 ])("Más → «%s» abre su hoja, y cerrarla deja Más", async (row, text) => {
   await renderRouter({ more: More }, { initialUrl: "/more", wrapper: Providers });
   await fireEvent.press(await screen.findByRole("button", { name: row }));
