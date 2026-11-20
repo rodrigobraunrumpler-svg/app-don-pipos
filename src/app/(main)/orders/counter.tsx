@@ -1,17 +1,12 @@
 import { router } from "expo-router";
-import { Text, View } from "react-native";
 
-import { Button } from "@/components/ui/button";
 import { Screen } from "@/components/ui/screen";
+import { CounterSale } from "@/features/orders";
 
-// Pantalla de paso: llega con la tarea 12 de la fase 4a
-export default function Placeholder() {
+export default function CounterSaleScreen() {
   return (
     <Screen bottom={false}>
-      <View className="flex-1 gap-4 px-5 pt-4">
-        <Text className="font-extrabold text-3xl text-text">Venta de mostrador</Text>
-        <Button variant="secondary" label="Volver" onPress={() => router.back()} />
-      </View>
+      <CounterSale onBack={() => router.back()} />
     </Screen>
   );
 }
