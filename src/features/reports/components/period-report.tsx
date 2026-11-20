@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { Text, View } from "react-native";
 
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import { reportSummaryQuery } from "../queries/reports";
 import { barUnit } from "../rules/bars";
 import type { Period } from "../rules/period";
 import { ByMethod } from "./by-method";
+import { ExportSheet } from "./export-sheet";
 import { InOutChart } from "./in-out-chart";
 import { ReportKpis } from "./report-kpis";
 
@@ -22,10 +24,12 @@ type Props = {
   onRanking: (period: { from: string; to: string; label: string }) => void;
 };
 
-// Los números de un periodo: la ganancia con ingresos y gastos, «Entra y sale», por medio de pago y «Ver alfajores»
+// Los números de un periodo: la ganancia con ingresos y gastos, «Entra y sale», por medio de pago, «Ver alfajores» y
+// «Exportar» (con las fechas del periodo ya elegidas)
 export function PeriodReport({ period, today, onRanking }: Props) {
   const online = useOnline();
   const { data, isError, refetch, dataUpdatedAt } = useQuery(reportSummaryQuery(period));
+  const [exporting, setExporting] = useState(false);
   if (!data && isError) return <LoadError what="los reportes" onRetry={() => void refetch()} />;
   if (!data)
     return (
@@ -53,14 +57,21 @@ export function PeriodReport({ period, today, onRanking }: Props) {
           <ReportKpis summary={data} against={period.previousLabel} />
           <InOutChart bars={data.bars} unit={barUnit(period.from, period.to)} today={today} />
           <ByMethod byMethod={data.byMethod} />
-          <View className="mt-6">
+          <View className="mt-6 gap-2.5">
             <Button
               variant="secondary"
               label="Ver alfajores"
               icon={<Icon name="cookie-outline" size={18} />}
               onPress={() => onRanking({ from: period.from, to: period.to, label: period.label })}
             />
+            <Button
+              variant="secondary"
+              label="Exportar"
+              icon={<Icon name="download" size={18} />}
+              onPress={() => setExporting(true)}
+            />
           </View>
+          {exporting ? <ExportSheet initial={period} onClose={() => setExporting(false)} /> : null}
         </>
       )}
     </>

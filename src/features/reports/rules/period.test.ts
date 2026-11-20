@@ -1,4 +1,4 @@
-import { customRange, parseRangeDay, periodRange } from "./period";
+import { customRange, lastMonthRange, parseRangeDay, periodRange } from "./period";
 
 // El miércoles 18 de noviembre de 2026, 10:00 en Lima
 const NOW = new Date("2026-11-18T15:00:00.000Z");
@@ -62,4 +62,13 @@ test("las fechas elegidas, con los días justo anteriores para comparar", () => 
   });
   expect(customRange("15/11", "1/11", "2026-11-18")).toEqual({ error: "«Desde» tiene que ir antes que «Hasta»." });
   expect(customRange("1/11/2024", "1/11/2026", "2026-11-18")).toEqual({ error: "Elige hasta un año." });
+});
+
+test("el mes pasado entero, también en enero", () => {
+  expect(lastMonthRange(NOW)).toEqual({ from: "2026-10-01", to: "2026-10-31", label: "Octubre" });
+  expect(lastMonthRange(new Date("2027-01-10T15:00:00.000Z"))).toEqual({
+    from: "2026-12-01",
+    to: "2026-12-31",
+    label: "Diciembre",
+  });
 });

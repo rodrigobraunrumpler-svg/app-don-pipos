@@ -52,6 +52,12 @@ export function periodRange(kind: PeriodKind, now: Date): Period {
   return { from, to, previousFrom, previousTo, label, previousLabel: formatMonth(noon(previousFrom)) };
 }
 
+// El mes pasado entero, para exportar: «Octubre», del 1 al 31
+export function lastMonthRange(now: Date): { from: string; to: string; label: string } {
+  const to = addDays(`${businessDate(now).slice(0, 8)}01`, -1);
+  return { from: `${to.slice(0, 8)}01`, to, label: capitalize(formatMonth(noon(to))) };
+}
+
 // Una fecha escrita como día/mes: la última vez que llegó ese día (hasta hoy). Con el año, ese día si ya pasó
 export function parseRangeDay(text: string, today: string): string | null {
   const match = DAY_TEXT.exec(text.trim());

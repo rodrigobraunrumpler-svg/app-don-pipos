@@ -9,9 +9,9 @@ import { ExpenseCategoriesRow, ExpensesRow } from "@/features/expenses";
 import { IncomeRow } from "@/features/income";
 import { ReceivablesRow } from "@/features/orders";
 import { ProductsRow } from "@/features/products";
-import { ReportsRow } from "@/features/reports";
+import { ExportRow, ReportsRow } from "@/features/reports";
 
-// Más (la maqueta): «Tu negocio» y «Ajustes», y la cuenta. Cada fila lleva a su pantalla
+// Más (la maqueta): «Tu negocio», «Ajustes», la cuenta y «Ayuda». Cada fila lleva a su pantalla o abre su hoja
 export default function More() {
   return (
     <Screen bottom={false}>
@@ -29,6 +29,9 @@ export default function More() {
           <ExpenseCategoriesRow />
         </MenuSection>
         <AccountSection onChangePin={() => router.navigate("/more/change-pin")} />
+        <MenuSection title="Ayuda">
+          <ExportRow />
+        </MenuSection>
       </ScrollView>
     </Screen>
   );

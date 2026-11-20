@@ -1,4 +1,4 @@
-// Más → Reportes → Alfajores → atrás, con las rutas de verdad
+// Más → Reportes → Alfajores → atrás, y Más → Exportar a Excel, con las rutas de verdad
 import { QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
@@ -86,4 +86,11 @@ test("Más → Reportes de la semana → sus alfajores, y atrás vuelve paso a p
   expect(screen).toHavePathname("/reports");
   await act(() => router.back());
   expect(screen).toHavePathname("/more");
+});
+
+test("Más → Ayuda → «Exportar a Excel» abre su hoja", async () => {
+  await renderRouter({ more: More }, { initialUrl: "/more", wrapper: Providers });
+  await fireEvent.press(await screen.findByRole("button", { name: "Exportar a Excel" }));
+  expect(await screen.findByRole("header", { name: "Exportar a Excel" })).toBeOnTheScreen();
+  expect(screen.getByRole("radio", { name: "Este mes", checked: true })).toBeOnTheScreen();
 });
