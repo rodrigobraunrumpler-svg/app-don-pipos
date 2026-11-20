@@ -1,5 +1,5 @@
 -- Clientes: buscar sin tildes y por teléfono, los filtros, la ficha, corregir y borrar sus datos (docs/spec/customers.md)
-select plan(32);
+select plan(33);
 
 select tests.make_user('00000000-0000-4000-8000-0000000015c1');
 select tests.make_user('00000000-0000-4000-8000-0000000015c2');
@@ -109,6 +109,14 @@ select throws_ok(format('select public.update_customer(%L, %s, %L, null, null, f
   current_setting('t.ana_v'), 'Ana (DEMO)'), 'P0001', 'conflict', 'con otra versión, conflict');
 select throws_ok(format('select public.update_customer(%L, %s, %L, null, null, false)', current_setting('t.ana'),
   current_setting('t.ana_v')::integer + 1, '   '), 'P0001', 'invalid', 'sin nombre, invalid');
+
+-- Con un pedido por entregar o por cobrar no se borran: se perdería a dónde llevarlo y a quién cobrarle
+select throws_ok(format('select public.anonymize_customer(%L)', current_setting('t.lucia')), 'P0001', 'conflict',
+  'con un pedido por entregar, no se borran sus datos');
+select public.advance_order(current_setting('t.lucia_order')::uuid, 'new');
+select public.advance_order(current_setting('t.lucia_order')::uuid, 'preparing');
+select public.advance_order(current_setting('t.lucia_order')::uuid, 'on_the_way');
+select public.add_payment(gen_random_uuid(), current_setting('t.lucia_order')::uuid, 'cash', 4800);
 
 -- Borrar sus datos (a pedido del cliente, Ley 29733): los números del negocio no cambian
 select set_config('t.home', public.home_summary()::text, true);

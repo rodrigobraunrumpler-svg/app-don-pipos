@@ -5,7 +5,7 @@ import { Text, View } from "react-native";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Sheet } from "@/components/ui/sheet";
-import { errorMessage } from "@/lib/errors";
+import { errorMessage, toAppError } from "@/lib/errors";
 import { useOnline } from "@/lib/use-online";
 
 import { useAnonymizeCustomer } from "../hooks/use-customer-changes";
@@ -25,7 +25,11 @@ export function EraseCustomerSheet({ customer, alsoRefresh, onClose }: Props) {
       await erase.mutateAsync(customer.id);
       onClose();
     } catch (error) {
-      setFailure(errorMessage(error));
+      setFailure(
+        toAppError(error).kind === "conflict"
+          ? "Tiene pedidos por entregar o por cobrar: termínalos o anúlalos antes de borrar sus datos."
+          : errorMessage(error),
+      );
     }
   }
 

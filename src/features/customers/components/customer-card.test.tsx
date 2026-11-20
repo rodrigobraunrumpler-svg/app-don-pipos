@@ -130,3 +130,15 @@ test("sin señal, lo que cambia algo se apaga", async () => {
   expect(screen.getByRole("button", { name: "Corregir datos" })).toBeDisabled();
   expect(screen.getByRole("button", { name: "Borrar datos de este cliente" })).toBeDisabled();
 });
+
+test("con pedidos por entregar o por cobrar, borrar dice qué hacer antes", async () => {
+  mockErase.mockRejectedValue(new AppError("conflict"));
+  await renderWithProviders(<CustomerCard {...props()} />);
+  await fireEvent.press(screen.getByRole("button", { name: "Borrar datos de este cliente" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Borrar sus datos" }));
+  expect(
+    await screen.findByText(
+      "Tiene pedidos por entregar o por cobrar: termínalos o anúlalos antes de borrar sus datos.",
+    ),
+  ).toBeOnTheScreen();
+});
