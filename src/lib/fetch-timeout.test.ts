@@ -33,3 +33,26 @@ test("una petición que responde a tiempo pasa igual", async () => {
   jest.spyOn(globalThis, "fetch").mockResolvedValue(response);
   await expect(fetchWithTimeout()("https://ejemplo.supabase.co")).resolves.toBe(response);
 });
+
+test("subir la foto de una boleta tiene 60 s: a los 20 s sigue", async () => {
+  jest.useFakeTimers();
+  let aborted = false;
+  jest.spyOn(globalThis, "fetch").mockImplementation(
+    (_input: unknown, init?: RequestInit) =>
+      new Promise((_resolve, reject) =>
+        init?.signal?.addEventListener("abort", () => {
+          aborted = true;
+          reject(Object.assign(new Error("Aborted"), { name: "AbortError" }));
+        }),
+      ),
+  );
+  const request = fetchWithTimeout()("https://ejemplo.supabase.co/storage/v1/object/receipts/a/b.jpg").catch(
+    () => undefined,
+  );
+  jest.advanceTimersByTime(20_000);
+  await Promise.resolve();
+  expect(aborted).toBe(false);
+  jest.advanceTimersByTime(40_000);
+  await request;
+  expect(aborted).toBe(true);
+});

@@ -3,9 +3,11 @@ import {
   businessDate,
   businessDayRange,
   formatLongDate,
+  formatMonth,
   formatShortDate,
   formatTime,
   formatWeekday,
+  formatWhen,
   TIME_ZONE,
 } from "@/lib/dates";
 
@@ -134,4 +136,17 @@ test("el día de la semana, con mayúscula, en hora de Lima", () => {
 test("la fecha corta, en hora de Lima", () => {
   expect(formatShortDate(new Date("2026-11-11T22:30:00Z"))).toBe("11 nov");
   expect(formatShortDate(new Date("2026-12-01T04:59:00Z"))).toBe("30 nov");
+});
+
+test("cuándo pasó algo, en una fila: hoy y ayer con la hora, la semana con el día y lo de antes con la fecha", () => {
+  const now = new Date("2026-11-19T16:40:00.000Z"); // jueves 19, 11:40 de Lima
+  expect(formatWhen(new Date("2026-11-19T14:10:00.000Z"), now)).toBe("Hoy, 09:10");
+  expect(formatWhen(new Date("2026-11-19T04:30:00.000Z"), now)).toBe("Ayer, 23:30");
+  expect(formatWhen(new Date("2026-11-16T15:00:00.000Z"), now)).toBe("Lunes 16");
+  expect(formatWhen(new Date("2026-11-09T15:00:00.000Z"), now)).toBe("9 nov");
+  expect(formatWhen(new Date("2026-11-21T15:00:00.000Z"), now)).toBe("21 nov");
+});
+
+test("el nombre del mes de Lima", () => {
+  expect(formatMonth(new Date("2026-12-01T04:30:00.000Z"))).toBe("noviembre");
 });

@@ -10,6 +10,7 @@ export const TIME_ZONE = "America/Lima";
 const LIMA_OFFSET = "-05:00";
 
 const DAY_FORMAT = /^\d{4}-\d{2}-\d{2}$/;
+const DAY_MS = 86_400_000;
 
 const inLima = (instant: Date): TZDate => new TZDate(instant.getTime(), LIMA_OFFSET);
 
@@ -47,4 +48,19 @@ export function formatWeekday(instant: Date): string {
 // «11 nov»
 export function formatShortDate(instant: Date): string {
   return format(inLima(instant), "d MMM", { locale: es });
+}
+
+// Cuándo pasó algo, en una fila: «Hoy, 09:10», «Ayer, 23:30», el día dentro de la semana («Lunes 16») y antes, o
+// después, la fecha («9 nov»). Con los días de Lima
+export function formatWhen(instant: Date, now: Date): string {
+  const days = Math.round((Date.parse(businessDate(now)) - Date.parse(businessDate(instant))) / DAY_MS);
+  if (days === 0) return `Hoy, ${formatTime(instant)}`;
+  if (days === 1) return `Ayer, ${formatTime(instant)}`;
+  if (days > 1 && days < 7) return `${formatWeekday(instant)} ${format(inLima(instant), "d")}`;
+  return formatShortDate(instant);
+}
+
+// «noviembre», el mes de Lima
+export function formatMonth(instant: Date): string {
+  return format(inLima(instant), "MMMM", { locale: es });
 }

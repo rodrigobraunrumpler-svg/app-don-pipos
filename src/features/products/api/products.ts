@@ -1,10 +1,8 @@
 import { AppError, toAppError } from "@/lib/errors";
+import { orNull } from "@/lib/rpc";
 import { supabase } from "@/lib/supabase";
 
 import { productListSchema, productSchema, type Product, type ProductInput } from "../schema/product";
-
-// Los tipos que genera Supabase no saben que un parámetro puede ir vacío; la función de la base sí lo acepta
-const orNull = <T>(value: T | null): T => value as T;
 
 export async function listProducts(): Promise<Product[]> {
   const { data, error } = await supabase().rpc("list_products");
