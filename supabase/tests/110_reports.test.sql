@@ -1,6 +1,6 @@
 -- Inicio y reportes (docs/spec/reports.md §3 y §8): el resumen de hoy, el periodo con el anterior, el ranking y lo que
 -- se exporta, con dos semanas de noviembre armadas a mano
-select plan(29);
+select plan(30);
 
 select tests.make_user('00000000-0000-4000-8000-0000000014c1');
 select tests.make_user('00000000-0000-4000-8000-0000000014c2');
@@ -124,6 +124,13 @@ select is((current_setting('t.r')::jsonb -> 'topCustomers' -> 0) - 'customerId',
   'los clientes que más compran');
 select is((select sum((e ->> 'units')::integer)::integer from jsonb_array_elements(public.report_ranking('2026-11-09', '2026-11-15') -> 'products') as e),
   2, 'el entregado y después anulado deja de contar en el ranking');
+
+-- Sin costo guardado en sus ventas, la ganancia sale con el costo de hoy (el aproximado de Productos)
+select tests.logout();
+update public.products set cost_cents = 600 where id = '00000000-0000-4000-8000-000000001402';
+select tests.login_as('00000000-0000-4000-8000-0000000014c1');
+select is((select (e ->> 'profitCents')::integer from jsonb_array_elements(public.report_ranking('2026-11-02', '2026-11-15') -> 'products') as e
+  where e ->> 'name' = 'Limon Kiss'), 600, 'una venta sin costo guardado toma el costo de hoy');
 
 -- Lo que se exporta: pedidos del periodo, pagos y devoluciones, gastos e ingresos a mano, del más viejo al más nuevo
 select set_config('t.x', public.export_rows('2026-11-09', '2026-11-15')::text, true);
