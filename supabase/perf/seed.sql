@@ -54,3 +54,79 @@ group by m.business_id, m.product_id;
 analyze public.products;
 analyze public.stock_levels;
 analyze public.stock_movements;
+
+-- Fase 4a: el negocio medido (el 2,500) con 300 clientes y 3 años de pedidos, 10 por día (#1 a #10,950), más 20 para los
+-- días que vienen. Lo de antes de hoy está entregado (cada décimo, de mostrador; cada 13.º, sin pagar); los de ayer pares
+-- siguen atrasados y los de hoy, en curso. Cada uno con una línea, su pago y sus estados
+insert into public.customers (id, business_id, name, phone, orders_count, spent_cents, last_order_at)
+select
+  ('00000000-0000-4000-d000-' || lpad(to_hex(k), 12, '0'))::uuid,
+  '00000000-0000-4000-a000-0000000009c4',
+  'Cliente ' || k || ' (DEMO)', '+51955' || lpad(k::text, 6, '0'), 36, 36 * 2400, now() - k * interval '1 hour'
+from generate_series(1, 300) as k;
+
+insert into public.orders (
+  id, business_id, number, customer_id, channel, fulfillment, status, scheduled_for, due_date, delivery_address,
+  subtotal_cents, total_cents, paid_cents, delivered_at, customer_name, items_summary, items_count, created_at
+)
+select
+  ('00000000-0000-4000-c000-' || lpad(to_hex(x.n), 12, '0'))::uuid,
+  '00000000-0000-4000-a000-0000000009c4',
+  x.n,
+  case when not x.counter then ('00000000-0000-4000-d000-' || lpad(to_hex(1 + x.n % 300), 12, '0'))::uuid end,
+  case when x.counter then 'local' else 'whatsapp' end,
+  case when x.counter then 'counter' when x.n % 2 = 1 then 'delivery' else 'pickup' end,
+  case when x.delivered then 'delivered' when x.n % 3 = 0 then 'preparing' else 'new' end,
+  case when x.days_ago < 0 then x.day end,
+  x.day,
+  case when not x.counter and x.n % 2 = 1 then 'Jr. Prueba ' || x.n end,
+  2400, 2400,
+  case when x.counter or (x.delivered and x.n % 13 <> 0) then 2400 else 0 end,
+  case when x.delivered then (x.day + time '15:00') at time zone 'America/Lima' end,
+  case when not x.counter then 'Cliente ' || (1 + x.n % 300) || ' (DEMO)' end,
+  '2 Alfajor ' || (1 + x.n % 5), 2,
+  least(now(), (x.day + time '10:00') at time zone 'America/Lima')
+from (
+  select n, d.days_ago, (now() at time zone 'America/Lima')::date - d.days_ago as day,
+    n % 10 = 0 and d.days_ago > 0 as counter,
+    (n % 10 = 0 and d.days_ago > 0) or d.days_ago > 1 or (d.days_ago = 1 and n % 2 = 1) as delivered
+  from generate_series(1, 10970) as n, lateral (select floor((10950 - n) / 10.0)::integer as days_ago) as d
+) as x;
+
+update private.business_counters set next_order_number = 10971 where business_id = '00000000-0000-4000-a000-0000000009c4';
+
+-- Los demás negocios, 6 ventas de mostrador cada uno: así el negocio medido es una parte de la tabla, como en producción,
+-- y la base elige el índice que empieza por el negocio
+insert into public.orders (
+  id, business_id, number, channel, fulfillment, status, due_date, subtotal_cents, total_cents, paid_cents, delivered_at,
+  items_summary, items_count, created_at
+)
+select
+  ('00000000-0000-4000-e000-' || lpad(to_hex(b * 10 + k), 12, '0'))::uuid,
+  ('00000000-0000-4000-a000-' || lpad(to_hex(b), 12, '0'))::uuid,
+  k, 'local', 'counter', 'delivered', (now() at time zone 'America/Lima')::date - k, 1200, 1200, 1200, now() - k * interval '1 day',
+  '1 Alfajor 1', 1, now() - k * interval '1 day'
+from generate_series(1, 5000) as b, generate_series(1, 6) as k
+where b <> 2500;
+
+insert into public.order_lines (business_id, order_id, product_id, product_name, quantity, unit_price_cents, created_at)
+select o.business_id, o.id, ('00000000-0000-4000-b000-' || lpad(to_hex(25000 + 1 + o.number % 5), 12, '0'))::uuid,
+  'Alfajor ' || (1 + o.number % 5), 2, 1200, o.created_at
+from public.orders o where o.business_id = '00000000-0000-4000-a000-0000000009c4';
+
+insert into public.payments (business_id, order_id, kind, method, amount_cents, paid_at)
+select o.business_id, o.id, 'payment', (array['cash', 'yape', 'plin', 'transfer'])[1 + o.number % 4], o.paid_cents, o.created_at
+from public.orders o where o.business_id = '00000000-0000-4000-a000-0000000009c4' and o.paid_cents > 0;
+
+insert into public.order_status_events (business_id, order_id, status, at)
+select o.business_id, o.id, 'new', o.created_at
+from public.orders o where o.business_id = '00000000-0000-4000-a000-0000000009c4' and o.fulfillment <> 'counter'
+union all
+select o.business_id, o.id, 'delivered', o.delivered_at
+from public.orders o where o.business_id = '00000000-0000-4000-a000-0000000009c4' and o.status = 'delivered';
+
+analyze public.customers;
+analyze public.orders;
+analyze public.order_lines;
+analyze public.payments;
+analyze public.order_status_events;

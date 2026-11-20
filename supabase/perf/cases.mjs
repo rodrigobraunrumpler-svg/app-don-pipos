@@ -12,6 +12,18 @@ const FIVE_PRODUCTS = JSON.stringify(
   })),
 );
 const STOCK_TABLES = ["products", "stock_levels", "stock_movements"];
+// Fase 4a: el mismo negocio con 3 años de pedidos (#1 a #10,970) y 300 clientes. El pedido #5,000 (0x1388)
+const ORDER = "00000000-0000-4000-c000-000000001388";
+const ORDER_TABLES = ["orders", "order_lines", "payments", "customers", "order_status_events"];
+const DRAFT = JSON.stringify({
+  customer: { phone: "+51955000150", name: "Cliente 150 (DEMO)" },
+  channel: "whatsapp",
+  fulfillment: "pickup",
+  lines: [1, 2].map((k) => ({
+    productId: `00000000-0000-4000-b000-${(2500 * 10 + k).toString(16).padStart(12, "0")}`,
+    quantity: 2,
+  })),
+});
 
 export const cases = [
   { name: "get_business", as: OWNER, sql: "select public.get_business()", tables: ["businesses", "business_settings"] },
@@ -35,7 +47,12 @@ export const cases = [
   },
   // Fase 3: productos y stock
   { name: "list_products", as: OWNER, sql: "select public.list_products()", tables: ["businesses", "products"] },
-  { name: "stock_overview", as: OWNER, sql: "select public.stock_overview()", tables: ["businesses", ...STOCK_TABLES] },
+  {
+    name: "stock_overview, con lo apartado",
+    as: OWNER,
+    sql: "select public.stock_overview()",
+    tables: ["businesses", ...STOCK_TABLES, "orders", "order_lines"],
+  },
   {
     name: "list_product_movements, primera página",
     as: OWNER,
@@ -71,6 +88,34 @@ export const cases = [
     as: OWNER,
     sql: `select * from public.stock_movements where product_id = '${PRODUCT}' order by happened_at desc, id desc limit 20`,
     tables: ["businesses", "stock_movements"],
+  },
+  // Fase 4a: pedidos
+  ...[
+    ["«Hoy»", "'today'"],
+    ["«Por entregar»", "'to_deliver'"],
+    ["«Todos», primera página", "'all'"],
+    ["«Todos», la página siguiente con su cursor", "'all', null, 20, public.list_orders('all') -> 'meta' ->> 'nextCursor'"],
+    ["buscar «#5000»", "'all', '#5000'"],
+    ["buscar «cliente 15»", "'all', 'cliente 15'"],
+  ].map(([name, args]) => ({
+    name: `list_orders, ${name}`,
+    as: OWNER,
+    sql: `select public.list_orders(${args})`,
+    tables: ["businesses", "orders"],
+  })),
+  { name: "order_counts", as: OWNER, sql: "select public.order_counts()", tables: ["businesses", "orders"] },
+  { name: "get_order", as: OWNER, sql: `select public.get_order('${ORDER}')`, tables: ["businesses", ...ORDER_TABLES] },
+  {
+    name: "find_customer_by_phone",
+    as: OWNER,
+    sql: "select public.find_customer_by_phone('+51955000150')",
+    tables: ["businesses", ...ORDER_TABLES],
+  },
+  {
+    name: "create_order de 2 alfajores, cliente que ya existe",
+    as: OWNER,
+    sql: `select public.create_order(gen_random_uuid(), '${DRAFT}')`,
+    tables: ["businesses", ...ORDER_TABLES, ...STOCK_TABLES],
   },
 ];
 
