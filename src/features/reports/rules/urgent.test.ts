@@ -86,12 +86,15 @@ test("lo atrasado va primero, del día más viejo al más nuevo, y después lo q
       late("0045", "2026-11-18", "2026-11-18T16:30:00.000Z", "late"),
       late("0044", "2026-11-18", "2026-11-18T16:00:00.000Z", "late"),
       late("0037", "2026-11-17", null, "overdue"),
+      // Del mismo día, en el orden en que llegaron; uno tarde sin hora (no debería pasar) va primero entre los tarde
+      late("0036", "2026-11-17", null, "overdue"),
+      late("0046", "2026-11-18", null, "late"),
       late("0030", "2026-11-16", "2026-11-16T15:00:00.000Z", "overdue"),
     ],
     [],
     0,
   );
-  expect(rows.map((row) => row.id)).toEqual(["0030", "0037", "0044", "0045"]);
+  expect(rows.map((row) => row.id)).toEqual(["0030", "0037", "0036", "0046", "0044", "0045"]);
 });
 
 test("si hay más pedidos por entregar de los que se miraron, una fila lleva a verlos", () => {
