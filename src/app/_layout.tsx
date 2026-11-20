@@ -60,13 +60,14 @@ export default function RootLayout() {
                 const signedIn = sessionStatus === "signed-in" && !signingIn;
                 const inside = signedIn && !locked && !offerBiometrics;
                 // Sin sesión, Ingresar; con sesión bloqueada, Entrar; recién ingresado, la huella; la primera vez, la
-                // puesta en marcha; si no, las pestañas. Mientras se sabe si falta, ninguna de las dos: la entrada espera
+                // puesta en marcha; si no, las pestañas. Mientras se sabe si falta, la entrada espera (el fondo); una
+                // recarga del negocio con la app abierta («loading» otra vez) no desarma las pestañas
                 return (
                   <SetupGate enabled={signedIn}>
                     {(setup) => (
                       <Stack screenOptions={{ headerShown: false }}>
                         <Stack.Screen name="index" />
-                        <Stack.Protected guard={inside && setup === "done"}>
+                        <Stack.Protected guard={inside && setup !== "needed"}>
                           <Stack.Screen name="(main)" />
                         </Stack.Protected>
                         <Stack.Protected guard={inside && setup === "needed"}>

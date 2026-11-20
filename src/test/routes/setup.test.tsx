@@ -170,12 +170,31 @@ test("los tres pasos: atrás no pierde lo puesto, «Terminar» guarda una vez y 
   expect(client.getQueryData<Business>(businessesKeys.all)?.setupDone).toBe(true);
 });
 
-test("si ya estaba hecha (conflict), «Terminar» lleva a «Todo listo» igual", async () => {
+test("«Todo listo» es el final: atrás no vuelve a los pasos, hace lo mismo que «Ir a Inicio»", async () => {
+  mockComplete.mockResolvedValue({ adjustments: 0, categories: 4 });
+  const client = await renderSetup();
+  await act(() => router.navigate("/setup/expenses"));
+  await finish();
+  expect(await screen.findByText("Todo listo")).toBeOnTheScreen();
+  await act(() => router.back());
+  expect(screen).toHavePathname("/setup/done");
+  expect(screen.queryByRole("button", { name: "Terminar" })).toBeNull();
+  await act(() => jest.advanceTimersByTimeAsync(50));
+  expect(await AsyncStorage.getItem("donpipos.firstTip")).toBe("pending");
+  expect(client.getQueryData<Business>(businessesKeys.all)?.setupDone).toBe(true);
+});
+
+test("si ya estaba hecha (conflict), «Terminar» lleva a «Todo listo» y dice que no se guardó nada nuevo", async () => {
   mockComplete.mockRejectedValue(new AppError("conflict"));
   await renderSetup();
   await act(() => router.navigate("/setup/expenses"));
   await finish();
   expect(await screen.findByText("Todo listo")).toBeOnTheScreen();
+  expect(
+    screen.getByText(
+      "La puesta en marcha ya estaba hecha, así que no se guardó nada nuevo. Si un número del stock no quedó bien, corrígelo en Stock con «Contar stock».",
+    ),
+  ).toBeOnTheScreen();
 });
 
 test("sin señal, «Terminar» lo dice y no sale nada", async () => {

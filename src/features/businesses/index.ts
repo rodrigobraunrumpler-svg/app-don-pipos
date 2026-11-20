@@ -8,6 +8,7 @@ export { useUpdateSettings } from "./hooks/use-update-settings";
 export { useSetupState } from "./hooks/use-setup-state";
 export type { SetupState } from "./hooks/use-setup-state";
 export { useCompleteSetup } from "./hooks/use-complete-setup";
+export { useFinishSetup } from "./hooks/use-finish-setup";
 export {
   deliveryLabel,
   lapsedLabel,

@@ -17,7 +17,7 @@ import { SetupTitle } from "./setup-title";
 
 // Paso 3, «Tus tipos de gasto»: chips con los de la maqueta. «Terminar» guarda todo de una vez (complete_setup), con
 // todos los alfajores (los que quedaron en 0 también) y los tipos marcados
-export function SetupExpensesStep({ onBack, onDone }: { onBack: () => void; onDone: () => void }) {
+export function SetupExpensesStep({ onBack, onDone }: { onBack: () => void; onDone: (alreadyDone: boolean) => void }) {
   const online = useOnline();
   const products = useQuery(productsQuery).data?.filter((product) => product.isActive);
   const { countOf, chosen, toggle, requestId, stock } = useSetupDraft();
@@ -31,7 +31,7 @@ export function SetupExpensesStep({ onBack, onDone }: { onBack: () => void; onDo
     busy.current = true;
     setFailure(null);
     try {
-      await complete.mutateAsync({
+      const { alreadyDone } = await complete.mutateAsync({
         requestId,
         stock: products.map((product) => ({ productId: product.id, counted: countOf(product.id) })),
         categories: SETUP_EXPENSE_CATEGORIES.filter((category) => chosen[category.name]).map(({ name, icon }) => ({
@@ -39,7 +39,7 @@ export function SetupExpensesStep({ onBack, onDone }: { onBack: () => void; onDo
           icon,
         })),
       });
-      onDone();
+      onDone(alreadyDone);
     } catch (error) {
       setFailure(errorMessage(error));
     } finally {
