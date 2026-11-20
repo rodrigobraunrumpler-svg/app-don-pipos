@@ -108,6 +108,18 @@ export const cases = [
   })),
   { name: "order_counts", as: OWNER, sql: "select public.order_counts()", tables: ["businesses", "orders"] },
   {
+    name: "production_suggestion, con 3 años de pedidos",
+    as: OWNER,
+    sql: "select public.production_suggestion()",
+    tables: ["businesses", "orders", "order_lines", ...STOCK_TABLES],
+  },
+  {
+    name: "product_sales_by_weekday",
+    as: OWNER,
+    sql: `select public.product_sales_by_weekday('${PRODUCT}')`,
+    tables: ["businesses", "orders", "order_lines"],
+  },
+  {
     name: "list_receivables, primera página",
     as: OWNER,
     sql: "select public.list_receivables()",

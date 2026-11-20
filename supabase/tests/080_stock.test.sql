@@ -104,7 +104,7 @@ select is(
   'los estados: en la nevera negativo, faltan para pedidos, agotado, en el mínimo o debajo, y alcanza');
 select is(
   (select e - 'productId' from jsonb_array_elements(public.stock_overview()) as e where e ->> 'name' = 'E owed'),
-  '{"name": "E owed", "imageUrl": null, "linkedToWeb": false, "minStock": 6, "onHand": -14, "reserved": 24, "physical": 10, "state": "owed"}'::jsonb,
+  '{"name": "E owed", "imageUrl": null, "linkedToWeb": false, "minStock": 6, "onHand": -14, "reserved": 24, "physical": 10, "state": "owed", "coverageDays": null}'::jsonb,
   'libre −14 con 24 apartados: 10 en la nevera, faltan para pedidos');
 select is((select count(*)::integer from jsonb_array_elements(public.stock_overview()) as e where e ->> 'name' = 'Inactivo'), 0, 'un desactivado no sale en el stock');
 select public.register_production(gen_random_uuid(), '[{"productId": "00000000-0000-4000-8000-000000000a03", "quantity": 11}]');

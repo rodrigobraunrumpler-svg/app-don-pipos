@@ -178,6 +178,8 @@ create function pg_temp.unlisted_functions_for_app() returns setof text language
       'public.revert_cancel(uuid)',
       'public.change_payment_method(uuid, uuid, text)',
       'public.list_receivables(integer, text)',
+      'public.production_suggestion()',
+      'public.product_sales_by_weekday(uuid)',
       -- lo que usan por dentro las reglas de acceso y las funciones de arriba
       'private.owned_business_ids()',
       'private.fail(text)',
@@ -202,7 +204,8 @@ create function pg_temp.unlisted_functions_for_app() returns setof text language
       'private.revert_edit(uuid, integer)',
       'private.cancel_order(uuid, uuid, text, integer, text)',
       'private.revert_cancel(uuid)',
-      'private.change_payment_method(uuid, uuid, text)'
+      'private.change_payment_method(uuid, uuid, text)',
+      'private.expected_sales(uuid)'
     )
 $$;
 

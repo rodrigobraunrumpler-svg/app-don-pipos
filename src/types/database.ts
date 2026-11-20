@@ -646,6 +646,8 @@ export type Database = {
       list_receivables: { Args: { p_cursor?: string; p_limit?: number }; Returns: Json };
       list_templates: { Args: Record<PropertyKey, never>; Returns: Json };
       order_counts: { Args: Record<PropertyKey, never>; Returns: Json };
+      product_sales_by_weekday: { Args: { p_product_id: string }; Returns: Json };
+      production_suggestion: { Args: Record<PropertyKey, never>; Returns: Json };
       register_production: { Args: { p_items: Json; p_request_id: string }; Returns: Json };
       register_stock_count: { Args: { p_counts: Json; p_request_id: string }; Returns: Json };
       register_waste: {
