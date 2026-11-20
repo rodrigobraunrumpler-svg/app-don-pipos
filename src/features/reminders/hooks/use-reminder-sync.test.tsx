@@ -3,6 +3,7 @@ import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react-native";
 import * as Notifications from "expo-notifications";
 import type { ReactNode } from "react";
+import { AppState, type AppStateStatus } from "react-native";
 
 import { TEST_BUSINESS } from "@/test/business";
 import { createTestQueryClient } from "@/test/render";
@@ -16,39 +17,50 @@ const page = <T,>(items: T[]) => ({
   meta: { limit: 20, total: items.length, hasMore: false, nextCursor: null },
 });
 let mockBusiness = TEST_BUSINESS;
+// Lo que hay: un pedido para mañana, un saldo de ayer y Morenita baja. Cada prueba lo cambia si necesita
+let mockEmpty = false;
+let mockOnHand = 4;
 jest.mock("@/features/businesses/api/business", () => ({ getBusiness: async () => mockBusiness }));
 jest.mock("@/features/orders/api/orders", () => ({
   listOrders: async () =>
-    page([
-      {
-        id: "o1",
-        number: 44,
-        status: "new",
-        fulfillment: "pickup",
-        customerName: "Patricia V. (DEMO)",
-        itemsSummary: "12 Coquetas",
-        totalCents: 14400,
-        paidCents: 0,
-        promisedAt: "2026-11-19T15:00:00.000Z",
-        dueDate: "2026-11-19",
-      },
-    ]),
+    page(
+      mockEmpty
+        ? []
+        : [
+            {
+              id: "o1",
+              number: 44,
+              status: "new",
+              fulfillment: "pickup",
+              customerName: "Patricia V. (DEMO)",
+              itemsSummary: "12 Coquetas",
+              totalCents: 14400,
+              paidCents: 0,
+              promisedAt: "2026-11-19T15:00:00.000Z",
+              dueDate: "2026-11-19",
+            },
+          ],
+    ),
   listReceivables: async () => ({
-    ...page([
-      {
-        id: "o9",
-        number: 40,
-        customerName: "Jorge P. (DEMO)",
-        customerPhone: "+51900000301",
-        fulfillment: "pickup",
-        status: "delivered",
-        totalCents: 2400,
-        paidCents: 0,
-        dueDate: "2026-11-17",
-        scheduledFor: null,
-        remind: true,
-      },
-    ]),
+    ...page(
+      mockEmpty
+        ? []
+        : [
+            {
+              id: "o9",
+              number: 40,
+              customerName: "Jorge P. (DEMO)",
+              customerPhone: "+51900000301",
+              fulfillment: "pickup",
+              status: "delivered",
+              totalCents: 2400,
+              paidCents: 0,
+              dueDate: "2026-11-17",
+              scheduledFor: null,
+              remind: true,
+            },
+          ],
+    ),
     meta: { limit: 20, total: 1, hasMore: false, nextCursor: null, totalDueCents: 2400 },
   }),
 }));
@@ -60,11 +72,11 @@ jest.mock("@/features/stock/api/stock", () => ({
       imageUrl: null,
       linkedToWeb: false,
       minStock: 6,
-      onHand: 4,
+      onHand: mockOnHand,
       reserved: 0,
-      physical: 4,
+      physical: mockOnHand,
       coverageDays: 1,
-      state: "low",
+      state: mockEmpty ? "ok" : "low",
     },
   ],
 }));
@@ -72,15 +84,37 @@ jest.mock("@/features/stock/api/stock", () => ({
 const schedule = jest.mocked(Notifications.scheduleNotificationAsync);
 const cancelAll = jest.mocked(Notifications.cancelAllScheduledNotificationsAsync);
 const permissions = jest.mocked(Notifications.getPermissionsAsync);
+const request = jest.mocked(Notifications.requestPermissionsAsync);
+const GRANTED = { status: "granted", granted: true, canAskAgain: true } as never;
+// El permiso como lo tiene el celular en cada momento de la prueba
+let mockPermission = "granted";
+let appStateHandlers: ((state: AppStateStatus) => void)[] = [];
 
 beforeEach(async () => {
   jest.useFakeTimers({ now: NOW, advanceTimers: true });
   mockBusiness = TEST_BUSINESS;
+  mockEmpty = false;
+  mockOnHand = 4;
+  mockPermission = "granted";
+  permissions.mockImplementation(
+    async () => ({ status: mockPermission, granted: mockPermission === "granted", canAskAgain: true }) as never,
+  );
+  request.mockReset();
+  request.mockResolvedValue(GRANTED);
   schedule.mockClear();
   cancelAll.mockClear();
+  appStateHandlers = [];
+  jest.spyOn(AppState, "addEventListener").mockImplementation((_type, handler) => {
+    appStateHandlers.push(handler as (state: AppStateStatus) => void);
+    return { remove: jest.fn() } as unknown as ReturnType<typeof AppState.addEventListener>;
+  });
   await AsyncStorage.clear();
 });
-afterEach(() => jest.useRealTimers());
+afterEach(() => {
+  jest.useRealTimers();
+  jest.restoreAllMocks();
+  permissions.mockImplementation(async () => GRANTED);
+});
 
 async function sync(): Promise<QueryClient> {
   const client = createTestQueryClient();
@@ -162,9 +196,52 @@ test("apagar «Saldos pendientes» los cancela y no los vuelve a programar", asy
 });
 
 test("sin permiso del celular no programa nada", async () => {
-  permissions.mockResolvedValueOnce({ status: "denied", granted: false, canAskAgain: false } as never);
+  mockPermission = "denied";
   await sync();
   await waitFor(() => expect(cancelAll).toHaveBeenCalled());
   await act(() => jest.advanceTimersByTimeAsync(50));
   expect(schedule).not.toHaveBeenCalled();
+});
+
+test("si llega otra recarga con el diálogo de permiso abierto, al aceptar igual quedan los avisos", async () => {
+  mockPermission = "undetermined";
+  let allow: () => void = () => undefined;
+  request.mockImplementation(
+    () =>
+      new Promise((resolve) => {
+        allow = () => {
+          mockPermission = "granted";
+          resolve(GRANTED);
+        };
+      }),
+  );
+  const client = await sync();
+  await act(() => jest.advanceTimersByTimeAsync(100));
+  expect(request).toHaveBeenCalledTimes(1);
+  mockOnHand = 3;
+  await act(() => client.refetchQueries());
+  await act(() => jest.advanceTimersByTimeAsync(100));
+  await act(async () => allow());
+  await act(() => jest.advanceTimersByTimeAsync(100));
+  expect(request).toHaveBeenCalledTimes(1);
+  expect(scheduled().map((call) => call.identifier)).toEqual(["order:o1", "balances", "stock:p1"]);
+});
+
+test("sin nada que avisar no pide el permiso", async () => {
+  mockEmpty = true;
+  mockPermission = "undetermined";
+  await sync();
+  await act(() => jest.advanceTimersByTimeAsync(100));
+  expect(request).not.toHaveBeenCalled();
+  expect(schedule).not.toHaveBeenCalled();
+});
+
+test("si después da el permiso en los ajustes del celular, al volver a la app quedan los avisos", async () => {
+  mockPermission = "denied";
+  await sync();
+  await act(() => jest.advanceTimersByTimeAsync(100));
+  expect(schedule).not.toHaveBeenCalled();
+  mockPermission = "granted";
+  await act(async () => appStateHandlers.forEach((handler) => handler("active")));
+  await waitFor(() => expect(schedule).toHaveBeenCalledTimes(3));
 });
