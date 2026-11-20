@@ -237,3 +237,16 @@ test("con más pedidos por entregar de los que entran, una fila lleva a Pedidos"
   await fireEvent.press(await screen.findByRole("button", { name: /^23 pedidos más por entregar\./ }));
   expect(on.onOrders).toHaveBeenCalledWith("to_deliver");
 });
+
+test("una devolución de hoy deja un medio en negativo: también se ve, para que la suma cuadre", async () => {
+  mockSummary.mockResolvedValue({
+    ...SUMMARY,
+    collectedTodayCents: 1200,
+    collectedByMethod: { cash: -1200, yape: 2400, plin: 0, transfer: 0 },
+  });
+  await renderWithProviders(<HomeScreen {...handlers()} />);
+  expect(await screen.findByText("−S/ 12.00")).toBeOnTheScreen();
+  expect(screen.getByText("Efectivo")).toBeOnTheScreen();
+  expect(screen.getByText("Yape")).toBeOnTheScreen();
+  expect(screen.queryByText("Plin")).toBeNull();
+});

@@ -21,7 +21,10 @@ export function CollectedToday({ onCash, onOrders, onReceivables }: Props) {
     return (
       <View accessibilityRole="progressbar" accessibilityLabel="Cargando" className="mt-4 h-44 rounded-lg bg-sunken" />
     );
-  const methods = PAYMENT_METHODS.filter((method) => data.collectedByMethod[method] > 0);
+  // Los medios en cero no salen; uno en negativo (una devolución de hoy) sí, para que la suma cuadre. La barra, solo lo
+  // que entró
+  const methods = PAYMENT_METHODS.filter((method) => data.collectedByMethod[method] !== 0);
+  const inBar = methods.filter((method) => data.collectedByMethod[method] > 0);
   const empty = !data.collectedTodayCents && !data.deliveredToday && !data.toDeliver && !data.receivablesCents;
   const cashLabel = data.cashClosedToday ? "Caja cerrada" : "Cuadrar caja";
   return (
@@ -51,7 +54,7 @@ export function CollectedToday({ onCash, onOrders, onReceivables }: Props) {
           {methods.length > 0 ? (
             <View className="mt-4">
               <View className="h-2 flex-row overflow-hidden rounded-full">
-                {methods.map((method) => (
+                {inBar.map((method) => (
                   <View
                     key={method}
                     style={{ flex: data.collectedByMethod[method] }}
