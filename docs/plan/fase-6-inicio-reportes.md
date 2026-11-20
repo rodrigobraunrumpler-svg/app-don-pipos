@@ -144,3 +144,69 @@ Se escriben en `reports.md` en la tarea 1, antes de la base.
 - [ ] **Paso 2: Documentar y commit** — `docs: record phase 6 results and the phone test`.
 
 **Lo que pruebas tú en el celular** (va en «Lo que falta»): abrir Inicio con pedidos del día (lo urgente, lo cobrado, los números que abren Pedidos con su filtro, el stock y qué producir); Reportes de la semana y del mes con su comparación, tocar las barras y elegir fechas; Alfajores en unidades y en soles; exportar el mes y abrir el archivo en Excel o en Hojas de cálculo.
+
+## Resultado (2026-11-20)
+
+La fase 6 quedó construida en la rama `fase-6`, con un commit por tarea y un arreglo de la exportación.
+
+| Comprobación | Resultado |
+|---|---|
+| `pnpm test:coverage` | 612 pruebas; 100 % en `lib/{money,dates,errors}`, `theme/tokens` y las cuentas de `features/*/rules` |
+| `pnpm db:check` | Pasa entera: 667 pruebas de la base en 32 archivos, consejos de Supabase sin nada pendiente y tipos al día |
+| `pnpm db:perf` | 39 casos, todos con índice y en menos de 50 ms: `home_summary` 13 ms, `report_summary` 13 ms, `report_ranking` 3 ms, `export_rows` de un mes 15 ms |
+| `pnpm lint`, `pnpm lint:rules`, `pnpm typecheck`, `pnpm test:scripts` | Pasan |
+
+En el proyecto de desarrollo quedaron tres migraciones: las lecturas de Inicio y reportes, el periodo anterior que pide la app y el día de cada fila exportada. No hay tablas nuevas ni datos DEMO nuevos: Inicio y Reportes muestran lo que anotes en la prueba.
+
+Llegaron dos librerías que ya trae Expo Go: `expo-file-system` (guardar el archivo) y `expo-sharing` (abrir «Compartir»). Después de juntar en `main`, se corre `pnpm install` en la copia principal.
+
+### Lo que falta: probar en el celular
+
+```bash
+cd /home/javier/var-mar/app && pnpm install && pnpm start --tunnel
+```
+
+Ingresa con el dueño DEMO (900 000 101, el PIN de tu `.env.local`). Antes, anota dos o tres pedidos de hoy (uno a recoger con una hora que ya pasó, uno cobrado por Yape y uno sin cobrar), un gasto y una venta de mostrador en efectivo.
+
+1. **Inicio:** arriba, el saludo según la hora y la fecha. Debajo, lo urgente en este orden: el pedido que va tarde («#00xx de … va N min tarde»), lo agotado, lo que hay que revisar y lo que se acaba. Cada fila lleva a su pedido, a Registrar producción o al alfajor.
+2. **Cobrado hoy:** el total con la barra y cada medio con su monto (los que están en cero no salen) y «Cuadrar caja ›». Toca «por entregar»: se abre Pedidos con «Por entregar» elegido. Vuelve a Inicio y toca «entregados» (Pedidos en «Hoy») y «por cobrar» (Por cobrar).
+3. **Tu stock y qué producir:** toca un alfajor (su detalle) y «Ver stock». Si hay 7 días de ventas, sale cuánto conviene hacer con «Registrar producción»; si no, no dice nada.
+4. **Por entregar y Próximos:** las mismas filas de Pedidos. Tira hacia abajo para actualizar.
+5. **Reportes:** Más → «Reportes». En «Semana» va del lunes a hoy, comparado con los mismos días de la semana pasada. Toca las barras de «Entra y sale»: el texto de arriba cambia. Prueba «Mes» y después «Elegir fechas», con «1/11» y «15/11» → «Ver».
+6. **Alfajores:** «Ver alfajores», en «Unidades» y en «Soles», y «Por dónde llegan los pedidos». Sin costos en Productos, «Ganancia por alfajor» invita a ponerlos: «Ir a Productos».
+7. **Exportar a Excel:** Más → Ayuda → «Exportar a Excel» → «Este mes» → «Compartir archivo». Mándatelo por WhatsApp o guárdalo en Drive y ábrelo en Excel o en Hojas de cálculo: las tildes, los montos «12.00» y una fila por pedido, pago, gasto e ingreso. Desde Reportes, «Exportar» llega con las fechas del reporte ya elegidas.
+8. **Sin señal (modo avión):** Inicio dice «Sin conexión. Ves lo último que se cargó, a las …»; Reportes, «Ves los números de las …»; «Compartir archivo» se apaga.
+
+### Lo que cambió respecto de este plan
+
+**Tarea 1**
+- Las barras traen desde, hasta y los montos; el nombre de cada una («Lun», «Hoy», «1 al 7», «15 a hoy») lo pone la app en `bars.ts`. Van por día hasta 7 días, por semana del periodo hasta 62 y por mes en un rango más largo.
+- «Por entregar» de `home_summary` sale de `order_counts`, así Inicio y Pedidos dicen lo mismo. La ganancia por alfajor usa el costo guardado en cada venta y queda vacía si a alguna le falta.
+
+**Tarea 2**
+- Con años de datos todo responde en menos de 50 ms con los índices que ya había: no hizo falta uno nuevo.
+
+**Tarea 3**
+- La especificación compara la semana del lunes 16 al miércoles 18 con la del lunes 9 al miércoles 11, y el mes del 1 al 18 con el 1 al 18 del mes anterior. Por eso `report_summary` recibe desde cuándo empieza el periodo anterior (una migración nueva). Si el mes pasado no tiene ese día (el 31 de marzo), se compara con los mismos días justo antes.
+- Las filas para Excel se piden solo al exportar y no se guardan en el celular: un año de filas no ocupa la caché.
+- Ningún otro módulo refresca las consultas de reportes (tendría que importarlas y habría un círculo): Inicio y Reportes las vuelven a pedir al volver a la pantalla.
+- Lo urgente recibe los pedidos atrasados con su número y su demora ya escritos por `orders`. «No alcanza para los pedidos» (un estado de Stock que la especificación no nombra) va justo después de lo agotado.
+- El archivo pone «'» delante de un texto que empieza con =, +, - o @, para que Excel nunca lo tome como fórmula.
+
+**Tarea 4**
+- El filtro llega una vez y se borra de la ruta: así el siguiente toque en Inicio lo vuelve a poner, y volver por la barra de pestañas no pisa el que eligió el dueño.
+
+**Tarea 5**
+- Inicio recibe una función por destino (como las demás pantallas), no un solo `onNavigate`. Cada parte carga por su cuenta: si una falla, dice «No se pudo cargar…» con «Reintentar» y las demás se ven.
+- Lo urgente mira la primera página de «Por entregar» (20 pedidos, como Pedidos).
+- Los colores de cada medio de pago de la maqueta pasaron al tema (`method-cash`, `method-yape`, `method-plin`, `method-transfer`). La campana de avisos de la cabecera queda para la fase 7, con los recordatorios.
+
+**Tarea 6**
+- Reportes y Alfajores usan la cabecera de las demás pantallas encima de las pestañas, en vez de un título que se achica al bajar.
+- Alfajores recibe el periodo de Reportes en la ruta; un enlace suelto muestra el mes en curso. Los clientes que más compran llegan con la ficha del cliente (fase 7).
+
+**Tarea 7**
+- La hoja abre con las fechas del reporte ya elegidas (desde Más, «Este mes»), y no repite la semana o el mes si son las mismas fechas. Más estrenó el grupo «Ayuda» con «Exportar a Excel»; «Soporte por WhatsApp» no entra en esta fase.
+
+**Tarea 8**
+- Al escribir este resultado salió un error en la exportación: un pedido entraba al archivo por su día, pero la columna «Fecha» decía cuándo se anotó. Una migración nueva da a cada fila su día de Lima: un pedido va con su día y su hora acordada (sin hora, vacía).
