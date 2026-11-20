@@ -313,3 +313,91 @@ Más: el día de Lima en `lateness` (un pedido de hoy a las 23:30 de Lima no est
 5. Otro pedido con el mismo teléfono: aparece Ana con «Repetir».
 6. Cierra la app con un pedido a medio anotar y ábrela: el borrador sigue ahí.
 7. Con el modo avión: la lista dice desde cuándo es lo que ves, y «Guardar» se apaga.
+
+---
+
+## Resultado (2026-11-19)
+
+La fase 4a quedó construida en la rama `fase-4a`, con un commit por tarea, más una corrección del medidor, dos de formato y uno de pruebas.
+
+| Comprobación | Resultado |
+|---|---|
+| `pnpm test:coverage` | 454 pruebas; 100 % en `lib/{money,dates,errors}`, `theme/tokens` y las cuentas de `features/*/rules` |
+| `pnpm db:check` | Pasa entera: 464 pruebas de la base en 23 archivos (incluidas las de dos conexiones), consejos de Supabase sin nada pendiente y tipos al día |
+| `pnpm db:perf` | 22 casos, todos con índice; el más lento, buscar un nombre en 3 años de pedidos: 34 ms |
+| `pnpm lint`, `pnpm lint:rules`, `pnpm typecheck`, `pnpm test:scripts` | Pasan |
+
+En el proyecto de desarrollo quedaron las cuatro migraciones de la fase (pedidos, crear, avanzar y cobrar, leer) y una que ajusta el cálculo de filas de `private.stock_items`. No se cargaron pedidos DEMO: los anotas tú en la prueba.
+
+### Lo que falta: probar en el celular
+
+```bash
+cd /home/javier/var-mar/app && pnpm start --tunnel
+```
+
+Ingresa con el dueño DEMO (900 000 101, el PIN de tu `.env.local`):
+
+1. + → Un pedido: 2 Coqueta y 1 Pipo Crush → «Seguir». En el paso 2: el 900 000 990, el nombre «Ana (DEMO)», Delivery con una dirección, «Una parte» de S/ 20 con Yape → «Guardar pedido de S/ …». Sale «Pedido #0001 guardado» con el mensaje de confirmación; «Avisar por WhatsApp» abre WhatsApp con el texto.
+2. Pedidos: está en «Hoy» y en «Por entregar». Ábrelo: «Empezar a preparar», «Marcar en camino», «Deshacer» en el aviso, otra vez «Marcar en camino» y «Marcar entregado»; en «¿Ya cobraste?», registra lo que falta.
+3. + → Una venta de mostrador: 1 Morenita, cobrar con Efectivo. Sale «Venta guardada: #0002, …».
+4. Anota otro pedido sin entregarlo y ve a Stock → «Contar stock»: la fila dice cuántos están apartados para pedidos.
+5. + → Un pedido con el mismo teléfono: aparece Ana, con su último pedido y «Repetir».
+6. Deja un pedido a medio anotar, cierra la app del todo y ábrela: «Recuperamos el pedido que dejaste a medias…».
+7. Con el modo avión: Pedidos dice desde qué hora es lo que ves, y «Guardar» y «Cobrar con» se apagan.
+
+### Lo que cambió respecto de este plan
+
+**Tarea 1**
+- `fillTemplate` también quita el espacio que deja un marcador vacío antes de un punto («Hola .» → «Hola.»), y un atraso de más de una semana se nombra con la fecha («Atrasado desde el 9 nov»).
+- Clientes tiene su propio `normalizePhone` (las cuentas no pueden usar otro módulo).
+
+**Tarea 2**
+- Los textos de WhatsApp por defecto viven en `private.default_templates()`: los usan el negocio nuevo, los negocios que ya existían y, en la fase 7, «Volver al texto original».
+
+**Tarea 3**
+- Ayudas nuevas en la base: `private.iso_time`, `plural_name`, `next_order_number` y `json_cents_or_zero`. Las líneas y el resumen van ordenados por nombre.
+- La prueba de dos pedidos a la vez usa el negocio DEMO del proyecto de desarrollo y lo deja como estaba.
+
+**Tarea 4**
+- Una venta nunca lleva código de registro (regla en la tabla `stock_movements`): así el «Deshacer» del stock no puede tocar una venta, sin cambiar `revert_stock_change`.
+- Cada estado guarda la hora exacta (`clock_timestamp`): dos cambios seguidos quedan en orden.
+- `revert_status` no deshace una anulación (eso llega en la 4b, con el stock y los pagos), y un pago sube la versión del pedido.
+
+**Tarea 5**
+- `list_orders` arma su consulta según el filtro, para que cada uno use su índice; `order_counts` cuenta con `list_orders`, así «Por entregar» y su número nunca difieren.
+- La búsqueda va dentro del filtro elegido; «%» y «_» se buscan como letras.
+
+**Tarea 6**
+- Los demás negocios del medidor tienen 6 ventas cada uno (el plan decía ninguna): con un solo negocio con pedidos, la base leía la tabla entera con razón.
+- Lo que faltaba no era un índice: `private.stock_items` (hasta 50 alfajores) se tomaba como 1,000 filas, y `create_order` leía los 25,000 productos. Una migración nueva lo corrige.
+
+**Tarea 7**
+- Un pedido de la lista no sirve de dato inicial para abrirlo (no trae líneas ni pagos): la fila lo pide al apretarla.
+- Qué refresca cada cambio (pedidos, stock y clientes) va en los hooks. Piezas comunes nuevas: `lib/parse.ts` y `useRequestId` en `lib`.
+- Si el teléfono cambia de un cliente conocido a uno nuevo, el nombre que se había completado se borra.
+
+**Tarea 8**
+- «Mostrando X de N» y «Cargar 20 más» salen en cualquier filtro con más páginas, no solo en «Todos». La búsqueda y los filtros quedan fijos arriba.
+- Cada fila dice su día junto al número («#0037, ayer»).
+
+**Tarea 9**
+- Los dos pasos viven en un componente (`NewOrder`); la ruta solo lo muestra. El botón dice «Seguir», como la maqueta.
+- El borrador guardado se revisa al leerlo: uno de otra versión de la app que no calce se descarta.
+
+**Tarea 10**
+- Llega el módulo `businesses` (mínimo): los medios de pago activos y el costo del delivery.
+- Sin selector de fecha ni de hora en la app (no hay librerías nuevas): «Cuándo» ofrece hoy y los 6 días que siguen, y la hora acordada se escribe («13:00») o se toma «En 30 min».
+- Piezas comunes nuevas: `Section`, `Segmented` y `Field` (el lint pide un componente por archivo y hasta 250 líneas).
+
+**Tarea 11**
+- El aviso con «Deshacer» sale al tocar el botón (el cambio ya se ve); si no se guardó, dice a qué estado volvió.
+- Quedan para después: «Ver ficha» (fase 7), «Ver en el mapa», «Editar pedido» y «Anular» (4b).
+
+**Tarea 12**
+- Sin señal, la venta dice «Para cobrar, espera la señal.»: los botones se apagan y nada queda en cola.
+
+**Tarea 13**
+- La fila del conteo con lo apartado ya existía (fase 3); ahora la prueba la mira con un pedido de verdad.
+
+**Tarea 14**
+- Para el 100 % de las cuentas, pruebas nuevas: la hora acordada de hoy, el mensaje de un pedido de mostrador o con un solo medio de pago, y el encabezado sin nombre.
