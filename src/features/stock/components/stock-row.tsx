@@ -29,7 +29,7 @@ export function StockRow({ item, onPress }: { item: StockItem; onPress: () => vo
       <ProductAvatar product={item} />
       <View className="flex-1">
         <Text className="font-extrabold text-base text-text">{item.name}</Text>
-        <Text className="text-[13px] text-text-secondary">{stockLine(item)}</Text>
+        <Text className="text-[13px] text-text-secondary">{stockLine(item, new Date())}</Text>
         {item.linkedToWeb && item.onHand <= 0 ? (
           <View className="mt-0.5 flex-row items-center gap-1">
             <Icon name="link-variant-off" size={14} tone="danger" />

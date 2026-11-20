@@ -4,6 +4,7 @@ import { AppState } from "react-native";
 import type { Database } from "@/types/database";
 
 import { appEnv } from "./env";
+import { fetchWithTimeout } from "./fetch-timeout";
 import { createSecureSessionStorage } from "./secure-session-storage";
 
 // Dónde guarda Supabase la sesión en este celular (cifrada). Fija, para poder preguntar si hay una sin pasar por la red
@@ -23,6 +24,7 @@ export function supabase(): SupabaseClient<Database> {
         persistSession: true,
         detectSessionInUrl: false,
       },
+      global: { fetch: fetchWithTimeout() },
     });
     const { auth } = client;
     // La sesión se renueva sola mientras la app está en primer plano (recomendación de Supabase para React Native)

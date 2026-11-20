@@ -20,6 +20,8 @@ export const stockItemSchema = z.object({
   onHand: z.number().int(),
   reserved: z.number().int(),
   physical: z.number().int(),
+  // Los días desde mañana que alcanza lo libre con la venta esperada (0 a 7); null sin 7 días de ventas
+  coverageDays: z.number().int().nullable(),
   state: stockStateSchema,
 });
 export type StockItem = z.infer<typeof stockItemSchema>;
@@ -67,3 +69,32 @@ export type Movement = z.infer<typeof movementSchema>;
 
 // Lo que avisa una hoja al guardar: el código del registro (para «Deshacer») y el texto del aviso
 export type StockChangeDone = { requestId: string; message: string };
+
+// La sugerencia de producción (production_suggestion, D16), con el porqué de cada alfajor
+export const suggestionItemSchema = z.object({
+  productId: z.string(),
+  name: z.string(),
+  imageUrl: z.string().nullable(),
+  suggested: z.number().int(),
+  expected: z.number().int(),
+  weekdayUnits: z.number(),
+  weekdayDays: z.number().int(),
+  weekendUnits: z.number(),
+  weekendDays: z.number().int(),
+  minStock: z.number().int(),
+  onHand: z.number().int(),
+});
+export type SuggestionItem = z.infer<typeof suggestionItemSchema>;
+export const productionSuggestionSchema = z.object({
+  ready: z.boolean(),
+  horizonDays: z.number().int(),
+  items: z.array(suggestionItemSchema),
+});
+export type ProductionSuggestion = z.infer<typeof productionSuggestionSchema>;
+
+// «Cómo se vende»: el promedio de cada día de la semana (1 lunes … 7 domingo)
+export const weekdaySalesSchema = z.object({
+  ready: z.boolean(),
+  days: z.array(z.object({ dow: z.number().int(), average: z.number() })),
+});
+export type WeekdaySales = z.infer<typeof weekdaySalesSchema>;

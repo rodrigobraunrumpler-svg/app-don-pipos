@@ -2,7 +2,12 @@ import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 
 import { STALE_TIME } from "@/lib/query";
 
-import { getStockOverview, listProductMovements } from "../api/stock";
+import {
+  getProductionSuggestion,
+  getProductSalesByWeekday,
+  getStockOverview,
+  listProductMovements,
+} from "../api/stock";
 import { stockKeys } from "./keys";
 
 // El stock cambia a cada rato: fresco por 30 segundos
@@ -21,4 +26,19 @@ export const productMovementsQuery = (productId: string) =>
     initialPageParam: null as string | null,
     getNextPageParam: (last) => (last.meta.hasMore ? last.meta.nextCursor : undefined),
     staleTime: STALE_TIME.live,
+  });
+
+// La sugerencia cambia con cada venta y producción, como el stock
+export const productionSuggestionQuery = queryOptions({
+  queryKey: stockKeys.suggestion,
+  queryFn: getProductionSuggestion,
+  staleTime: STALE_TIME.live,
+});
+
+// «Cómo se vende» mira 4 semanas: fresco por 5 minutos
+export const weekdaySalesQuery = (productId: string) =>
+  queryOptions({
+    queryKey: stockKeys.weekdaySales(productId),
+    queryFn: () => getProductSalesByWeekday(productId),
+    staleTime: STALE_TIME.reports,
   });

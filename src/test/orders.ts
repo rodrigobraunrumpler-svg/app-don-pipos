@@ -24,6 +24,7 @@ export const TEST_ORDER: Order = {
   totalCents: 4200,
   paidCents: 2000,
   deliveredAt: null,
+  cancelReason: null,
   note: null,
   itemsSummary: "2 Coquetas, 1 Pipo Crush",
   itemsCount: 3,

@@ -1,11 +1,27 @@
 import { mutationOptions } from "@tanstack/react-query";
 
-import { addPayment, advanceOrder, createCounterSale, createOrder, revertStatus } from "../api/orders";
+import {
+  addPayment,
+  advanceOrder,
+  cancelOrder,
+  changePaymentMethod,
+  createCounterSale,
+  createOrder,
+  editOrder,
+  revertCancel,
+  revertEdit,
+  revertStatus,
+} from "../api/orders";
 
-// Los pedidos van en fila (`scope`): un «Deshacer» espera al cambio que deshace. Qué refrescan (pedidos, stock y
-// clientes) y la respuesta al instante los ponen los hooks, que ven los otros módulos y el cliente de consultas
-export const createOrderMutation = mutationOptions({ mutationFn: createOrder, scope: { id: "orders" } });
-export const createCounterSaleMutation = mutationOptions({ mutationFn: createCounterSale, scope: { id: "orders" } });
-export const advanceOrderMutation = mutationOptions({ mutationFn: advanceOrder, scope: { id: "orders" } });
-export const revertStatusMutation = mutationOptions({ mutationFn: revertStatus, scope: { id: "orders" } });
-export const addPaymentMutation = mutationOptions({ mutationFn: addPayment, scope: { id: "orders" } });
+// La fila de cada cambio (un «Deshacer» espera al cambio que deshace, de su mismo pedido), qué refresca y la respuesta
+// al instante los ponen los hooks, que saben de qué pedido se trata y ven los otros módulos
+export const createOrderMutation = mutationOptions({ mutationFn: createOrder });
+export const createCounterSaleMutation = mutationOptions({ mutationFn: createCounterSale });
+export const advanceOrderMutation = mutationOptions({ mutationFn: advanceOrder });
+export const revertStatusMutation = mutationOptions({ mutationFn: revertStatus });
+export const addPaymentMutation = mutationOptions({ mutationFn: addPayment });
+export const editOrderMutation = mutationOptions({ mutationFn: editOrder });
+export const revertEditMutation = mutationOptions({ mutationFn: revertEdit });
+export const cancelOrderMutation = mutationOptions({ mutationFn: cancelOrder });
+export const revertCancelMutation = mutationOptions({ mutationFn: revertCancel });
+export const changePaymentMethodMutation = mutationOptions({ mutationFn: changePaymentMethod });

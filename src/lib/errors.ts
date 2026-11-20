@@ -37,7 +37,9 @@ const MESSAGES: Record<AppErrorKind, string> = {
 
 const NETWORK_MESSAGE = /Network request failed|Network request timed out|Failed to fetch/;
 // Los nombres que usa supabase-js cuando la petición ni siquiera llegó al servidor
-const NETWORK_ERROR_NAMES = new Set(["FunctionsFetchError", "AuthRetryableFetchError"]);
+// AbortError: la petición se cortó a los 20 s (lib/fetch-timeout.ts); para el dueño es lo mismo que no tener señal
+const NETWORK_ERROR_NAMES = new Set(["FunctionsFetchError", "AuthRetryableFetchError", "AbortError"]);
+const ABORTED_MESSAGE = /^AbortError\b/;
 
 function isOffline(error: unknown): boolean {
   if (error instanceof TypeError) return NETWORK_MESSAGE.test(error.message);
@@ -46,7 +48,7 @@ function isOffline(error: unknown): boolean {
   // PostgREST devuelve la falla de red como un objeto: { message: "TypeError: Network request failed", code: "" }
   return (
     (typeof name === "string" && NETWORK_ERROR_NAMES.has(name)) ||
-    (typeof message === "string" && NETWORK_MESSAGE.test(message))
+    (typeof message === "string" && (NETWORK_MESSAGE.test(message) || ABORTED_MESSAGE.test(message)))
   );
 }
 

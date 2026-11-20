@@ -30,7 +30,7 @@ async function setup<T>(hook: () => T) {
 test("avanzar se ve al instante en el pedido y vuelve atrás si falla", async () => {
   let reject: (error: unknown) => void = () => undefined;
   mockAdvance.mockImplementationOnce(() => new Promise((_resolve, fail) => (reject = fail)));
-  const { client, result } = await setup(() => useAdvanceOrder());
+  const { client, result } = await setup(() => useAdvanceOrder(TEST_ORDER.id));
   await act(() => void result.current.mutate({ orderId: TEST_ORDER.id, fromStatus: "new" }));
   await waitFor(() => expect(client.getQueryData<typeof TEST_ORDER>(KEY)?.status).toBe("preparing"));
   expect(client.getQueryData<typeof TEST_ORDER>(KEY)?.timeline.map((event) => event.status)).toEqual([
@@ -49,11 +49,28 @@ test("deshacer vuelve al estado anterior al instante, y queda lo que responde la
   };
   let resolve: (order: unknown) => void = () => undefined;
   mockRevert.mockImplementationOnce(() => new Promise((done) => (resolve = done)));
-  const { client, result } = await setup(() => useRevertStatus());
+  const { client, result } = await setup(() => useRevertStatus(TEST_ORDER.id));
   client.setQueryData(KEY, preparing);
   await act(() => void result.current.mutate({ orderId: TEST_ORDER.id, expectedStatus: "preparing" }));
   await waitFor(() => expect(client.getQueryData<typeof TEST_ORDER>(KEY)?.status).toBe("new"));
   expect(client.getQueryData<typeof TEST_ORDER>(KEY)?.timeline).toHaveLength(1);
   await act(() => resolve({ ...TEST_ORDER, version: 3 }));
   await waitFor(() => expect(client.getQueryData<typeof TEST_ORDER>(KEY)?.version).toBe(3));
+});
+
+test("un «Deshacer» espera al cambio de su pedido, no a los de otro pedido", async () => {
+  mockAdvance.mockImplementationOnce(() => new Promise(() => undefined));
+  mockRevert.mockResolvedValue(TEST_ORDER);
+  const { result } = await setup(() => ({
+    advanceA: useAdvanceOrder("pedido-a"),
+    undoA: useRevertStatus("pedido-a"),
+    undoB: useRevertStatus("pedido-b"),
+  }));
+  await act(() => void result.current.advanceA.mutate({ orderId: "pedido-a", fromStatus: "new" }));
+  await act(() => {
+    result.current.undoA.mutate({ orderId: "pedido-a", expectedStatus: "preparing" });
+    result.current.undoB.mutate({ orderId: "pedido-b", expectedStatus: "preparing" });
+  });
+  await waitFor(() => expect(mockRevert).toHaveBeenCalledWith({ orderId: "pedido-b", expectedStatus: "preparing" }));
+  expect(mockRevert).not.toHaveBeenCalledWith({ orderId: "pedido-a", expectedStatus: "preparing" });
 });

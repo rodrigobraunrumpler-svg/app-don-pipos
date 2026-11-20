@@ -23,6 +23,7 @@ const item = (productId: string, onHand: number): StockItem => ({
   onHand,
   reserved: 0,
   physical: onHand,
+  coverageDays: null,
   state: stockState({ onHand, reserved: 0, minStock: 6 }),
 });
 

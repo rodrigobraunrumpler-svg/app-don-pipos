@@ -14,6 +14,7 @@ export const TEST_ITEMS: StockItem[] = [
     onHand: 13,
     reserved: 0,
     physical: 13,
+    coverageDays: null,
     state: "ok",
   },
   {
@@ -25,6 +26,7 @@ export const TEST_ITEMS: StockItem[] = [
     onHand: 11,
     reserved: 0,
     physical: 11,
+    coverageDays: null,
     state: "ok",
   },
 ];

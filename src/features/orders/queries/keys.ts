@@ -5,4 +5,5 @@ export const ordersKeys = {
   list: (filter: OrderFilter, search: string) => ["orders", "list", filter, search] as const,
   counts: ["orders", "counts"] as const,
   detail: (orderId: string) => ["orders", "detail", orderId] as const,
+  receivables: ["orders", "receivables"] as const,
 };

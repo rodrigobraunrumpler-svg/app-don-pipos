@@ -5,7 +5,7 @@ export { movementLabel, movementTime } from "./rules/movement";
 export { productionSavedText, productionSaveLabel, productionTotal } from "./rules/production";
 export type { MovementKind, StockState, WasteReason } from "./schema/stock";
 export { StockOverview } from "./components/stock-overview";
-export { stockOverviewQuery } from "./queries/stock";
+export { productionSuggestionQuery, stockOverviewQuery, weekdaySalesQuery } from "./queries/stock";
 export type { StockItem } from "./schema/stock";
 export { ProductionForm } from "./components/production-form";
 export { ProductStock } from "./components/product-stock";

@@ -2,7 +2,7 @@ import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 
 import { STALE_TIME } from "@/lib/query";
 
-import { getOrder, getOrderCounts, listOrders } from "../api/orders";
+import { getOrder, getOrderCounts, listOrders, listReceivables } from "../api/orders";
 import type { OrderFilter } from "../schema/order";
 import { ordersKeys } from "./keys";
 
@@ -30,3 +30,12 @@ export const orderQuery = (orderId: string) =>
     queryFn: () => getOrder(orderId),
     staleTime: STALE_TIME.live,
   });
+
+// Por cobrar, por páginas de 20 (del número mayor al menor)
+export const receivablesQuery = infiniteQueryOptions({
+  queryKey: ordersKeys.receivables,
+  queryFn: ({ pageParam }) => listReceivables({ cursor: pageParam }),
+  initialPageParam: null as string | null,
+  getNextPageParam: (last) => (last.meta.hasMore ? last.meta.nextCursor : undefined),
+  staleTime: STALE_TIME.live,
+});

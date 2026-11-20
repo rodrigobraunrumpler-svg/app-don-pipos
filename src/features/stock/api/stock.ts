@@ -7,6 +7,8 @@ import {
   countResultSchema,
   movementSchema,
   productionResultSchema,
+  productionSuggestionSchema,
+  weekdaySalesSchema,
   revertResultSchema,
   stockOverviewSchema,
   wasteResultSchema,
@@ -15,6 +17,8 @@ import {
   type Movement,
   type ProductionInput,
   type ProductionResult,
+  type ProductionSuggestion,
+  type WeekdaySales,
   type RevertResult,
   type StockItem,
   type WasteInput,
@@ -73,4 +77,16 @@ export async function revertStockChange(requestId: string): Promise<RevertResult
   const { data, error } = await supabase().rpc("revert_stock_change", { p_request_id: requestId });
   if (error) throw toAppError(error);
   return parse(revertResultSchema, data);
+}
+
+export async function getProductionSuggestion(): Promise<ProductionSuggestion> {
+  const { data, error } = await supabase().rpc("production_suggestion");
+  if (error) throw toAppError(error);
+  return parse(productionSuggestionSchema, data);
+}
+
+export async function getProductSalesByWeekday(productId: string): Promise<WeekdaySales> {
+  const { data, error } = await supabase().rpc("product_sales_by_weekday", { p_product_id: productId });
+  if (error) throw toAppError(error);
+  return parse(weekdaySalesSchema, data);
 }

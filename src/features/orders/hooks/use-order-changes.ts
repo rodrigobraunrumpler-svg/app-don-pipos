@@ -1,8 +1,5 @@
 import { useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
 
-import { customersKeys } from "@/features/customers";
-import { stockKeys } from "@/features/stock";
-
 import { ordersKeys } from "../queries/keys";
 import {
   addPaymentMutation,
@@ -13,14 +10,9 @@ import {
 } from "../queries/mutations";
 import { nextStatus } from "../rules/status";
 import type { Order } from "../schema/order";
+import { INVALIDATES, keepOrder as keep, orderScope } from "./order-cache";
 
-// Cada cambio de un pedido refresca los pedidos, el stock (una venta resta, un pedido aparta) y el último pedido del
-// cliente. El pedido que devuelve la base queda listo para abrirlo
-const INVALIDATES = [ordersKeys.all, stockKeys.all, customersKeys.all];
-const keep = (queryClient: QueryClient) => (order: Order) =>
-  queryClient.setQueryData(ordersKeys.detail(order.id), order);
-
-// Crear, vender y cobrar esperan la respuesta («Guardando…»)
+// Crear, vender y cobrar esperan la respuesta («Guardando…»). Crear y vender no van en fila: la base ya los ordena
 export function useCreateOrder() {
   const queryClient = useQueryClient();
   return useMutation({ ...createOrderMutation, meta: { invalidates: INVALIDATES }, onSuccess: keep(queryClient) });
@@ -35,9 +27,14 @@ export function useCreateCounterSale() {
   });
 }
 
-export function useAddPayment() {
+export function useAddPayment(orderId: string) {
   const queryClient = useQueryClient();
-  return useMutation({ ...addPaymentMutation, meta: { invalidates: INVALIDATES }, onSuccess: keep(queryClient) });
+  return useMutation({
+    ...addPaymentMutation,
+    scope: orderScope(orderId),
+    meta: { invalidates: INVALIDATES },
+    onSuccess: keep(queryClient),
+  });
 }
 
 // Avanzar y deshacer se ven al instante en el pedido y vuelven atrás si la base no lo guarda (§14.2)
@@ -49,10 +46,11 @@ async function showNow(queryClient: QueryClient, orderId: string, change: (order
   return { previous };
 }
 
-export function useAdvanceOrder() {
+export function useAdvanceOrder(orderId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     ...advanceOrderMutation,
+    scope: orderScope(orderId),
     meta: { invalidates: INVALIDATES },
     onMutate: ({ orderId }) =>
       showNow(queryClient, orderId, (order) => {
@@ -71,10 +69,11 @@ export function useAdvanceOrder() {
   });
 }
 
-export function useRevertStatus() {
+export function useRevertStatus(orderId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     ...revertStatusMutation,
+    scope: orderScope(orderId),
     meta: { invalidates: INVALIDATES },
     onMutate: ({ orderId }) =>
       showNow(queryClient, orderId, (order) => {

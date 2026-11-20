@@ -15,7 +15,9 @@ export type {
   OrderLineInput,
   OrderStatus,
   OrderSummary,
+  Payment,
   PaymentMethod,
+  Receivable,
 } from "./schema/order";
 export {
   useAddPayment,
@@ -25,7 +27,15 @@ export {
   useRevertStatus,
 } from "./hooks/use-order-changes";
 export { ordersKeys } from "./queries/keys";
-export { orderCountsQuery, orderQuery, ordersQuery } from "./queries/orders";
+export { orderCountsQuery, orderQuery, ordersQuery, receivablesQuery } from "./queries/orders";
+export {
+  useCancelOrder,
+  useChangePaymentMethod,
+  useEditOrder,
+  useRevertCancel,
+  useRevertEdit,
+} from "./hooks/use-order-corrections";
+export { receivableReason } from "./rules/receivable";
 export { OrderList } from "./components/order-list";
 export { NewMenu } from "./components/new-menu";
 export { OrderDraftProvider } from "./components/order-draft-provider";

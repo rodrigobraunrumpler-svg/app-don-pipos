@@ -41,8 +41,8 @@ export function OrderDetail({ orderId, onBack }: Props) {
   const online = useOnline();
   const { data: order, isError, refetch, dataUpdatedAt } = useQuery(orderQuery(orderId));
   const methods = useQuery({ ...businessQuery, select: (business) => business.settings.activePaymentMethods }).data;
-  const advance = useAdvanceOrder();
-  const revert = useRevertStatus();
+  const advance = useAdvanceOrder(orderId);
+  const revert = useRevertStatus(orderId);
   const [sheet, setSheet] = useState<"pay" | "delivery" | null>(null);
   const [message, setMessage] = useState<Message | null>(null);
   const hideMessage = useCallback(() => setMessage(null), []);

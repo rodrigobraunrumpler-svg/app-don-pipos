@@ -31,7 +31,7 @@ const CONFLICT_TEXT =
 // Al entregar, el efectivo viene marcado
 export function PaymentSheet({ order, atDelivery, methods, onClose, onSaved }: Props) {
   const online = useOnline();
-  const pay = useAddPayment();
+  const pay = useAddPayment(order.id);
   const { requestId, renew } = useRequestId();
   const due = order.totalCents - order.paidCents;
   const [text, setText] = useState((due / 100).toFixed(2));

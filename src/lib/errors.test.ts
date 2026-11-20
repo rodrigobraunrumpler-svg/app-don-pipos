@@ -108,3 +108,9 @@ test.each([
 ])("%p de supabase-js se convierte en %s", (input, kind) => {
   expect(toAppError(input).kind).toBe(kind);
 });
+
+test("una petición cortada por tiempo llega como sin conexión, venga como venga", () => {
+  expect(toAppError(Object.assign(new Error("Aborted"), { name: "AbortError" })).kind).toBe("offline");
+  // PostgREST la devuelve como objeto: { message: "AbortError: Aborted", code: "" }
+  expect(toAppError({ message: "AbortError: Aborted", code: "" }).kind).toBe("offline");
+});

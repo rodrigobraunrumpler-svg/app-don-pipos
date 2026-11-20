@@ -37,6 +37,7 @@ export const orderSchema = z.object({
   totalCents: z.number().int(),
   paidCents: z.number().int(),
   deliveredAt: z.string().nullable(),
+  cancelReason: z.string().nullable(),
   note: z.string().nullable(),
   itemsSummary: z.string(),
   itemsCount: z.number().int(),
@@ -66,6 +67,7 @@ export const orderSchema = z.object({
     .nullable(),
 });
 export type Order = z.infer<typeof orderSchema>;
+export type Payment = Order["payments"][number];
 
 // Una fila de la lista (list_orders)
 export const orderSummarySchema = orderSchema.pick({
@@ -107,3 +109,34 @@ export type OrderDraft = {
   payment?: { method: PaymentMethod; amountCents: number };
   lines: OrderLineInput[];
 };
+
+// Una fila de Por cobrar (list_receivables). «remind»: ya se entregó o hay un adelanto
+export const receivableSchema = z.object({
+  id: z.string(),
+  number: z.number().int(),
+  customerName: z.string().nullable(),
+  customerPhone: z.string().nullable(),
+  fulfillment: fulfillmentSchema,
+  status: orderStatusSchema,
+  totalCents: z.number().int(),
+  paidCents: z.number().int(),
+  dueDate: z.string(),
+  scheduledFor: z.string().nullable(),
+  remind: z.boolean(),
+});
+export type Receivable = z.infer<typeof receivableSchema>;
+
+export const receivablesPageSchema = z.object({
+  items: z.array(receivableSchema),
+  meta: z.object({
+    limit: z.number().int(),
+    total: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+    totalDueCents: z.number().int(),
+  }),
+});
+export type ReceivablesPage = z.infer<typeof receivablesPageSchema>;
+
+// Una devolución en la misma operación (editar por debajo de lo pagado, anular)
+export type RefundInput = { cents: number; method: PaymentMethod } | null;

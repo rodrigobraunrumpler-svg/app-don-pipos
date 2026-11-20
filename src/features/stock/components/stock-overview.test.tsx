@@ -19,6 +19,7 @@ const item = (overrides: Partial<StockItem>): StockItem => ({
   onHand: 13,
   reserved: 0,
   physical: 13,
+  coverageDays: null,
   state: "ok",
   ...overrides,
 });
