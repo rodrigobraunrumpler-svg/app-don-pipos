@@ -12,7 +12,8 @@ import ChangePin from "@/app/(main)/more/change-pin";
 import Products from "@/app/(main)/more/products";
 import OrderScreen from "@/app/(main)/orders/[id]";
 import Counter from "@/app/(main)/orders/counter";
-import NewOrder from "@/app/(main)/orders/new";
+import NewOrderLayout from "@/app/(main)/orders/new/_layout";
+import NewOrder from "@/app/(main)/orders/new/index";
 import ProductStockScreen from "@/app/(main)/stock/[productId]";
 import Production from "@/app/(main)/stock/production";
 import { createTestQueryClient } from "@/test/render";
@@ -35,16 +36,17 @@ afterEach(() => jest.mocked(useSafeAreaInsets).mockReset());
 
 const padding = () => StyleSheet.flatten(screen.getByTestId("screen").props.style);
 
-test.each<[string, string, ComponentType]>([
-  ["/orders/new", "orders/new", NewOrder],
-  ["/orders/counter", "orders/counter", Counter],
-  ["/orders/00000000-0000-4000-8000-0000000000f1", "orders/[id]", OrderScreen],
-  ["/stock/production", "stock/production", Production],
-  ["/stock/00000000-0000-4000-8000-000000000a01", "stock/[productId]", ProductStockScreen],
-  ["/more/products", "more/products", Products],
-  ["/more/change-pin", "more/change-pin", ChangePin],
-])("%s deja abajo el espacio de la barra del sistema", async (url, route, Component) => {
-  await renderRouter({ [route]: Component }, { initialUrl: url, wrapper: Providers });
+test.each<[string, Record<string, ComponentType>]>([
+  // Nuevo pedido, con su recorrido (el borrador vive en su _layout)
+  ["/orders/new", { "orders/new/_layout": NewOrderLayout, "orders/new/index": NewOrder }],
+  ["/orders/counter", { "orders/counter": Counter }],
+  ["/orders/00000000-0000-4000-8000-0000000000f1", { "orders/[id]": OrderScreen }],
+  ["/stock/production", { "stock/production": Production }],
+  ["/stock/00000000-0000-4000-8000-000000000a01", { "stock/[productId]": ProductStockScreen }],
+  ["/more/products", { "more/products": Products }],
+  ["/more/change-pin", { "more/change-pin": ChangePin }],
+])("%s deja abajo el espacio de la barra del sistema", async (url, routes) => {
+  await renderRouter(routes, { initialUrl: url, wrapper: Providers });
   expect(padding()).toMatchObject({ paddingTop: 24, paddingBottom: 48 });
 });
 

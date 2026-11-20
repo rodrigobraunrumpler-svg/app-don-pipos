@@ -19,6 +19,8 @@ export default function TabsLayout() {
       <Tabs
         screenOptions={{
           headerShown: false,
+          // Las pestañas se deslizan un poco hacia el lado de la que se toca: nunca un salto seco
+          animation: "shift",
           tabBarActiveTintColor: colors.primary,
           tabBarInactiveTintColor: colors.textMuted,
           tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
