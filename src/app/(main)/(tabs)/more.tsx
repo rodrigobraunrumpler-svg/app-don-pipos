@@ -5,6 +5,7 @@ import { MenuSection } from "@/components/ui/menu-section";
 import { Screen } from "@/components/ui/screen";
 import { AccountSection } from "@/features/auth";
 import { CashRow } from "@/features/cash";
+import { CustomersRow } from "@/features/customers";
 import { ExpenseCategoriesRow, ExpensesRow } from "@/features/expenses";
 import { IncomeRow } from "@/features/income";
 import { ReceivablesRow } from "@/features/orders";
@@ -20,6 +21,7 @@ export default function More() {
         <MenuSection title="Tu negocio">
           <ExpensesRow onPress={() => router.navigate("/expenses")} />
           <ReportsRow onPress={() => router.navigate("/reports")} />
+          <CustomersRow onPress={() => router.navigate("/customers")} />
           <IncomeRow onPress={() => router.navigate("/income")} />
           <ReceivablesRow onPress={() => router.navigate("/orders/receivables")} />
           <CashRow onPress={() => router.navigate("/cash")} />

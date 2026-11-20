@@ -9,3 +9,14 @@ export function lastOrderLabel(at: Date, now: Date): string {
   if (days === 1) return "Ayer";
   return `Hace ${days} días`;
 }
+
+// La línea de un cliente en Clientes: «7 pedidos, último hoy, 09:30»
+export function customerLine(
+  { ordersCount, lastOrderAt }: { ordersCount: number; lastOrderAt: string | null },
+  now: Date,
+): string {
+  const orders = `${ordersCount} ${ordersCount === 1 ? "pedido" : "pedidos"}`;
+  if (!lastOrderAt) return orders;
+  const label = lastOrderLabel(new Date(lastOrderAt), now);
+  return `${orders}, último ${label.charAt(0).toLowerCase()}${label.slice(1)}`;
+}
