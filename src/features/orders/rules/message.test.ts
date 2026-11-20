@@ -36,3 +36,20 @@ test("pagado, para recoger otro día con hora, y solo con los medios activos", (
   expect(pickup.entrega).toBe("Te avisamos cuando esté listo para recoger.");
   expect(pickup.pago).toBe(`Total a pagar: ${sol("42.00")} (Yape o efectivo).`);
 });
+
+test("sin hora, de mostrador, con un solo medio o sin ajustes, y el nombre del pedido si no hay cliente", () => {
+  const later = messageContext({ ...TEST_ORDER, scheduledFor: "2026-11-21", promisedAt: null }, ["cash"]);
+  expect(later.entrega).toBe("Lo entregamos el sábado 21 de noviembre.");
+  expect(later.pago).toBe(`Total a pagar: ${sol("22.00")} (efectivo).`);
+  expect(messageContext(TEST_ORDER, []).pago).toBe(
+    `Total a pagar: ${sol("22.00")} (Yape, Plin, transferencia o efectivo).`,
+  );
+  const counter = messageContext({ ...TEST_ORDER, fulfillment: "counter", customer: null, customerName: null }, [
+    "cash",
+  ]);
+  expect(counter.entrega).toBe("");
+  expect(counter.nombre).toBe("");
+  expect(messageContext({ ...TEST_ORDER, customer: null, customerName: "Luis Q. (DEMO)" }, ["cash"]).nombre).toBe(
+    "Luis",
+  );
+});

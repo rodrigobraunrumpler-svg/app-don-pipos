@@ -12,10 +12,12 @@ const SPOKEN: [PaymentMethod, string][] = [
   ["cash", "efectivo"],
 ];
 
+// Sin los ajustes cargados, nombra los cuatro
 function spokenMethods(methods: PaymentMethod[]): string {
-  const names = SPOKEN.filter(([method]) => methods.includes(method)).map(([, name]) => name);
-  const list = names.length ? names : SPOKEN.map(([, name]) => name);
-  return list.length > 1 ? `${list.slice(0, -1).join(", ")} o ${list.at(-1)}` : (list[0] ?? "");
+  const chosen = SPOKEN.filter(([method]) => methods.includes(method));
+  const names = (chosen.length ? chosen : SPOKEN).map(([, name]) => name);
+  const last = String(names.pop());
+  return names.length ? `${names.join(", ")} o ${last}` : last;
 }
 
 function scheduledText(order: Order): string {
@@ -30,7 +32,7 @@ export function messageContext(order: Order, methods: PaymentMethod[]): Record<s
   const due = order.totalCents - order.paidCents;
   const name = order.customer?.name ?? order.customerName ?? "";
   return {
-    nombre: name.split(" ")[0] ?? "",
+    nombre: name.replace(/ .*/, ""),
     numero: orderNumber(order.number),
     detalle: order.itemsSummary,
     total: formatCents(order.totalCents),

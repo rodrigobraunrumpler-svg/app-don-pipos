@@ -70,6 +70,10 @@ test("el borrador como lo recibe create_order: sin lo vacío, con la hora en el 
     note: "Sin azúcar",
     lines: LINES,
   });
+  const today = { ...DRAFT, promisedTime: "13:00" };
+  expect(
+    toOrderDraft(today, { phone: "+51900000990", today: "2026-11-19", totalCents: 2400, lines: LINES }).promisedAt,
+  ).toBe("2026-11-19T13:00:00-05:00");
   const part = { ...DRAFT, paymentMode: "part" as const, paymentMethod: "cash" as const, paymentCents: 1000 };
   expect(
     toOrderDraft(part, { phone: "+51900000990", today: "2026-11-19", totalCents: 2400, lines: LINES }).payment,

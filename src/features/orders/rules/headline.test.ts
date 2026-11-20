@@ -11,6 +11,7 @@ test("debajo del número: quién, cómo se entrega y qué día", () => {
     "Ana (DEMO), recoge en el local el sábado 21",
   );
   expect(orderHeadline({ ...TEST_ORDER, dueDate: "2026-11-18" }, NOW)).toBe("Ana (DEMO), delivery ayer");
+  expect(orderHeadline({ ...TEST_ORDER, customerName: null }, NOW)).toBe("Cliente, delivery hoy");
   expect(orderHeadline({ ...TEST_ORDER, fulfillment: "counter", customerName: null }, NOW)).toBe(
     "Venta en el mostrador, hoy",
   );
