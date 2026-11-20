@@ -49,7 +49,7 @@
   Con las reglas de acceso, Postgres no usa `like` en un índice; por eso la búsqueda vive en `private`, filtra el negocio ella misma y usa el índice de trigramas.
 - **`get_customer(id)`:** la ficha: sus datos, sus totales, su favorito (el alfajor que más pide) y sus sellos.
 - **`update_customer(id, expected_version, name, address, note, accepts_promotions)`:** con otra versión responde `conflict`.
-- **`anonymize_customer(id)`:** borra el nombre, el teléfono, la dirección y la nota, y quita el permiso de promociones. En sus pedidos, `customer_name` pasa a «Cliente eliminado», la dirección de los deliverys a «Dirección eliminada» (un delivery necesita una) y la nota queda vacía: también son datos personales. Los pedidos quedan, para no romper los números del negocio. Una segunda vez devuelve lo mismo.
+- **`anonymize_customer(id)`:** borra el nombre, el teléfono, la dirección y la nota, y quita el permiso de promociones. En sus pedidos, `customer_name` pasa a «Cliente eliminado», la dirección de los deliverys a «Dirección eliminada» (un delivery necesita una) y la nota queda vacía: también son datos personales. Los pedidos quedan, para no romper los números del negocio. Una segunda vez devuelve lo mismo. Con un pedido por entregar o por cobrar responde `conflict` (decidido en la revisión de la fase 7a): se perdería a dónde llevarlo y a quién cobrarle; primero se entrega y se cobra, o se anula.
 - **`list_customer_orders(customer_id, limit, cursor)`** (de `orders`): sus pedidos, del más nuevo al más viejo, con la forma de `list_orders`.
 - **Los pedidos lo mantienen al día:** `create_order` crea o actualiza al cliente por su teléfono, y mantiene `orders_count`, `spent_cents` y `last_order_at`, también al anular.
 

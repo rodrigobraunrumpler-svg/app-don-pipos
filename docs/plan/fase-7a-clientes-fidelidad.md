@@ -341,3 +341,32 @@ Ingresa con el dueño DEMO (900 000 101, el PIN de tu `.env.local`):
 
 **Tarea 9**
 - La burbuja pasó a `MessageBubble`, la misma en el editor y en los avisos. Lo escrito no se pierde con un `conflict`.
+
+## Después de la revisión final (2026-11-20)
+
+Un revisor nuevo leyó la rama entera: «lista después de arreglos», sin nada crítico. Los sellos, el canje y el borrado en la base estaban bien, y las funciones de pedidos que se volvieron a crear no perdieron nada. Se arreglaron, cada uno con su prueba:
+
+- **Lo guardado se ve al instante.** Antes, después de guardar, la pantalla mostraba lo de antes hasta recargar: el interruptor de promociones volvía atrás, Fidelidad parecía apagarse y un segundo toque daba un falso «otro cambio llegó antes». Ahora corregir a un cliente se ve en el acto (y vuelve atrás si falla), y la fidelidad y los mensajes muestran lo que devolvió la base.
+- **El descuento a mano ya no ofrece «Fidelidad».** Daba el premio sin gastar los sellos, y el cliente podía recibirlo dos veces. El premio se aplica solo con la tarjeta («Aplicar»).
+- **Borrar a un cliente saca sus datos del celular.** Lo buscado con su teléfono, las listas y los pedidos guardados se borran o se vuelven a pedir, y «Cerca del premio» se refresca después de entregar, canjear o borrar.
+- **No se borran los datos de un cliente con pedidos por entregar o por cobrar** (migración `20261120182558_erase_after_open_orders`). Se perdería a dónde llevarlos y a quién cobrarles. La hoja dice qué hacer antes: entregarlos y cobrarlos, o anularlos.
+- **La lista de Clientes no parpadea** al cambiar de filtro o al buscar: la de antes queda atenuada hasta que llega la nueva.
+
+`loyalty.md` y `customers.md` quedaron al día con lo decidido.
+
+| Comprobación | Resultado |
+|---|---|
+| `pnpm test:coverage` | 683 pruebas, con el 100 % donde se pide |
+| `pnpm db:check` | 745 pruebas de la base en 35 archivos |
+| `pnpm lint`, `pnpm lint:rules`, `pnpm typecheck`, `pnpm test:scripts` | Pasan |
+
+**Quedan para después** (no cambian plata ni datos):
+- Con «Otro premio», el pedido no dice qué regalo entregar, y el aviso muestra «−S/ 0.00».
+- Las respuestas guardadas para reintentos conservan el nombre de un cliente borrado hasta la limpieza de los 7 días.
+- La app y la base leen distinto un marcador con tilde («{dirección}»).
+- Fidelidad apagada con una regla a medio escribir da un error general al guardar.
+- Un conflicto en Fidelidad o en «Corregir datos» deja lo escrito aunque dice que se cargó lo nuevo.
+- Cerrar un mensaje abierto pierde lo escrito sin avisar.
+- Deshacer una anulación cuyo premio ya se usó dice «El pedido cambió después».
+- Faltan pruebas de la base para «ñ» en la búsqueda, para deshacer la anulación de un entregado y para Por cobrar después de un borrado.
+- «El premio va en hasta 60 letras.» no puede salir: el campo ya corta en 60.

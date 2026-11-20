@@ -43,17 +43,17 @@ Una tarjeta de sellos digital (D15):
 | Tabla | Índice | Sirve para |
 |---|---|---|
 | `loyalty_stamps` | `(business_id, customer_id, created_at desc)` | La llave foránea y la tarjeta de un cliente |
-| `loyalty_stamps` | parcial `(business_id, order_id)`, si tiene pedido | La llave foránea y el neto de sellos de un pedido |
-| `customers` | parcial `(business_id, stamps desc)`, si tiene sellos | «Cerca del premio» |
+| `loyalty_stamps` | `(business_id, order_id)`, entero (la regla de estructura pide índices completos para las llaves) | La llave foránea y el neto de sellos de un pedido |
+| `customers` | parcial `(business_id, stamps desc, last_order_at desc, id desc)`, si tiene sellos | «Cerca del premio»: entre los empatados, primero el que compró hace menos |
 
 ## 3. Funciones de la base
 
 - **`update_loyalty_settings(expected_version, …)`:** con otra versión responde `conflict`. Cada cambio queda en el registro (`private.audit_log`).
-- **`private.sync_order_stamps(order_id)`** (decidido en la fase 7a, en vez de `add_stamp` y `remove_stamp`): con el pedido bloqueado, deja su neto de sellos de entrega en lo que debe ser. Si está entregado, tiene cliente y la fidelidad está activa: 1, o sus alfajores si es por alfajor. Si no está entregado: 0. Con la fidelidad apagada no suma, pero sí quita. La llaman `advance_order`, `revert_status`, `cancel_order`, `revert_cancel` y `edit_order`. Así entregar, deshacer, volver a entregar, anular o corregir un entregado deja los sellos justos.
+- **`private.sync_order_stamps(order_id)`** (decidido en la fase 7a, en vez de `add_stamp` y `remove_stamp`): con el pedido bloqueado, deja su neto de sellos de entrega en lo que debe ser. Si está entregado, tiene cliente y la fidelidad está activa: 1, o sus alfajores si es por alfajor. Si no está entregado: 0. Con la fidelidad apagada no suma, pero sí quita. La llaman `advance_order`, `revert_status`, `cancel_order` y `revert_cancel` (un pedido entregado no se corrige: `edit_order` lo rechaza). Así entregar, deshacer, volver a entregar o anular deja los sellos justos. Quitar nunca deja al cliente en menos de 0 (ya pudo canjearlos): el movimiento anota lo que de verdad se quitó. La misma función devuelve lo canjeado al anular y lo vuelve a canjear al deshacer la anulación.
 - **El canje** ocurre dentro de `create_order`, cuando el borrador trae `redeemReward: true`: resta la meta y pone el descuento con el motivo «Fidelidad». El monto lo calcula la base (el alfajor más barato del pedido, el descuento sin pasar del total, u «otro premio» en 0). Con el premio, el borrador no trae otro descuento. Sin sellos suficientes o con la fidelidad apagada: `invalid`.
   - Deshacer la anulación de un pedido canjeado vuelve a canjear; si el cliente ya no tiene esos sellos, `conflict`.
   - Si después se anula ese pedido, los sellos canjeados vuelven (`redeem_returned`).
-  - Si se anula un pedido ya entregado, se quitan los sellos que había sumado (`private.remove_stamp`).
+  - Si se anula un pedido ya entregado, se quitan los sellos que había sumado (`private.sync_order_stamps`).
   - Editar el pedido no quita el premio; para quitarlo, se anula y se anota de nuevo.
 - **`get_loyalty_settings()`** y **`loyalty_overview(limit)`:** los clientes más cerca del premio (la meta − 2 sellos o más).
 - **La fila de un negocio nuevo** guarda, apagada, la regla de ejemplo de la pregunta de `PROJECT_CONTEXT.md` §7 (10 compras, 1 alfajor gratis). No es una regla del negocio: no se usa hasta que el dueño la revise y la encienda.
