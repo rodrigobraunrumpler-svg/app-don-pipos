@@ -194,6 +194,9 @@ create function pg_temp.unlisted_functions_for_app() returns setof text language
       'public.void_manual_income(uuid, text)',
       'public.income_summary(date, date)',
       'public.list_income(date, date, integer, text)',
+      'public.cash_expected(date)',
+      'public.close_cash_day(uuid, date, integer, integer)',
+      'public.latest_cash_count(date)',
       -- lo que usan por dentro las reglas de acceso y las funciones de arriba
       'private.owned_business_ids()',
       'private.fail(text)',
@@ -231,7 +234,10 @@ create function pg_temp.unlisted_functions_for_app() returns setof text language
       'private.revert_expense_change(uuid)',
       'private.create_manual_income(uuid, text, integer, text, date)',
       'private.void_manual_income(uuid, text)',
-      'private.income_rows(uuid, timestamp with time zone, timestamp with time zone)'
+      'private.income_rows(uuid, timestamp with time zone, timestamp with time zone)',
+      'private.close_cash_day(uuid, date, integer, integer)',
+      'private.cash_totals(uuid, date)',
+      'private.cash_count_json(cash_counts)'
     )
 $$;
 

@@ -89,6 +89,60 @@ export type Database = {
         };
         Relationships: [];
       };
+      cash_counts: {
+        Row: {
+          business_date: string;
+          business_id: string;
+          cash_in_cents: number;
+          cash_out_cents: number;
+          closed_at: string;
+          counted_cents: number;
+          created_at: string;
+          difference_cents: number;
+          expected_cents: number;
+          id: string;
+          opening_cents: number;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          business_date: string;
+          business_id: string;
+          cash_in_cents: number;
+          cash_out_cents: number;
+          closed_at?: string;
+          counted_cents: number;
+          created_at?: string;
+          difference_cents: number;
+          expected_cents: number;
+          id?: string;
+          opening_cents: number;
+          updated_at?: string;
+        };
+        Update: {
+          business_date?: string;
+          business_id?: string;
+          cash_in_cents?: number;
+          cash_out_cents?: number;
+          closed_at?: string;
+          counted_cents?: number;
+          created_at?: string;
+          difference_cents?: number;
+          expected_cents?: number;
+          id?: string;
+          opening_cents?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "cash_counts_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       customers: {
         Row: {
           accepts_promotions: boolean;
@@ -785,7 +839,12 @@ export type Database = {
         };
         Returns: Json;
       };
+      cash_expected: { Args: { p_business_date: string }; Returns: Json };
       change_payment_method: { Args: { p_method: string; p_payment_id: string; p_request_id: string }; Returns: Json };
+      close_cash_day: {
+        Args: { p_business_date: string; p_counted_cents: number; p_opening_cents: number; p_request_id: string };
+        Returns: Json;
+      };
       correct_expense: {
         Args: {
           p_amount_cents: number;
@@ -836,6 +895,7 @@ export type Database = {
       get_business: { Args: Record<PropertyKey, never>; Returns: Json };
       get_order: { Args: { p_order_id: string }; Returns: Json };
       income_summary: { Args: { p_from: string; p_to: string }; Returns: Json };
+      latest_cash_count: { Args: { p_business_date: string }; Returns: Json };
       list_expense_categories: { Args: Record<PropertyKey, never>; Returns: Json };
       list_expenses: { Args: { p_cursor?: string; p_from?: string; p_limit?: number; p_to?: string }; Returns: Json };
       list_income: { Args: { p_cursor?: string; p_from?: string; p_limit?: number; p_to?: string }; Returns: Json };
