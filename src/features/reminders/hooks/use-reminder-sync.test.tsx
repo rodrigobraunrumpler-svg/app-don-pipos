@@ -20,6 +20,7 @@ let mockBusiness = TEST_BUSINESS;
 // Lo que hay: un pedido para mañana, un saldo de ayer y Morenita baja. Cada prueba lo cambia si necesita
 let mockEmpty = false;
 let mockOnHand = 4;
+let mockReceivablesFail = false;
 jest.mock("@/features/businesses/api/business", () => ({ getBusiness: async () => mockBusiness }));
 jest.mock("@/features/orders/api/orders", () => ({
   listUpcomingOrders: async () =>
@@ -39,28 +40,31 @@ jest.mock("@/features/orders/api/orders", () => ({
             dueDate: "2026-11-19",
           },
         ],
-  listReceivables: async () => ({
-    ...page(
-      mockEmpty
-        ? []
-        : [
-            {
-              id: "o9",
-              number: 40,
-              customerName: "Jorge P. (DEMO)",
-              customerPhone: "+51900000301",
-              fulfillment: "pickup",
-              status: "delivered",
-              totalCents: 2400,
-              paidCents: 0,
-              dueDate: "2026-11-17",
-              scheduledFor: null,
-              remind: true,
-            },
-          ],
-    ),
-    meta: { limit: 20, total: 1, hasMore: false, nextCursor: null, totalDueCents: 2400 },
-  }),
+  listReceivables: async () => {
+    if (mockReceivablesFail) throw new (jest.requireActual("@/lib/errors").AppError)("unexpected");
+    return {
+      ...page(
+        mockEmpty
+          ? []
+          : [
+              {
+                id: "o9",
+                number: 40,
+                customerName: "Jorge P. (DEMO)",
+                customerPhone: "+51900000301",
+                fulfillment: "pickup",
+                status: "delivered",
+                totalCents: 2400,
+                paidCents: 0,
+                dueDate: "2026-11-17",
+                scheduledFor: null,
+                remind: true,
+              },
+            ],
+      ),
+      meta: { limit: 20, total: 1, hasMore: false, nextCursor: null, totalDueCents: 2400 },
+    };
+  },
 }));
 jest.mock("@/features/stock/api/stock", () => ({
   getStockOverview: async () => [
@@ -93,6 +97,7 @@ beforeEach(async () => {
   mockBusiness = TEST_BUSINESS;
   mockEmpty = false;
   mockOnHand = 4;
+  mockReceivablesFail = false;
   mockPermission = "granted";
   permissions.mockImplementation(
     async () => ({ status: mockPermission, granted: mockPermission === "granted", canAskAgain: true }) as never,
@@ -242,4 +247,11 @@ test("si después da el permiso en los ajustes del celular, al volver a la app q
   mockPermission = "granted";
   await act(async () => appStateHandlers.forEach((handler) => handler("active")));
   await waitFor(() => expect(schedule).toHaveBeenCalledTimes(3));
+});
+
+test("si Por cobrar no carga, los avisos de pedidos y de stock no esperan", async () => {
+  mockReceivablesFail = true;
+  await sync();
+  await waitFor(() => expect(schedule).toHaveBeenCalledTimes(2));
+  expect(scheduled().map((call) => call.identifier)).toEqual(["order:o1", "stock:p1"]);
 });

@@ -16,7 +16,7 @@ import type { Reminder, ReminderData, ReminderSwitches } from "../schema/reminde
 import { readNotifiedToday, saveNotifiedToday } from "./notified-today";
 import { useReminderSources } from "./use-reminder-sources";
 
-type Sources = Omit<ReminderData, "notifiedToday"> & { settings: ReminderSwitches };
+type Sources = Partial<Omit<ReminderData, "notifiedToday">> & { settings: ReminderSwitches };
 
 const toNotice = (reminder: Reminder): LocalNotice => ({
   id: reminder.id,
@@ -32,7 +32,7 @@ const toNotice = (reminder: Reminder): LocalNotice => ({
 // recarga con el diálogo de permiso abierto espera su respuesta y no deja todo cancelado. El permiso se pide la primera
 // vez que hay algo que avisar, una sola vez; sin él no queda nada programado
 export function useReminderSync(): void {
-  const { settings, upcoming, receivables, stock } = useReminderSources();
+  const { settings, upcoming, receivables, stock, settled } = useReminderSources();
   const programmed = useRef<string | null>(null);
   const permission = useRef<Promise<boolean> | null>(null);
   const queue = useRef<Promise<void>>(Promise.resolve());
@@ -46,7 +46,7 @@ export function useReminderSync(): void {
   }, []);
 
   useEffect(() => {
-    if (!settings || !upcoming || !receivables || !stock) return;
+    if (!settings || !settled) return;
     const sources: Sources = { settings, upcoming, receivables, stock };
 
     async function allowed(): Promise<boolean> {
@@ -56,11 +56,20 @@ export function useReminderSync(): void {
       return permission.current;
     }
 
-    async function sync({ settings: switches, ...data }: Sources) {
+    // Lo que no pudo cargar (un error, sin nada guardado) no avisa; lo demás no lo espera
+    async function sync({ settings: switches, upcoming: orders, receivables: debts, stock: levels }: Sources) {
       const now = new Date();
       const today = businessDate(now);
       const notifiedToday = await readNotifiedToday(today);
-      const reminders = buildReminders({ ...data, notifiedToday }, switches, now);
+      const reminders = buildReminders(
+        { upcoming: orders ?? [], receivables: debts ?? [], stock: levels ?? [], notifiedToday },
+        {
+          scheduled: switches.scheduled && orders !== undefined,
+          stock: switches.stock && levels !== undefined,
+          balances: switches.balances && debts !== undefined,
+        },
+        now,
+      );
       const on = reminders.length > 0 && (await allowed());
       const later = on ? reminders.filter((reminder) => reminder.at !== null).map(toNotice) : [];
       const signature = JSON.stringify(later);
@@ -76,5 +85,5 @@ export function useReminderSync(): void {
 
     // ponytail: si el celular no deja programar, se intenta otra vez con la próxima corrida
     queue.current = queue.current.then(() => sync(sources)).catch(() => undefined);
-  }, [settings, upcoming, receivables, stock, awake]);
+  }, [settings, upcoming, receivables, stock, settled, awake]);
 }
