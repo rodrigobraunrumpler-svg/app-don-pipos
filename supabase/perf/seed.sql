@@ -130,3 +130,69 @@ analyze public.orders;
 analyze public.order_lines;
 analyze public.payments;
 analyze public.order_status_events;
+
+-- Fase 5: los pagos de las ventas de los demás negocios (así los del negocio medido son una parte de la tabla, como
+-- en producción). El negocio medido, con 5 tipos de gasto y 3 años de gastos (3 por día; cada 20.º anulado y cada 50.º
+-- corregido), un ingreso a mano por día (cada 30.º anulado) y un cierre de caja por día. Los demás, un tipo, 3 gastos y
+-- un ingreso a mano
+insert into public.payments (business_id, order_id, kind, method, amount_cents, paid_at)
+select o.business_id, o.id, 'payment', 'cash', o.paid_cents, o.created_at
+from public.orders o
+where o.id between '00000000-0000-4000-e000-000000000000' and '00000000-0000-4000-e000-ffffffffffff';
+
+insert into public.expense_categories (id, business_id, name, icon, sort_order)
+select
+  ('00000000-0000-4000-f000-' || lpad(to_hex(n * 10 + k), 12, '0'))::uuid,
+  ('00000000-0000-4000-a000-' || lpad(to_hex(n), 12, '0'))::uuid,
+  'Tipo ' || k, 'receipt-text-outline', k
+from generate_series(1, 5000) as n, generate_series(1, 5) as k
+where k = 1 or n = 2500;
+
+insert into public.expenses (business_id, category_id, description, amount_cents, method, spent_at, voided_at, void_reason)
+select
+  '00000000-0000-4000-a000-0000000009c4',
+  ('00000000-0000-4000-f000-' || lpad(to_hex(25000 + 1 + n % 5), 12, '0'))::uuid,
+  'Gasto ' || n, 500 + n % 50 * 100, (array['cash', 'yape', 'plin', 'transfer'])[1 + n % 4],
+  now() - n * interval '8 hours',
+  case when n % 20 = 0 or n % 50 = 0 then now() - n * interval '8 hours' end,
+  case when n % 20 = 0 then 'Anotado dos veces' when n % 50 = 0 then 'corrección' end
+from generate_series(1, 3285) as n;
+
+insert into public.expenses (business_id, category_id, description, amount_cents, method, spent_at, replaces_id)
+select e.business_id, e.category_id, e.description, e.amount_cents + 100, e.method, e.spent_at, e.id
+from public.expenses e
+where e.business_id = '00000000-0000-4000-a000-0000000009c4' and e.void_reason = 'corrección';
+
+insert into public.expenses (business_id, category_id, amount_cents, method, spent_at)
+select
+  ('00000000-0000-4000-a000-' || lpad(to_hex(n), 12, '0'))::uuid,
+  ('00000000-0000-4000-f000-' || lpad(to_hex(n * 10 + 1), 12, '0'))::uuid,
+  1000, 'cash', now() - k * interval '1 day'
+from generate_series(1, 5000) as n, generate_series(1, 3) as k
+where n <> 2500;
+
+insert into public.manual_incomes (business_id, description, amount_cents, method, received_at, voided_at, void_reason)
+select
+  '00000000-0000-4000-a000-0000000009c4', 'Ingreso ' || d || ' (DEMO)', 1500, (array['cash', 'yape'])[1 + d % 2],
+  now() - d * interval '1 day' + interval '3 hours',
+  case when d % 30 = 0 then now() - d * interval '1 day' end,
+  case when d % 30 = 0 then 'Anotado dos veces' end
+from generate_series(1, 1095) as d;
+
+insert into public.manual_incomes (business_id, description, amount_cents, method, received_at)
+select ('00000000-0000-4000-a000-' || lpad(to_hex(n), 12, '0'))::uuid, 'Ingreso (DEMO)', 1000, 'cash', now() - interval '2 days'
+from generate_series(1, 5000) as n
+where n <> 2500;
+
+insert into public.cash_counts (business_id, business_date, opening_cents, cash_in_cents, cash_out_cents, expected_cents,
+  counted_cents, difference_cents, closed_at)
+select
+  '00000000-0000-4000-a000-0000000009c4', (now() at time zone 'America/Lima')::date - d, 5000, 10000, 3000, 12000,
+  12000 - d % 7 * 100, -(d % 7 * 100), now() - d * interval '1 day'
+from generate_series(1, 1095) as d;
+
+analyze public.payments;
+analyze public.expense_categories;
+analyze public.expenses;
+analyze public.manual_incomes;
+analyze public.cash_counts;

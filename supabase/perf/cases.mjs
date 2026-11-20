@@ -25,6 +25,12 @@ const DRAFT = JSON.stringify({
   })),
 });
 
+// Fase 5: el mismo negocio con 3 años de gastos, ingresos a mano y cierres de caja
+const EXPENSE_TABLES = ["expenses", "expense_categories"];
+const INCOME_TABLES = ["payments", "manual_incomes"];
+const TODAY = "(now() at time zone 'America/Lima')::date";
+const MONTH_START = "date_trunc('month', now() at time zone 'America/Lima')::date";
+
 export const cases = [
   { name: "get_business", as: OWNER, sql: "select public.get_business()", tables: ["businesses", "business_settings"] },
   {
@@ -137,6 +143,61 @@ export const cases = [
     as: OWNER,
     sql: `select public.create_order(gen_random_uuid(), '${DRAFT}')`,
     tables: ["businesses", ...ORDER_TABLES, ...STOCK_TABLES],
+  },
+  // Fase 5: gastos, ingresos y caja, con 3 años de cada uno
+  {
+    name: "list_expense_categories",
+    as: OWNER,
+    sql: "select public.list_expense_categories()",
+    tables: ["businesses", "expense_categories"],
+  },
+  {
+    name: "list_expenses, primera página",
+    as: OWNER,
+    sql: "select public.list_expenses()",
+    tables: ["businesses", ...EXPENSE_TABLES],
+  },
+  {
+    name: "list_expenses, la página siguiente con su cursor",
+    as: OWNER,
+    sql: "select public.list_expenses(null, null, 20, public.list_expenses() -> 'meta' ->> 'nextCursor')",
+    tables: ["businesses", ...EXPENSE_TABLES],
+  },
+  {
+    name: "expenses_summary del mes",
+    as: OWNER,
+    sql: `select public.expenses_summary(${MONTH_START}, ${TODAY})`,
+    tables: ["businesses", ...EXPENSE_TABLES],
+  },
+  {
+    name: "income_summary del mes",
+    as: OWNER,
+    sql: `select public.income_summary(${MONTH_START}, ${TODAY})`,
+    tables: ["businesses", ...INCOME_TABLES],
+  },
+  {
+    name: "list_income, primera página",
+    as: OWNER,
+    sql: "select public.list_income()",
+    tables: ["businesses", ...INCOME_TABLES, "orders"],
+  },
+  {
+    name: "list_income, la página siguiente con su cursor",
+    as: OWNER,
+    sql: "select public.list_income(null, null, 20, public.list_income() -> 'meta' ->> 'nextCursor')",
+    tables: ["businesses", ...INCOME_TABLES, "orders"],
+  },
+  {
+    name: "cash_expected de hoy",
+    as: OWNER,
+    sql: `select public.cash_expected(${TODAY})`,
+    tables: ["businesses", ...INCOME_TABLES, ...EXPENSE_TABLES, "cash_counts"],
+  },
+  {
+    name: "latest_cash_count de hoy",
+    as: OWNER,
+    sql: `select public.latest_cash_count(${TODAY})`,
+    tables: ["businesses", "cash_counts"],
   },
 ];
 
