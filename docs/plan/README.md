@@ -79,7 +79,7 @@ Cómo se construye la app de Don Pipos, por fases. Cada fase deja algo que funci
 | 5. Gastos, ingresos y caja | Construida, revisada y juntada en `main` el 2026-11-20; las correcciones están en `fase-5-gastos-caja.md`, «Después de la revisión final». Falta tu prueba en el celular («Lo que falta») |
 | 6. Inicio y reportes | Construida, revisada y juntada en `main` el 2026-11-20; las correcciones están en `fase-6-inicio-reportes.md`, «Después de la revisión final». Falta tu prueba en el celular («Lo que falta») |
 | 7a. Clientes, fidelidad y mensajes | Construida, revisada y juntada en `main` el 2026-11-20; las correcciones están en `fase-7a-clientes-fidelidad.md`, «Después de la revisión final». Falta tu prueba en el celular («Lo que falta») |
-| 7b. Primera vez, avisos y ajustes | Construida el 2026-11-20 en la rama `fase-7b`; falta la revisión final y tu prueba en el celular («Lo que falta» en `fase-7b-primera-vez-avisos.md`) |
+| 7b. Primera vez, avisos y ajustes | Construida, revisada y juntada en `main` el 2026-11-20; las correcciones están en `fase-7b-primera-vez-avisos.md`, «Después de la revisión final». Falta tu prueba en el celular («Lo que falta») |
 | 8. Web y entrega | Su plan se escribe al terminar la fase anterior |
 
 Las fases 0, 1 y 2 se juntaron en `main` el 2026-11-19, con todas sus pruebas en verde.
