@@ -140,6 +140,7 @@ Todas comprueban que el negocio sea del usuario y devuelven el pedido con sus to
   - Ordena del número mayor al menor.
   - Devuelve `{ items, meta }` (§14.3).
 - **`order_counts()`:** cuántos pedidos hay en cada filtro, para los chips.
+- **`upcoming_orders(limit)` (fase 7b):** los pedidos que vienen (de mañana en adelante, sin entregar ni anular), del más próximo al más lejano, con la forma de una fila de `list_orders`; hasta 100, 50 por defecto. Los usan los recordatorios del celular y la campana de Inicio: «Próximos» va del número mayor al menor y con muchos pedidos dejaba fuera uno anotado temprano para mañana. Usa `orders_open_idx`.
 - **`get_order(order_id)`:** el pedido con sus líneas, pagos, línea de tiempo y los datos básicos del cliente.
 - **`list_receivables(limit, cursor)`:** los pedidos con saldo, sin los anulados. Cada uno dice si ya corresponde recordarle el saldo: está entregado o es un adelanto con fecha.
 
@@ -272,7 +273,7 @@ Los movimientos de stock y los sellos los crea la base dentro de las funciones d
 - Renombrar un alfajor no cambia el nombre en los pedidos viejos.
 - `edit_order` con una versión vieja responde `conflict`.
 
-**Rendimiento** (con los datos de prueba grandes, ver `README.md`): `list_orders`, `order_counts`, `get_order` y `list_receivables` usan sus índices (sin `Seq Scan` en `orders` ni `payments`) y responden en menos de 50 ms.
+**Rendimiento** (con los datos de prueba grandes, ver `README.md`): `list_orders`, `order_counts`, `upcoming_orders`, `get_order` y `list_receivables` usan sus índices (sin `Seq Scan` en `orders` ni `payments`) y responden en menos de 50 ms.
 
 **Cuentas (Jest):** los ejemplos de §5, con 100 % de cobertura.
 

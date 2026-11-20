@@ -126,7 +126,7 @@ La anota el script de copia del VPS. No lleva `business_id` porque la copia es d
   - «Producción»: cada cuántos días produce. Inicio y Stock sugieren para ese periodo.
   - «Clientes que no vuelven»: a partir de cuántos días sin pedir un cliente sale en «No vuelven» (decidido en la fase 7b; la maqueta no tiene la fila).
 - **Más, arriba:** «Tus datos están respaldados. Última copia de seguridad: hoy, 03:00». Si está atrasada, en ámbar: «La copia de seguridad está atrasada. El equipo ya está avisado».
-- **Vistas:** «Guardando…». Sin internet, las hojas dicen «Sin conexión. Los cambios esperan a que vuelva la señal» y no dejan guardar hasta que vuelva (los guardados de la app salen al momento y avisan si no hay señal). Un cambio que llegó antes responde «Otro cambio llegó antes: revisa los ajustes y vuelve a guardar», sin perder lo escrito.
+- **Vistas:** «Guardando…». Sin internet, las hojas dicen «Sin conexión. Los cambios esperan a que vuelva la señal» y no dejan guardar hasta que vuelva (los guardados de la app salen al momento y avisan si no hay señal). Un cambio que llegó antes responde «Otro cambio llegó antes: revisa los ajustes y vuelve a guardar», sin perder lo escrito, y la hoja muestra «Lo guardado ahora: …». El delivery llega hasta S/ 10,000 (la hoja lo dice antes de guardar).
 
 ## 7. Con otros módulos
 

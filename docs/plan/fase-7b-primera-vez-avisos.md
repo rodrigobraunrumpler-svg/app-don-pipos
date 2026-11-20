@@ -534,3 +534,16 @@ Un revisor aparte leyó toda la rama: nada crítico, tres arreglos importantes y
 7. El consejo no se anuncia solo con TalkBack.
 8. Faltan pruebas de dos interruptores seguidos y de la recarga después de un `conflict`. La prueba de Delivery espera «5.00» sin esperar a que lleguen los datos (puede fallar de vez en cuando).
 9. Si preparar el canal de avisos falla una vez, no se reintenta hasta reabrir la app.
+
+## Los detalles que quedaban (arreglados el 2026-11-20)
+
+Después de la revisión, a pedido tuyo, se arreglaron también los nueve detalles menores, en la rama `fase-7b-detalles`, cada uno con su prueba.
+
+1. **Los avisos de pedidos miran los 50 más próximos:** la función nueva `upcoming_orders` va del día más cercano al más lejano. Es una migración más (`20261120213053_upcoming_orders`), con 6 pruebas de la base, y tarda 1,4 ms con su índice.
+2. **Un aviso que llega con la app abierta se muestra desde que abre,** también en la pantalla del PIN. Si preparar el canal de avisos falla, se intenta otra vez.
+3. **Si Por cobrar no carga, los avisos de pedidos y de stock no esperan.** Sin señal y sin nada guardado, lo programado antes queda como está.
+4. **Tras un `conflict` en Delivery, Producción o «Clientes que no vuelven»,** la hoja muestra «Lo guardado ahora: …», y lo escrito queda.
+5. **El delivery llega hasta S/ 10,000:** la hoja lo dice antes de guardar.
+6. **El consejo de la primera vez queda marcado al terminar la puesta en marcha,** no al tocar «Ir a Inicio»: si la app se cierra en «Todo listo», igual sale.
+7. **TalkBack lee el consejo** al aparecer.
+8. **Pruebas nuevas:** dos interruptores tocados seguidos, la recarga después de un `conflict`, apagar «Saldos pendientes» con avisos ya programados. La prueba de Delivery ahora espera a que lleguen los datos.
