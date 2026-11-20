@@ -8,6 +8,7 @@ import {
   formatTime,
   formatWeekday,
   formatWhen,
+  previousDay,
   TIME_ZONE,
 } from "@/lib/dates";
 
@@ -149,4 +150,10 @@ test("cuándo pasó algo, en una fila: hoy y ayer con la hora, la semana con el 
 
 test("el nombre del mes de Lima", () => {
   expect(formatMonth(new Date("2026-12-01T04:30:00.000Z"))).toBe("noviembre");
+});
+
+test("el día anterior, también al cambiar de mes y de año", () => {
+  expect(previousDay("2026-11-20")).toBe("2026-11-19");
+  expect(previousDay("2026-12-01")).toBe("2026-11-30");
+  expect(previousDay("2027-01-01")).toBe("2026-12-31");
 });

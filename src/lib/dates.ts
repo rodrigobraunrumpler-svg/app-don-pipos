@@ -64,3 +64,9 @@ export function formatWhen(instant: Date, now: Date): string {
 export function formatMonth(instant: Date): string {
   return format(inLima(instant), "MMMM", { locale: es });
 }
+
+// El día anterior a un día de Lima («2026-11-01» → «2026-10-31»)
+export function previousDay(date: string): string {
+  const { from } = businessDayRange(date);
+  return businessDate(new Date(from.getTime() - DAY_MS));
+}

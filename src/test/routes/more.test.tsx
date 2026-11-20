@@ -21,6 +21,9 @@ jest.mock("@/features/expenses/api/expenses", () => ({
   getExpensesSummary: async () => ({ totalCents: 13100, byCategory: [] }),
   listExpenses: async () => ({ items: [], meta: { limit: 20, total: 0, hasMore: false, nextCursor: null } }),
 }));
+jest.mock("@/features/income/api/income", () => ({
+  getIncomeSummary: async () => ({ totalCents: 0, byMethod: { cash: 0, yape: 0, plin: 0, transfer: 0 }, byDay: [] }),
+}));
 jest.mock("@/features/orders/api/orders", () => ({
   listReceivables: async () => ({
     items: [],
