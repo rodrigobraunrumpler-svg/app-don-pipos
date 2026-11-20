@@ -272,3 +272,72 @@ Se escriben en las especificaciones en la tarea 1, antes de la base.
 6. Aplica el premio en un pedido nuevo.
 7. Corrige un mensaje y vuelve al original.
 8. Borra los datos de un cliente de prueba.
+
+## Resultado (2026-11-20)
+
+La fase 7a quedó construida en la rama `fase-7`, con un commit por tarea y dos de velocidad.
+
+| Comprobación | Resultado |
+|---|---|
+| `pnpm test:coverage` | 673 pruebas; 100 % en `lib/{money,dates,errors}`, `theme/tokens` y las cuentas de `features/*/rules` |
+| `pnpm db:check` | Pasa entera: 744 pruebas de la base en 35 archivos, consejos de Supabase sin nada pendiente y tipos al día |
+| `pnpm db:perf` | 49 casos, todos con índice y en menos de 50 ms, con 30,000 clientes en el negocio medido: buscar 10–30 ms, la ficha 5 ms, «Cerca del premio» 1 ms |
+| `pnpm lint`, `pnpm lint:rules`, `pnpm typecheck`, `pnpm test:scripts` | Pasan |
+
+En el proyecto de desarrollo quedaron siete migraciones: clientes, dos de la búsqueda (con el índice de trigramas y su columna sin tildes), fidelidad, el orden de «Cerca del premio», buscar el texto primero y las plantillas. La fidelidad del negocio DEMO quedó apagada, con la regla de ejemplo: la enciendes tú en la prueba.
+
+No llegaron librerías nuevas. La caché guardada en el celular cambió de forma (`CACHE_SCHEMA` 4): la primera vez que abras la app, vuelve a pedir todo.
+
+### Lo que falta: probar en el celular
+
+```bash
+cd /home/javier/var-mar/app && pnpm start --tunnel
+```
+
+Ingresa con el dueño DEMO (900 000 101, el PIN de tu `.env.local`):
+
+1. **Un cliente nuevo:** anota un pedido con un teléfono que no usaste. Más → «Clientes»: aparece arriba, con «1 pedido, último hoy».
+2. **Buscar:** escribe un nombre sin tildes («lucia») o parte del teléfono con espacios («987 654»).
+3. **Los filtros:** «Los que más compran» va numerado por lo gastado. «No vuelven» muestra a quien no pide hace más de 30 días, con «Escribirle» solo si aceptó promociones.
+4. **La ficha:** toca un cliente: WhatsApp, Llamar, sus números, su favorito y sus pedidos (toca uno y «Volver» regresa a la ficha). Cambia «Acepta recibir promociones» y «Corregir datos».
+5. **Fidelidad:** Más → Ajustes → «Fidelidad». Enciéndela con tu regla (por compra o por alfajor, la meta y el premio) y «Guardar». Entrega un pedido de un cliente y mira su tarjeta en la ficha. El mensaje de entregado dice «Llevas 1 de … sellos».
+6. **El premio:** con un cliente que llegó a la meta, anota un pedido nuevo: en el paso 2 sale «… tiene su premio listo» → «Aplicar», y el total baja.
+7. **Mensajes:** Más → Ajustes → «Mensajes de WhatsApp». Abre «En camino», cambia el texto (la burbuja cambia mientras escribes), inserta un marcador, «Guardar», y después «Volver al texto original».
+8. **Borrar los datos de un cliente de prueba:** en su ficha, «Borrar datos de este cliente» → «Borrar sus datos». La ficha queda sin datos y sus pedidos dicen «Cliente eliminado».
+
+### Lo que cambió respecto de este plan
+
+**Tarea 1**
+- Con las reglas de acceso activas, Postgres no usa un índice para `like` y revisaba a los 30,000 clientes uno por uno (un segundo). La búsqueda pasó a `private`, filtra el negocio ella misma y usa el índice de trigramas.
+- El texto sin tildes se guarda en una columna calculada (`search_text`), así revisar miles de candidatos no recalcula cada nombre.
+- Las páginas siguen un cursor «valor~id» y nunca repiten a nadie.
+- Las respuestas guardadas para reintentos (se borran a los 7 días) pueden tener el nombre de un cliente borrado hasta que se limpian: borrarlas podía duplicar un pedido en un reintento tardío.
+
+**Tarea 2**
+- Un pedido entregado no se corrige (`edit_order` lo rechaza), así que corregir no toca los sellos.
+- La misma función deja justo también el canje: anular devuelve los sellos y deshacer la anulación los vuelve a canjear (o `conflict` si ya no están).
+- Quitar sellos nunca deja a un cliente en menos de 0 (ya pudo canjearlos); el movimiento anota lo que de verdad se quitó.
+- «Cerca del premio» desempata por el que compró hace menos, con un índice que ya trae ese orden (por nombre, con miles de empatados, tardaba hasta 52 ms).
+- Una búsqueda con texto busca primero por el índice de trigramas y después filtra: con «No vuelven» el plan a veces elegía el índice de fechas (hasta 90 ms).
+
+**Tarea 3**
+- `list_templates` compara con los textos originales con las reglas de acceso de quien lee, así que esa función quedó a su alcance (solo devuelve los seis originales).
+
+**Tarea 4**
+- Corregir y borrar refrescan Clientes; lo de otros módulos (los pedidos con su nombre) lo pide quien llama: `customers` no usa a nadie.
+
+**Tarea 5**
+- «Escribirle» vive en la fila del cliente (lo pone la ruta, con el mensaje de `messages`), sin un archivo aparte.
+
+**Tarea 6**
+- Las cuentas del formulario (el rango de la meta, el monto y el texto del premio) viven en `rules/draft.ts` con su 100 %. La vista previa usa 6 sellos de ejemplo, o uno menos que la meta si es menor.
+
+**Tarea 7**
+- La ficha recibe la tarjeta de sellos y los pedidos como piezas (`stamps`, `orders`), que pone la ruta. Un cliente borrado se ve como la maqueta: el aviso y sus números.
+
+**Tarea 8**
+- El borrador recuerda si se aplicó el premio; aplicarlo saca el descuento a mano, y si el teléfono cambia a alguien sin premio, deja de aplicarse.
+- `CACHE_SCHEMA` sube a 4 porque cambió la forma de tres lecturas.
+
+**Tarea 9**
+- La burbuja pasó a `MessageBubble`, la misma en el editor y en los avisos. Lo escrito no se pierde con un `conflict`.
