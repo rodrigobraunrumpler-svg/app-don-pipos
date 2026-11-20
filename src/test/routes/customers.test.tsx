@@ -1,4 +1,4 @@
-// Más → Clientes → la ficha → atrás, y «Escribirle» en «No vuelven», con las rutas de verdad
+// Más → Clientes → la ficha → atrás, «Escribirle» en «No vuelven» y Más → Fidelidad, con las rutas de verdad
 import { QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
@@ -8,6 +8,7 @@ import { Linking } from "react-native";
 
 import More from "@/app/(main)/(tabs)/more";
 import CustomerProfile from "@/app/(main)/customers/[id]";
+import Loyalty from "@/app/(main)/more/loyalty";
 import Customers from "@/app/(main)/customers/index";
 import { createTestQueryClient } from "@/test/render";
 import { ThemeProvider } from "@/theme";
@@ -27,6 +28,18 @@ jest.mock("@/features/orders/api/orders", () => ({
     items: [],
     meta: { limit: 20, total: 0, hasMore: false, nextCursor: null, totalDueCents: 0 },
   }),
+}));
+jest.mock("@/features/loyalty/api/loyalty", () => ({
+  getLoyaltySettings: async () => ({
+    isActive: false,
+    stampUnit: "order",
+    goal: 10,
+    rewardKind: "free_item",
+    rewardAmountCents: null,
+    rewardText: null,
+    version: 1,
+  }),
+  getLoyaltyOverview: async () => ({ goal: 10, customers: [] }),
 }));
 jest.mock("@/features/messages/api/templates", () => ({
   listTemplates: async () => [
@@ -67,7 +80,7 @@ function Providers({ children }: { children: ReactNode }) {
     </QueryClientProvider>
   );
 }
-const ROUTES = { more: More, "customers/index": Customers, "customers/[id]": CustomerProfile };
+const ROUTES = { more: More, "customers/index": Customers, "customers/[id]": CustomerProfile, "more/loyalty": Loyalty };
 
 test("Más → Clientes → la ficha, y atrás vuelve paso a paso", async () => {
   await renderRouter(ROUTES, { initialUrl: "/more", wrapper: Providers });
@@ -91,4 +104,13 @@ test("en «No vuelven», «Escribirle» abre WhatsApp con el mensaje lleno", asy
     `https://wa.me/51900000505?text=${encodeURIComponent("Hola Rosa, hace tiempo que no te vemos por Don Pipos.")}`,
   );
   open.mockRestore();
+});
+
+test("Más → Fidelidad (apagada) y atrás vuelve", async () => {
+  await renderRouter(ROUTES, { initialUrl: "/more", wrapper: Providers });
+  await fireEvent.press(await screen.findByRole("button", { name: "Fidelidad, Apagada" }));
+  expect(screen).toHavePathname("/more/loyalty");
+  expect(await screen.findByText("La fidelidad está apagada")).toBeOnTheScreen();
+  await act(() => router.back());
+  expect(screen).toHavePathname("/more");
 });

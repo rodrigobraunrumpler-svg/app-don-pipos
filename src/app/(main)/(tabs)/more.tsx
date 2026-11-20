@@ -8,6 +8,7 @@ import { CashRow } from "@/features/cash";
 import { CustomersRow } from "@/features/customers";
 import { ExpenseCategoriesRow, ExpensesRow } from "@/features/expenses";
 import { IncomeRow } from "@/features/income";
+import { LoyaltyRow } from "@/features/loyalty";
 import { ReceivablesRow } from "@/features/orders";
 import { ProductsRow } from "@/features/products";
 import { ExportRow, ReportsRow } from "@/features/reports";
@@ -29,6 +30,7 @@ export default function More() {
         <MenuSection title="Ajustes">
           <ProductsRow onPress={() => router.navigate("/more/products")} />
           <ExpenseCategoriesRow />
+          <LoyaltyRow onPress={() => router.navigate("/more/loyalty")} />
         </MenuSection>
         <AccountSection onChangePin={() => router.navigate("/more/change-pin")} />
         <MenuSection title="Ayuda">
