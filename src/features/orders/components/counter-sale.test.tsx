@@ -9,7 +9,11 @@ import { COQUETA_ID } from "@/test/stock-items";
 import { CounterSale } from "./counter-sale";
 
 const mockSale = jest.fn();
-jest.mock("../api/orders", () => ({ createCounterSale: (input: unknown) => mockSale(input) }));
+const mockCancel = jest.fn();
+jest.mock("../api/orders", () => ({
+  createCounterSale: (input: unknown) => mockSale(input),
+  cancelOrder: (input: unknown) => mockCancel(input),
+}));
 jest.mock("@/features/products/api/products", () => ({
   listProducts: async () => (jest.requireActual("@/test/products") as { TEST_PRODUCTS: unknown }).TEST_PRODUCTS,
 }));
@@ -78,4 +82,25 @@ test("si esa venta ya se había guardado con otros alfajores, lo dice sin invita
       "Esta venta ya se había guardado antes de tu cambio. Revisa Pedidos antes de cobrarla otra vez.",
     ),
   ).toBeOnTheScreen();
+});
+
+test("«Deshacer» anula la venta con la devolución completa en el mismo medio; el número queda usado", async () => {
+  const sold = { ...TEST_ORDER, number: 43, fulfillment: "counter" as const, status: "delivered" as const };
+  mockSale.mockReset();
+  mockSale.mockResolvedValue({ ...sold, totalCents: 2400, paidCents: 2400 });
+  mockCancel.mockResolvedValue({ ...sold, status: "cancelled", paidCents: 0 });
+  await renderWithProviders(<CounterSale onBack={jest.fn()} />);
+  await fireEvent.press(await screen.findByRole("button", { name: "Sumar un Coqueta" }));
+  await fireEvent.press(await screen.findByRole("button", { name: "Yape" }));
+  expect(await screen.findByText("Venta guardada: #0043, S/ 24.00.")).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: "Deshacer" }));
+  await waitFor(() =>
+    expect(mockCancel).toHaveBeenCalledWith({
+      requestId: expect.any(String),
+      orderId: sold.id,
+      reason: "Venta deshecha",
+      refund: { cents: 2400, method: "yape" },
+    }),
+  );
+  expect(await screen.findByText("Venta #0043 anulada, con su devolución.")).toBeOnTheScreen();
 });

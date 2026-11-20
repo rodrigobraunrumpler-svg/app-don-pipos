@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { randomUUID } from "expo-crypto";
 import { useCallback, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
@@ -20,8 +21,9 @@ import { useRequestId } from "@/lib/use-request-id";
 
 import { PAYMENT_METHOD_LABELS } from "../constants";
 import { useCreateCounterSale } from "../hooks/use-order-changes";
+import { useCancelOrder } from "../hooks/use-order-corrections";
 import { orderNumber } from "../rules/number";
-import type { PaymentMethod } from "../schema/order";
+import type { Order, PaymentMethod } from "../schema/order";
 
 // El mismo código ya se guardó con otros alfajores (una respuesta perdida y después un cambio): no invita a cobrar otra vez
 const CONFLICT_TEXT = "Esta venta ya se había guardado antes de tu cambio. Revisa Pedidos antes de cobrarla otra vez.";
@@ -29,7 +31,8 @@ const CONFLICT_TEXT = "Esta venta ya se había guardado antes de tu cambio. Revi
 const METHODS = Object.keys(PAYMENT_METHOD_LABELS) as PaymentMethod[];
 
 // La venta de mostrador (PANTALLAS.venta): sin cliente, se toca cada alfajor y se cobra con un toque en el medio.
-// Espera la respuesta y queda vacía para la siguiente. Pedir más de lo que hay avisa sin bloquear (D12)
+// Espera la respuesta y queda vacía para la siguiente. Pedir más de lo que hay avisa sin bloquear (D12). «Deshacer» la
+// anula con la devolución completa en el mismo medio: el número queda usado y nada se borra
 export function CounterSale({ onBack }: { onBack: () => void }) {
   const online = useOnline();
   const products = useQuery({ ...productsQuery, select: (list) => list.filter((product) => product.isActive) });
@@ -38,7 +41,9 @@ export function CounterSale({ onBack }: { onBack: () => void }) {
   const sale = useCreateCounterSale();
   const { requestId, renew } = useRequestId();
   const [quantities, setQuantities] = useState<Record<string, number>>({});
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ text: string; onUndo?: () => void } | null>(null);
+  const [sold, setSold] = useState<Order | null>(null);
+  const cancel = useCancelOrder(sold?.id ?? "");
   const hideToast = useCallback(() => setToast(null), []);
   const chosen = (products.data ?? []).filter((product) => (quantities[product.id] ?? 0) > 0);
   const units = chosen.reduce((sum, product) => sum + (quantities[product.id] ?? 0), 0);
@@ -57,12 +62,32 @@ export function CounterSale({ onBack }: { onBack: () => void }) {
       renew();
       confirmTap();
       setQuantities({});
-      setToast(`Venta guardada: ${orderNumber(order.number)}, ${formatCents(order.totalCents)}.`);
+      setSold(order);
+      setToast({
+        text: `Venta guardada: ${orderNumber(order.number)}, ${formatCents(order.totalCents)}.`,
+        onUndo: () => undo(order, method),
+      });
     } catch (error) {
       const conflict = toAppError(error).kind === "conflict";
       if (conflict) renew();
-      setToast(conflict ? CONFLICT_TEXT : errorMessage(error));
+      setToast({ text: conflict ? CONFLICT_TEXT : errorMessage(error) });
     }
+  }
+
+  function undo(order: Order, method: PaymentMethod) {
+    setToast(null);
+    cancel.mutate(
+      {
+        requestId: randomUUID(),
+        orderId: order.id,
+        reason: "Venta deshecha",
+        refund: order.paidCents > 0 ? { cents: order.paidCents, method } : null,
+      },
+      {
+        onSuccess: () => setToast({ text: `Venta ${orderNumber(order.number)} anulada, con su devolución.` }),
+        onError: (error) => setToast({ text: errorMessage(error) }),
+      },
+    );
   }
 
   return (
@@ -137,7 +162,14 @@ export function CounterSale({ onBack }: { onBack: () => void }) {
           ))}
         </View>
       </View>
-      {toast ? <Toast message={toast} onHide={hideToast} /> : null}
+      {toast ? (
+        <Toast
+          message={toast.text}
+          actionLabel={toast.onUndo ? "Deshacer" : undefined}
+          onAction={toast.onUndo}
+          onHide={hideToast}
+        />
+      ) : null}
     </View>
   );
 }
