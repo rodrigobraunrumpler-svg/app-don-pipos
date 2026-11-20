@@ -27,3 +27,5 @@ export {
 export { ordersKeys } from "./queries/keys";
 export { orderCountsQuery, orderQuery, ordersQuery } from "./queries/orders";
 export { OrderList } from "./components/order-list";
+export { NewMenu } from "./components/new-menu";
+export { NewOrder } from "./components/new-order";

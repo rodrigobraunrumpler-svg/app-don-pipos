@@ -1,4 +1,4 @@
-// El botón + de las pestañas: todavía no abre nada (llega con los pedidos, fase 4)
+// La pestaña del botón +: el botón abre «¿Qué quieres anotar?» (en _layout.tsx) y esta pantalla nunca se muestra
 export default function New() {
   return null;
 }
