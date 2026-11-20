@@ -1,4 +1,4 @@
-import { infiniteQueryOptions, queryOptions, skipToken } from "@tanstack/react-query";
+import { infiniteQueryOptions, keepPreviousData, queryOptions, skipToken } from "@tanstack/react-query";
 
 import { STALE_TIME } from "@/lib/query";
 
@@ -14,9 +14,11 @@ export const customerByPhoneQuery = (phone: string | null) =>
     staleTime: STALE_TIME.live,
   });
 
-// Clientes, de 20 en 20: pide la siguiente página con el cursor de la anterior
+// Clientes, de 20 en 20: pide la siguiente página con el cursor de la anterior. Al cambiar de filtro o de búsqueda, la
+// lista de antes queda hasta que llega la nueva (sin parpadeo, PROJECT_CONTEXT §14.2)
 export const customersQuery = (filter: CustomerFilter, search: string) =>
   infiniteQueryOptions({
+    placeholderData: keepPreviousData,
     queryKey: customersKeys.list(filter, search),
     queryFn: ({ pageParam }) => searchCustomers({ filter, search, cursor: pageParam }),
     initialPageParam: null as string | null,

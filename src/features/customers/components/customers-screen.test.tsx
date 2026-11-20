@@ -79,15 +79,25 @@ test("en «No vuelven», «Escribirle» solo a quien aceptó promociones, con la
   expect(screen.getByText("Solo puedes escribirles una promoción a quienes aceptaron recibirlas.")).toBeOnTheScreen();
 });
 
-test("sin clientes, explica cómo llegan; sin señal, desde cuándo es la lista", async () => {
+test("sin clientes, explica cómo llegan", async () => {
   mockSearch.mockResolvedValue(page([]));
-  const { unmount } = await renderWithProviders(<CustomersScreen {...handlers()} />);
+  await renderWithProviders(<CustomersScreen {...handlers()} />);
   expect(await screen.findByText("Todavía no hay clientes")).toBeOnTheScreen();
   expect(screen.getByText("Se registran solos al anotar un pedido con su teléfono.")).toBeOnTheScreen();
-  unmount();
-  mockSearch.mockResolvedValue(page(ROWS));
+});
+
+test("sin señal, desde cuándo es la lista", async () => {
   await renderWithProviders(<CustomersScreen {...handlers()} />);
   await screen.findByText("3 clientes");
   await act(() => onlineManager.setOnline(false));
   expect(await screen.findByText(/^Sin conexión\. Ves los clientes de las \d\d:\d\d\.$/)).toBeOnTheScreen();
+});
+
+test("al cambiar de filtro no parpadea: la lista de antes queda hasta que llega la nueva", async () => {
+  await renderWithProviders(<CustomersScreen {...handlers()} />);
+  await screen.findByText("3 clientes");
+  mockSearch.mockReturnValue(new Promise(() => undefined));
+  await fireEvent.press(screen.getByRole("button", { name: "No vuelven" }));
+  expect(screen.queryByLabelText("Cargando")).toBeNull();
+  expect(screen.getByText("Ana Q. (DEMO)")).toBeOnTheScreen();
 });

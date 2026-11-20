@@ -125,26 +125,28 @@ export function CustomersScreen({ onBack, onOpen, lapsedAction }: Props) {
               {search ? `Nadie con «${search}».` : "Nadie en esta lista."}
             </Text>
           ) : (
-            <FlashList
-              data={customers}
-              keyExtractor={(customer) => customer.id}
-              renderItem={({ item, index }) => (
-                <CustomerRow
-                  customer={item}
-                  now={now}
-                  position={filter === "top" ? index + 1 : undefined}
-                  lapsed={lapsed}
-                  action={lapsed ? lapsedAction(item) : null}
-                  onPress={() => onOpen(item.id)}
-                />
-              )}
-              ListFooterComponent={footer}
-              onEndReached={() => {
-                if (online && list.hasNextPage && !list.isFetchingNextPage) void list.fetchNextPage();
-              }}
-              onEndReachedThreshold={0.5}
-              contentContainerStyle={{ paddingBottom: 24 }}
-            />
+            <View className={`flex-1 ${list.isPlaceholderData ? "opacity-60" : ""}`}>
+              <FlashList
+                data={customers}
+                keyExtractor={(customer) => customer.id}
+                renderItem={({ item, index }) => (
+                  <CustomerRow
+                    customer={item}
+                    now={now}
+                    position={filter === "top" ? index + 1 : undefined}
+                    lapsed={lapsed}
+                    action={lapsed ? lapsedAction(item) : null}
+                    onPress={() => onOpen(item.id)}
+                  />
+                )}
+                ListFooterComponent={footer}
+                onEndReached={() => {
+                  if (online && list.hasNextPage && !list.isFetchingNextPage) void list.fetchNextPage();
+                }}
+                onEndReachedThreshold={0.5}
+                contentContainerStyle={{ paddingBottom: 24 }}
+              />
+            </View>
           )}
         </>
       )}
