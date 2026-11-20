@@ -4,6 +4,7 @@ import { ScrollView, Text } from "react-native";
 import { MenuSection } from "@/components/ui/menu-section";
 import { Screen } from "@/components/ui/screen";
 import { AccountSection } from "@/features/auth";
+import { DeliveryRow, LapsedRow, PaymentMethodsRow, ProductionRow } from "@/features/businesses";
 import { CashRow } from "@/features/cash";
 import { CustomersRow } from "@/features/customers";
 import { ExpenseCategoriesRow, ExpensesRow } from "@/features/expenses";
@@ -31,6 +32,10 @@ export default function More() {
         <MenuSection title="Ajustes">
           <ProductsRow onPress={() => router.navigate("/more/products")} />
           <ExpenseCategoriesRow />
+          <PaymentMethodsRow />
+          <DeliveryRow />
+          <ProductionRow />
+          <LapsedRow />
           <MessagesRow onPress={() => router.navigate("/more/messages")} />
           <LoyaltyRow onPress={() => router.navigate("/more/loyalty")} />
         </MenuSection>
