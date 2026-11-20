@@ -17,3 +17,12 @@ export const PAYMENT_METHOD_LABELS = {
   plin: "Plin",
   transfer: "Transferencia",
 } as const;
+
+// Los filtros de la lista, en el orden de la maqueta
+export const FILTER_LABELS = {
+  today: "Hoy",
+  to_deliver: "Por entregar",
+  to_collect: "Por cobrar",
+  upcoming: "Próximos",
+  all: "Todos",
+} as const;

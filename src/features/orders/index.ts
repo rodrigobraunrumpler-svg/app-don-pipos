@@ -26,3 +26,4 @@ export {
 } from "./hooks/use-order-changes";
 export { ordersKeys } from "./queries/keys";
 export { orderCountsQuery, orderQuery, ordersQuery } from "./queries/orders";
+export { OrderList } from "./components/order-list";

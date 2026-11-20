@@ -31,7 +31,7 @@ export default function MainLayout() {
         }}
       />
       <Tabs.Screen
-        name="orders/index"
+        name="orders"
         options={{
           title: "Pedidos",
           tabBarIcon: ({ focused, size }) => (

@@ -1,14 +1,17 @@
-import { Text, View } from "react-native";
+import { router } from "expo-router";
 
 import { Screen } from "@/components/ui/screen";
+import { OrderList, ordersKeys } from "@/features/orders";
+import { useRefreshOnFocus } from "@/lib/use-refresh-on-focus";
 
-// Pedidos llega en la fase 4
 export default function Orders() {
+  useRefreshOnFocus(ordersKeys.all);
   return (
     <Screen bottom={false}>
-      <View className="flex-1 px-5 pt-4">
-        <Text className="font-extrabold text-3xl text-text">Pedidos</Text>
-      </View>
+      <OrderList
+        onOpen={(id) => router.push({ pathname: "/orders/[id]", params: { id } })}
+        onNew={() => router.push("/orders/new")}
+      />
     </Screen>
   );
 }
