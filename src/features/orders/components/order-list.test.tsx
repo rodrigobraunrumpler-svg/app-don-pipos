@@ -34,7 +34,7 @@ beforeEach(() => {
 });
 
 test("«Hoy» agrupa lo que está en curso arriba y lo terminado abajo", async () => {
-  await renderWithProviders(<OrderList onOpen={jest.fn()} onNew={jest.fn()} />);
+  await renderWithProviders(<OrderList onOpen={jest.fn()} onNew={jest.fn()} onReceivables={jest.fn()} />);
   await screen.findByText("#0044");
   const order = screen.getAllByText(/^(En curso|Terminados|#00\d\d)$/).map((node) => node.props.children);
   expect(order).toEqual(["En curso", "#0044", "Terminados", "#0043"]);
@@ -43,7 +43,7 @@ test("«Hoy» agrupa lo que está en curso arriba y lo terminado abajo", async (
 
 test("cambiar de filtro pide esa lista; tocar una fila abre el pedido", async () => {
   const onOpen = jest.fn();
-  await renderWithProviders(<OrderList onOpen={onOpen} onNew={jest.fn()} />);
+  await renderWithProviders(<OrderList onOpen={onOpen} onNew={jest.fn()} onReceivables={jest.fn()} />);
   await screen.findByText("#0044");
   await fireEvent.press(screen.getByRole("button", { name: "Por entregar" }));
   await waitFor(() => expect(mockList).toHaveBeenLastCalledWith({ filter: "to_deliver", search: null, cursor: null }));
@@ -57,7 +57,7 @@ test("«Todos» llega de 20 en 20: al final pide la página siguiente", async ()
   mockList.mockImplementation(async ({ cursor }: { cursor: string | null }) =>
     cursor === null ? page(first, { total: 25, hasMore: true, nextCursor: "6" }) : page(rest, { total: 25 }),
   );
-  await renderWithProviders(<OrderList onOpen={jest.fn()} onNew={jest.fn()} />);
+  await renderWithProviders(<OrderList onOpen={jest.fn()} onNew={jest.fn()} onReceivables={jest.fn()} />);
   await fireEvent.press(await screen.findByRole("button", { name: "Todos" }));
   expect(await screen.findByText("Mostrando 20 de 25")).toBeOnTheScreen();
   expect(screen.getByRole("button", { name: "Cargar 5 más" })).toBeOnTheScreen();
@@ -67,7 +67,7 @@ test("«Todos» llega de 20 en 20: al final pide la página siguiente", async ()
 });
 
 test("buscar «ana» pide la lista con la búsqueda, y sin resultados lo dice", async () => {
-  await renderWithProviders(<OrderList onOpen={jest.fn()} onNew={jest.fn()} />);
+  await renderWithProviders(<OrderList onOpen={jest.fn()} onNew={jest.fn()} onReceivables={jest.fn()} />);
   await screen.findByText("#0044");
   mockList.mockImplementation(async () => page([]));
   await fireEvent.changeText(screen.getByLabelText("Buscar pedidos"), "ana");
@@ -77,7 +77,7 @@ test("buscar «ana» pide la lista con la búsqueda, y sin resultados lo dice", 
 
 test("un filtro sin pedidos lo dice; los filtros muestran cuántos hay", async () => {
   mockList.mockImplementation(async () => page([]));
-  await renderWithProviders(<OrderList onOpen={jest.fn()} onNew={jest.fn()} />);
+  await renderWithProviders(<OrderList onOpen={jest.fn()} onNew={jest.fn()} onReceivables={jest.fn()} />);
   expect(await screen.findByText("No hay pedidos en «Hoy».")).toBeOnTheScreen();
   expect(within(screen.getByRole("button", { name: "Todos" })).getByText("25")).toBeOnTheScreen();
 });
@@ -86,7 +86,7 @@ test("sin ningún pedido todavía, invita a anotar el primero", async () => {
   mockList.mockImplementation(async () => page([]));
   mockCounts.mockImplementationOnce(async () => ({ today: 0, toDeliver: 0, upcoming: 0, toCollect: 0, all: 0 }));
   const onNew = jest.fn();
-  await renderWithProviders(<OrderList onOpen={jest.fn()} onNew={onNew} />);
+  await renderWithProviders(<OrderList onOpen={jest.fn()} onNew={onNew} onReceivables={jest.fn()} />);
   expect(await screen.findByText("Todavía no hay pedidos")).toBeOnTheScreen();
   await fireEvent.press(screen.getByRole("button", { name: "Anotar un pedido" }));
   expect(onNew).toHaveBeenCalled();

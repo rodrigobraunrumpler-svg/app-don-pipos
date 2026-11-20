@@ -9,16 +9,17 @@ import { LoadError } from "@/components/ui/load-error";
 import { Notice } from "@/components/ui/notice";
 import { SkeletonRows } from "@/components/ui/skeleton";
 import { formatLongDate, formatTime } from "@/lib/dates";
+import { formatCents } from "@/lib/money";
 import { useOnline } from "@/lib/use-online";
 import { useTheme } from "@/theme";
 
 import { FILTER_LABELS } from "../constants";
-import { orderCountsQuery, orderQuery, ordersQuery } from "../queries/orders";
+import { orderCountsQuery, orderQuery, ordersQuery, receivablesQuery } from "../queries/orders";
 import type { OrderFilter, OrderSummary } from "../schema/order";
 import { OrderFilters } from "./order-filters";
 import { OrderRow } from "./order-row";
 
-type Props = { onOpen: (orderId: string) => void; onNew: () => void };
+type Props = { onOpen: (orderId: string) => void; onNew: () => void; onReceivables: () => void };
 type Row =
   | { type: "group"; key: string; title: string }
   | { type: "order"; key: string; order: OrderSummary; finished: boolean };
@@ -41,7 +42,7 @@ function groupToday(orders: OrderSummary[]): Row[] {
 }
 
 // La pestaña Pedidos (PANTALLAS.pedidos): la búsqueda, los filtros con su cantidad y la lista por páginas de 20
-export function OrderList({ onOpen, onNew }: Props) {
+export function OrderList({ onOpen, onNew, onReceivables }: Props) {
   const online = useOnline();
   const { colors } = useTheme();
   const queryClient = useQueryClient();
@@ -52,6 +53,8 @@ export function OrderList({ onOpen, onNew }: Props) {
   const [pulling, setPulling] = useState(false);
   const counts = useQuery(orderCountsQuery);
   const list = useInfiniteQuery(ordersQuery(filter, search));
+  // Con «Por cobrar» elegido, cuánto te deben en total y la entrada a Por cobrar (hasta que llegue Inicio)
+  const due = useInfiniteQuery({ ...receivablesQuery, enabled: filter === "to_collect" }).data?.pages[0]?.meta;
   const now = new Date();
 
   // Busca cuando el dueño deja de escribir
@@ -107,6 +110,16 @@ export function OrderList({ onOpen, onNew }: Props) {
             />
           </View>
           <OrderFilters filter={filter} counts={counts.data} onChange={setFilter} />
+          {filter === "to_collect" && due?.total ? (
+            <View className="mx-5 flex-row items-center gap-3 rounded-md bg-primary py-1 pl-4 pr-1">
+              <Text numberOfLines={1} className="flex-1 font-extrabold text-base text-on-primary">
+                {`Te deben ${formatCents(due.totalDueCents)}`}
+              </Text>
+              <View className="shrink-0 rounded-full bg-background">
+                <Button variant="text" label="Ver por cobrar" onPress={onReceivables} />
+              </View>
+            </View>
+          ) : null}
           {online || !list.data ? null : (
             <View className="px-5">
               <Notice>{`Sin conexión. Ves los pedidos de las ${formatTime(new Date(list.dataUpdatedAt))}.`}</Notice>

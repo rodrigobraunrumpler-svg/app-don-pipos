@@ -11,6 +11,7 @@ export default function Orders() {
       <OrderList
         onOpen={(id) => router.push({ pathname: "/orders/[id]", params: { id } })}
         onNew={() => router.push("/orders/new")}
+        onReceivables={() => router.push("/orders/receivables")}
       />
     </Screen>
   );

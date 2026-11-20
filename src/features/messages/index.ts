@@ -3,3 +3,4 @@ export { fillTemplate } from "./rules/fill";
 export { PLACEHOLDERS, unknownPlaceholders } from "./rules/placeholders";
 export type { Placeholder, TemplateKey } from "./rules/placeholders";
 export { MessagePreview } from "./components/message-preview";
+export { MessageButton } from "./components/message-button";
