@@ -14,9 +14,9 @@ import { formatLongDate } from "@/lib/dates";
 import { errorMessage, toAppError } from "@/lib/errors";
 import { confirmTap } from "@/lib/haptics";
 import { useOnline } from "@/lib/use-online";
+import { useRequestId } from "@/lib/use-request-id";
 
 import { STOCK_CONFLICT_TEXT } from "../constants";
-import { useRequestId } from "@/lib/use-request-id";
 import { registerProductionMutation, revertStockChangeMutation } from "../queries/mutations";
 import { stockOverviewQuery } from "../queries/stock";
 import { productionSaveLabel, productionTotal } from "../rules/production";

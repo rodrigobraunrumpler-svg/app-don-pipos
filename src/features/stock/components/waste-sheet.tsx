@@ -11,9 +11,9 @@ import { ProductAvatar } from "@/features/products";
 import { errorMessage, toAppError } from "@/lib/errors";
 import { confirmTap } from "@/lib/haptics";
 import { useOnline } from "@/lib/use-online";
+import { useRequestId } from "@/lib/use-request-id";
 
 import { STOCK_CONFLICT_TEXT, WASTE_REASONS } from "../constants";
-import { useRequestId } from "@/lib/use-request-id";
 import { useRegisterWaste } from "../hooks/use-stock-changes";
 import { stockOverviewQuery } from "../queries/stock";
 import type { StockChangeDone, WasteReason } from "../schema/stock";

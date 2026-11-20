@@ -2,17 +2,20 @@ import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 
 import { AppError } from "@/lib/errors";
 import { renderWithProviders } from "@/test/render";
-import { LIMON_ID } from "@/test/stock-items";
+import { LIMON_ID, TEST_ITEMS } from "@/test/stock-items";
 
 import { CountSheet } from "./count-sheet";
 
 const mockCount = jest.fn();
+const mockItems = jest.fn();
 jest.mock("../api/stock", () => ({
-  getStockOverview: async () => (jest.requireActual("@/test/stock-items") as { TEST_ITEMS: unknown }).TEST_ITEMS,
+  getStockOverview: () => mockItems(),
   registerWaste: jest.fn(),
   registerStockCount: (input: unknown) => mockCount(input),
   revertStockChange: jest.fn(),
 }));
+
+beforeEach(() => mockItems.mockResolvedValue(TEST_ITEMS));
 
 test("con 11, contar 12 dice «+1» y guarda un ajuste", async () => {
   mockCount.mockResolvedValue({
@@ -57,4 +60,25 @@ test("si ese código ya se guardó con otros datos, lo dice y el siguiente inten
   await fireEvent.press(screen.getByRole("button", { name: "Guardar 1 ajuste" }));
   await waitFor(() => expect(mockCount).toHaveBeenCalledTimes(2));
   expect(mockCount.mock.calls[1][0].requestId).not.toBe(mockCount.mock.calls[0][0].requestId);
+});
+
+test("con dos alfajores y uno cambiado, manda solo ese (un conteo nunca pisa una venta que entró mientras tanto)", async () => {
+  mockCount.mockReset();
+  mockCount.mockResolvedValue({ adjustments: 1, items: [], backOnWeb: [], outOnWeb: [] });
+  mockItems.mockResolvedValueOnce([
+    { ...TEST_ITEMS[0]!, onHand: 11, reserved: 2, physical: 13 },
+    { ...TEST_ITEMS[1]! },
+  ]);
+  await renderWithProviders(<CountSheet productIds={null} onClose={jest.fn()} onDone={jest.fn()} />);
+  expect(
+    await screen.findByText("Deberías tener 13 en la nevera (11 libres y 2 apartados para pedidos)"),
+  ).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: "Más Limon Kiss" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Guardar 1 ajuste" }));
+  await waitFor(() =>
+    expect(mockCount).toHaveBeenCalledWith({
+      requestId: expect.any(String),
+      counts: [{ productId: LIMON_ID, counted: 12 }],
+    }),
+  );
 });

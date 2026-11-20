@@ -10,9 +10,9 @@ import { ProductAvatar } from "@/features/products";
 import { errorMessage, toAppError } from "@/lib/errors";
 import { confirmTap } from "@/lib/haptics";
 import { useOnline } from "@/lib/use-online";
+import { useRequestId } from "@/lib/use-request-id";
 
 import { STOCK_CONFLICT_TEXT } from "../constants";
-import { useRequestId } from "@/lib/use-request-id";
 import { useRegisterStockCount } from "../hooks/use-stock-changes";
 import { stockOverviewQuery } from "../queries/stock";
 import { countSaveLabel, differenceLabel, expectedLabel } from "../rules/count";
@@ -21,7 +21,8 @@ import type { StockChangeDone, StockItem } from "../schema/stock";
 type Props = { productIds: string[] | null; onClose: () => void; onDone: (done: StockChangeDone) => void };
 
 // Contar stock: por alfajor, lo que debería haber en la nevera (libre + apartado), lo contado y la diferencia.
-// Se mandan todos los contados: la base crea un ajuste solo donde hay diferencia
+// Se mandan solo los alfajores con diferencia: con pedidos entrando, mandar todos con el número de la pantalla podía
+// pisar una venta que entró mientras tanto (stock.md §3)
 export function CountSheet({ productIds, onClose, onDone }: Props) {
   const online = useOnline();
   const { data } = useQuery(stockOverviewQuery);
@@ -31,14 +32,14 @@ export function CountSheet({ productIds, onClose, onDone }: Props) {
   const [problem, setProblem] = useState<string | null>(null);
   const items = (data ?? []).filter((item) => productIds === null || productIds.includes(item.productId));
   const valueOf = (item: StockItem): number => counted[item.productId] ?? Math.max(item.physical, 0);
-  const changes = items.filter((item) => valueOf(item) !== item.physical).length;
+  const changed = items.filter((item) => valueOf(item) !== item.physical);
 
   async function submit() {
     setProblem(null);
     try {
       const result = await count.mutateAsync({
         requestId,
-        counts: items.map((item) => ({ productId: item.productId, counted: valueOf(item) })),
+        counts: changed.map((item) => ({ productId: item.productId, counted: valueOf(item) })),
       });
       renew();
       confirmTap();
@@ -85,9 +86,9 @@ export function CountSheet({ productIds, onClose, onDone }: Props) {
       {problem ? <Text className="mt-2 font-bold text-sm text-danger">{problem}</Text> : null}
       <View className="mt-4">
         <Button
-          label={count.isPending ? "Guardando…" : countSaveLabel(changes)}
+          label={count.isPending ? "Guardando…" : countSaveLabel(changed.length)}
           onPress={() => void submit()}
-          disabled={changes === 0 || !online || count.isPending}
+          disabled={changed.length === 0 || !online || count.isPending}
         />
       </View>
     </Sheet>
