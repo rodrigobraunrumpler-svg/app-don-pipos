@@ -104,6 +104,7 @@ export default function TabsLayout() {
         onOrder={() => go("/orders/new")}
         onCounterSale={() => go("/orders/counter")}
         onProduction={() => go("/stock/production")}
+        onExpense={() => go("/expenses/new")}
       />
     </>
   );

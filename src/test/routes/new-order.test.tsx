@@ -16,6 +16,7 @@ import NewOrderLayout from "@/app/(main)/orders/new/_layout";
 import NewOrderDetails from "@/app/(main)/orders/new/details";
 import NewOrder from "@/app/(main)/orders/new/index";
 import SavedOrderScreen from "@/app/(main)/orders/saved/[id]";
+import NewExpense from "@/app/(main)/expenses/new";
 import Production from "@/app/(main)/stock/production";
 import { AppError } from "@/lib/errors";
 import { TEST_ORDER } from "@/test/orders";
@@ -36,6 +37,7 @@ jest.mock("@/features/orders/api/orders", () => ({
   createOrder: (input: unknown) => mockCreate(input),
 }));
 jest.mock("@/features/customers/api/customers", () => ({ findCustomerByPhone: async () => null }));
+jest.mock("@/features/expenses/api/expenses", () => ({ listExpenseCategories: async () => [] }));
 jest.mock("@/features/businesses/api/business", () => ({
   getBusiness: async () => ({
     id: "00000000-0000-4000-8000-0000000000b1",
@@ -111,6 +113,7 @@ const ROUTES = {
   ...NEW_ORDER,
   "orders/counter": Counter,
   "stock/production": Production,
+  "expenses/new": NewExpense,
 };
 
 test("el recorrido: + → Un pedido → qué lleva → entrega y pago → guardado", async () => {
@@ -139,6 +142,7 @@ test("el botón + abre «¿Qué quieres anotar?» y cada opción lleva a su pant
     ["Un pedido", "/orders/new"],
     ["Una venta de mostrador", "/orders/counter"],
     ["La producción", "/stock/production"],
+    ["Un gasto", "/expenses/new"],
   ]) {
     await choose(option!);
     expect(screen).toHavePathname(path!);

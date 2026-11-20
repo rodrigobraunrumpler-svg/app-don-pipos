@@ -9,10 +9,11 @@ type Props = {
   onOrder: () => void;
   onCounterSale: () => void;
   onProduction: () => void;
+  onExpense: () => void;
 };
 
-// El botón + de las pestañas (hojaNuevo de la maqueta). «Un gasto» llega en la fase 5
-export function NewMenu({ visible, onClose, onOrder, onCounterSale, onProduction }: Props) {
+// El botón + de las pestañas (hojaNuevo de la maqueta)
+export function NewMenu({ visible, onClose, onOrder, onCounterSale, onProduction, onExpense }: Props) {
   const options: { icon: IconName; title: string; text: string; onPress: () => void }[] = [
     {
       icon: "clipboard-list-outline",
@@ -27,6 +28,12 @@ export function NewMenu({ visible, onClose, onOrder, onCounterSale, onProduction
       onPress: onCounterSale,
     },
     { icon: "package-variant-closed", title: "La producción", text: "Lo que hiciste hoy", onPress: onProduction },
+    {
+      icon: "receipt-text-outline",
+      title: "Un gasto",
+      text: "El monto, el tipo y la foto de la boleta",
+      onPress: onExpense,
+    },
   ];
   return (
     <Sheet visible={visible} title="¿Qué quieres anotar?" onClose={onClose}>
