@@ -118,17 +118,14 @@ Un concepto nuevo se agrega aquí antes de usarlo en el código.
 | Deshacer (un gasto) | `revertExpenseChange` | función `revert_expense_change` | La última corrección o anulación del gasto, hasta 10 minutos después |
 | Gastado en el mes | `expensesSummary` | función `expenses_summary` | El total y lo gastado por tipo |
 | Anular un ingreso | `voidManualIncome` | función `void_manual_income` | Solo los anotados a mano; los pagos se corrigen en su pedido |
+| Cuadre de caja | `cashCount` | `cash_counts` | Cada conteo queda; el último del día es el que vale |
+| Abriste con | `openingCents` | `opening_cents` | Por defecto, lo de hoy si ya se contó, si no lo del último cierre |
 | Cobrado en efectivo | `cashInCents` | `cash_in_cents` | Pagos e ingresos a mano en efectivo, sin anular, de ese día |
-| Gastos en efectivo | `cashOutCents` | `cash_out_cents` | Gastos y devoluciones en efectivo, sin anular, de ese día |
-| Lo contado | `countedCents` | `counted_cents` | Lo que hay en la caja |
-| Faltan, sobran | `differenceCents` | `difference_cents` | Lo contado − lo que debería haber |
-| Cerrar el día, volver a contar | `closeCashDay` | función `close_cash_day` | Cada conteo queda; el último del día es el que vale |
-| Cuadre de caja | `cashCount` | `cash_counts` | |
-| Abriste con | `openingCents` | `opening_cents` | |
-| Debería haber | `expectedCents` | — | Con cuánto abrió + cobrado en efectivo − gastos en efectivo |
-| Hay en la caja (contado) | `countedCents` | `counted_cents` | |
-| Diferencia: cuadra, sobra, falta | `differenceCents` | — | Contado menos lo que debería haber |
-| Cerrar el día | `closeDay` | `cash_counts.closed_at` | |
+| Gastos y devoluciones en efectivo | `cashOutCents` | `cash_out_cents` | Gastos y devoluciones en efectivo, sin anular, de ese día |
+| Debería haber | `expectedCents` | `expected_cents` | Con cuánto abrió + cobrado en efectivo − gastos y devoluciones en efectivo |
+| Hay en la caja (lo contado) | `countedCents` | `counted_cents` | |
+| Diferencia: cuadra, sobran, faltan | `differenceCents` | `difference_cents` | Lo contado − lo que debería haber |
+| Cerrar el día, volver a contar | `closeCashDay` | función `close_cash_day` | Volver a contar crea otro cierre |
 
 ## Clientes, fidelidad y mensajes
 

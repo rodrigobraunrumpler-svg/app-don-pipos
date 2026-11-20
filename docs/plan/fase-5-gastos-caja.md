@@ -296,3 +296,29 @@ Ingresa con el dueño DEMO (900 000 101, el PIN de tu `.env.local`):
 **Tarea 11**
 - La pantalla es `CashCountView`: `CashCount` es el tipo del cierre, como en el glosario.
 - Un cierre que ya se había guardado con otros números lo dice y pide volver a contar.
+
+## Después de la revisión final (2026-11-20)
+
+Un revisor nuevo revisó toda la rama: «listo para juntar, con correcciones», sin nada crítico. Se corrigió en una pasada, cada cosa con la prueba que la mostraba fallar:
+
+- **Una foto que no subía podía perderse sin aviso** si se guardaba otro gasto o se salía del formulario mientras subía. Ahora cada foto sube por su cuenta, el gasto se confirma enseguida («Gasto guardado: S/ X. Subiendo la foto…») y las que fallan quedan avisadas en Gastos, con «Reintentar las fotos».
+- **La cámara ya no dispara el bloqueo automático:** con «Al salir», volver de la cámara pedía el PIN y borraba el formulario.
+- **Deshacer o anular otra vez,** después de una respuesta que se perdió, ahora devuelve cómo quedó. Antes decía «Ya no se puede deshacer» o «Hay un dato que no es válido», aunque el cambio ya estaba hecho (una migración nueva).
+- **El Cuadre de caja** ya no se queda cargando para siempre: si falla, lo dice con «Reintentar»; sin señal y sin datos guardados, lo dice.
+- **«Volver a contar»** arranca con lo que se abrió en el conteo de hoy, no con lo del día anterior.
+- **Anotar ingreso** vuelve a «Hoy» después de guardar: «Ayer» ya no queda puesto sin que se note.
+- **Una foto cortada a los 60 s** dice «Sin conexión», no «Algo salió mal».
+- **Lo que sale en efectivo** se llama «Gastos y devoluciones en efectivo», porque incluye las devoluciones.
+- **El glosario** ya no repite filas del cuadre de caja.
+
+Comprobado: 567 pruebas de la app (100 % en las cuentas), lint, tipos y formato; las pruebas de la base pasan con la migración nueva.
+
+Para la prueba en el celular, suma: guarda dos gastos con foto seguidos en modo avión y vuelve a la señal; toma una foto con el bloqueo en «Al salir»; toca «Deshacer» en modo avión y vuelve a tocarlo con señal.
+
+**Quedan para después (menores):**
+- El enlace firmado de la foto se guarda con la caché: después de reabrir, la foto puede verse en blanco hasta que se pide otro.
+- «Gastado/Cobrado en noviembre» dicen S/ 0.00 mientras cargan o si fallan.
+- En un celular angosto, la segunda línea de algunas filas puede cortarse con «…»: mirarlo en el celular.
+- En «Editar tipo de gasto», atrás cierra toda la hoja en vez de volver a la lista.
+- Detalles de pruebas y de código (el medio de pago repetido en cuatro esquemas, una foto sin datos, recuperar la foto si Android cierra la app con la cámara abierta).
+
