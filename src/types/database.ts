@@ -268,6 +268,54 @@ export type Database = {
           },
         ];
       };
+      manual_incomes: {
+        Row: {
+          amount_cents: number;
+          business_id: string;
+          created_at: string;
+          description: string;
+          id: string;
+          method: string;
+          received_at: string;
+          updated_at: string;
+          void_reason: string | null;
+          voided_at: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          amount_cents: number;
+          business_id: string;
+          created_at?: string;
+          description: string;
+          id?: string;
+          method: string;
+          received_at?: string;
+          updated_at?: string;
+          void_reason?: string | null;
+          voided_at?: string | null;
+        };
+        Update: {
+          amount_cents?: number;
+          business_id?: string;
+          created_at?: string;
+          description?: string;
+          id?: string;
+          method?: string;
+          received_at?: string;
+          updated_at?: string;
+          void_reason?: string | null;
+          voided_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "manual_incomes_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       message_templates: {
         Row: {
           body: string;
@@ -761,6 +809,16 @@ export type Database = {
         };
         Returns: Json;
       };
+      create_manual_income: {
+        Args: {
+          p_amount_cents: number;
+          p_description: string;
+          p_method: string;
+          p_received_on: string;
+          p_request_id: string;
+        };
+        Returns: Json;
+      };
       create_order: { Args: { p_draft: Json; p_request_id: string }; Returns: Json };
       edit_order: {
         Args: {
@@ -777,8 +835,10 @@ export type Database = {
       find_customer_by_phone: { Args: { p_phone: string }; Returns: Json };
       get_business: { Args: Record<PropertyKey, never>; Returns: Json };
       get_order: { Args: { p_order_id: string }; Returns: Json };
+      income_summary: { Args: { p_from: string; p_to: string }; Returns: Json };
       list_expense_categories: { Args: Record<PropertyKey, never>; Returns: Json };
       list_expenses: { Args: { p_cursor?: string; p_from?: string; p_limit?: number; p_to?: string }; Returns: Json };
+      list_income: { Args: { p_cursor?: string; p_from?: string; p_limit?: number; p_to?: string }; Returns: Json };
       list_orders: {
         Args: { p_cursor?: string; p_filter: string; p_limit?: number; p_search?: string };
         Returns: Json;
@@ -822,6 +882,7 @@ export type Database = {
       stock_overview: { Args: Record<PropertyKey, never>; Returns: Json };
       update_settings: { Args: { p_expected_version: number; p_patch: Json }; Returns: Json };
       void_expense: { Args: { p_id: string; p_reason: string }; Returns: Json };
+      void_manual_income: { Args: { p_id: string; p_reason: string }; Returns: Json };
     };
     Enums: {
       [_ in never]: never;

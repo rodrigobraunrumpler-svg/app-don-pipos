@@ -190,6 +190,10 @@ create function pg_temp.unlisted_functions_for_app() returns setof text language
       'public.revert_expense_change(uuid)',
       'public.list_expenses(date, date, integer, text)',
       'public.expenses_summary(date, date)',
+      'public.create_manual_income(uuid, text, integer, text, date)',
+      'public.void_manual_income(uuid, text)',
+      'public.income_summary(date, date)',
+      'public.list_income(date, date, integer, text)',
       -- lo que usan por dentro las reglas de acceso y las funciones de arriba
       'private.owned_business_ids()',
       'private.fail(text)',
@@ -224,7 +228,10 @@ create function pg_temp.unlisted_functions_for_app() returns setof text language
       'private.attach_receipt(uuid, text)',
       'private.correct_expense(uuid, uuid, uuid, integer, text, text)',
       'private.void_expense(uuid, text)',
-      'private.revert_expense_change(uuid)'
+      'private.revert_expense_change(uuid)',
+      'private.create_manual_income(uuid, text, integer, text, date)',
+      'private.void_manual_income(uuid, text)',
+      'private.income_rows(uuid, timestamp with time zone, timestamp with time zone)'
     )
 $$;
 
