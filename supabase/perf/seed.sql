@@ -125,6 +125,25 @@ union all
 select o.business_id, o.id, 'delivered', o.delivered_at
 from public.orders o where o.business_id = '00000000-0000-4000-a000-0000000009c4' and o.status = 'delivered';
 
+-- Fase 7a: decenas de miles de clientes. El negocio medido suma 30,000 sin pedidos (nombres que se repiten, con tildes
+-- y «ñ», y su último pedido repartido en un año) y cada uno de los demás negocios, 12
+insert into public.customers (id, business_id, name, phone, orders_count, spent_cents, last_order_at)
+select
+  ('00000000-0000-4000-f000-' || lpad(to_hex(k), 12, '0'))::uuid,
+  '00000000-0000-4000-a000-0000000009c4',
+  (array['Ana', 'Lucía', 'Jorge', 'Rosa', 'Martín', 'Sofía', 'Carlos', 'Miguel', 'Patricia', 'Ñusta'])[1 + k % 10]
+    || ' ' || k || ' (DEMO)',
+  '+51966' || lpad(k::text, 6, '0'), 1 + k % 20, (1 + k % 20) * 1200, now() - (k % 365) * interval '1 day'
+from generate_series(1, 30000) as k;
+
+insert into public.customers (id, business_id, name, phone, orders_count, spent_cents, last_order_at)
+select
+  ('00000000-0000-4000-f100-' || lpad(to_hex(b * 100 + k), 12, '0'))::uuid,
+  ('00000000-0000-4000-a000-' || lpad(to_hex(b), 12, '0'))::uuid,
+  'Cliente ' || k || ' (DEMO)', '+51977' || lpad(k::text, 6, '0'), 1, 1200, now() - k * interval '1 day'
+from generate_series(1, 5000) as b, generate_series(1, 12) as k
+where b <> 2500;
+
 analyze public.customers;
 analyze public.orders;
 analyze public.order_lines;

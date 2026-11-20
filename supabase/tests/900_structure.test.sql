@@ -201,6 +201,11 @@ create function pg_temp.unlisted_functions_for_app() returns setof text language
       'public.report_summary(date, date, date)',
       'public.report_ranking(date, date)',
       'public.export_rows(date, date)',
+      'public.get_customer(uuid)',
+      'public.search_customers(text, text, integer, text)',
+      'public.update_customer(uuid, integer, text, text, text, boolean)',
+      'public.anonymize_customer(uuid)',
+      'public.list_customer_orders(uuid, integer, text)',
       -- lo que usan por dentro las reglas de acceso y las funciones de arriba
       'private.owned_business_ids()',
       'private.fail(text)',
@@ -242,7 +247,13 @@ create function pg_temp.unlisted_functions_for_app() returns setof text language
       'private.close_cash_day(uuid, date, integer, integer)',
       'private.cash_totals(uuid, date)',
       'private.cash_count_json(cash_counts)',
-      'private.report_totals(uuid, date, date)'
+      'private.report_totals(uuid, date, date)',
+      'private.search_text(text)',
+      'private.customer_search(text, text)',
+      'private.customer_json(uuid)',
+      'private.update_customer(uuid, integer, text, text, text, boolean)',
+      'private.anonymize_customer(uuid)',
+      'private.search_customers(text, text, integer, text)'
     )
 $$;
 

@@ -135,12 +135,15 @@ Un concepto nuevo se agrega aquí antes de usarlo en el código.
 | Ficha del cliente | `customerProfile` | — | |
 | No vuelven | `lapsedCustomers` | — | Más de 30 días sin pedir (se cambia en Ajustes) |
 | Acepta promociones | `acceptsPromotions` | `accepts_promotions` | Sin permiso, no se le escriben promociones |
-| Borrar sus datos | `anonymizeCustomer` | `anonymized_at` | Ley 29733; los pedidos quedan como «Cliente eliminado» |
+| Borrar sus datos | `anonymizeCustomer` | `anonymized_at` | Ley 29733; los pedidos quedan como «Cliente eliminado», con «Dirección eliminada» y sin nota |
+| Texto de búsqueda | `searchText` | `customers.search_text` | El nombre sin tildes y en minúsculas, con el teléfono; se calcula al escribir |
+| Favorito | `favorite` | — | El alfajor que más pide, sin anulados |
 | Fidelidad | `loyalty` | `loyalty_settings` | Apagada hasta que el dueño la defina (D15) |
 | Sello | `stamp` | `loyalty_stamps` | Movimientos: +1 por pedido entregado, −meta al canjear |
 | Meta, premio | `goal`, `reward` | `goal`, `reward` | |
 | Sello por pedido o por alfajor | `stampUnit` | `stamp_unit` | `order` o `item`; lo elige el dueño |
-| Canjear | `redeem` | — | Se aplica como descuento con motivo «fidelidad» |
+| Canjear | `redeem` | `redeemReward` (borrador) | Se aplica como descuento con motivo «Fidelidad»; lo calcula la base |
+| Sellos de un pedido | `orderStamps` | `private.sync_order_stamps` | Los deja justos al entregar, deshacer, anular o corregir |
 | Mensaje de WhatsApp | `messageTemplate` | `message_templates` | Confirmación, en camino, listo, entregado, recordatorio de saldo, «te extrañamos» |
 | Recordatorio | `reminder` | — | Aviso del celular |
 

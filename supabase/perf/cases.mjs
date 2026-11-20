@@ -15,6 +15,8 @@ const STOCK_TABLES = ["products", "stock_levels", "stock_movements"];
 // Fase 4a: el mismo negocio con 3 años de pedidos (#1 a #10,970) y 300 clientes. El pedido #5,000 (0x1388)
 const ORDER = "00000000-0000-4000-c000-000000001388";
 const ORDER_TABLES = ["orders", "order_lines", "payments", "customers", "order_status_events"];
+// Fase 7a: un cliente con pedidos (el 150 de los 300: 0x96)
+const CUSTOMER = "00000000-0000-4000-d000-000000000096";
 const DRAFT = JSON.stringify({
   customer: { phone: "+51955000150", name: "Cliente 150 (DEMO)" },
   channel: "whatsapp",
@@ -230,6 +232,33 @@ export const cases = [
     as: OWNER,
     sql: `select public.export_rows(${MONTH_START}, ${TODAY})`,
     tables: ["businesses", "orders", ...INCOME_TABLES, ...EXPENSE_TABLES],
+  },
+  // Fase 7a: buscar entre decenas de miles de clientes, la ficha y sus pedidos
+  ...[
+    ["todos", "null, 'all'"],
+    ["los que más compran", "null, 'top'"],
+    ["no vuelven", "null, 'lapsed'"],
+    ["la página siguiente de todos", "null, 'all', 20, public.search_customers(null, 'all') -> 'meta' ->> 'nextCursor'"],
+    ["buscar «sofia 25»", "'sofia 25', 'all'"],
+    ["buscar «966 000 12»", "'966 000 12', 'all'"],
+    ["buscar «lucia» en no vuelven", "'lucia', 'lapsed'"],
+  ].map(([name, args]) => ({
+    name: `search_customers, ${name}`,
+    as: OWNER,
+    sql: `select public.search_customers(${args})`,
+    tables: ["businesses", "customers"],
+  })),
+  {
+    name: "get_customer con 3 años de pedidos",
+    as: OWNER,
+    sql: `select public.get_customer('${CUSTOMER}')`,
+    tables: ["businesses", "customers", "orders", "order_lines"],
+  },
+  {
+    name: "list_customer_orders",
+    as: OWNER,
+    sql: `select public.list_customer_orders('${CUSTOMER}')`,
+    tables: ["businesses", "orders"],
   },
 ];
 

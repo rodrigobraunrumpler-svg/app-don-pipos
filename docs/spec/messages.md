@@ -26,7 +26,7 @@ La llave primaria basta: son 6 filas por negocio.
 
 ## 3. Funciones de la base
 
-- **`list_templates()`.**
+- **`list_templates()`:** cada texto con `isDefault` (si es el original).
 - **`update_template(key, expected_version, body)`:** rechaza los marcadores que no existen y los textos vacíos (`invalid`), y con otra versión responde `conflict`. Cada cambio queda en el registro (`private.audit_log`).
 - **`reset_template(key)`:** vuelve al texto por defecto.
 

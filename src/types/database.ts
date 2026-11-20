@@ -156,6 +156,7 @@ export type Database = {
           note: string | null;
           orders_count: number;
           phone: string | null;
+          search_text: string | null;
           spent_cents: number;
           stamps: number;
           updated_at: string;
@@ -174,6 +175,7 @@ export type Database = {
           note?: string | null;
           orders_count?: number;
           phone?: string | null;
+          search_text?: never;
           spent_cents?: number;
           stamps?: number;
           updated_at?: string;
@@ -191,6 +193,7 @@ export type Database = {
           note?: string | null;
           orders_count?: number;
           phone?: string | null;
+          search_text?: never;
           spent_cents?: number;
           stamps?: number;
           updated_at?: string;
@@ -828,6 +831,7 @@ export type Database = {
         Returns: Json;
       };
       advance_order: { Args: { p_from_status: string; p_order_id: string }; Returns: Json };
+      anonymize_customer: { Args: { p_id: string }; Returns: Json };
       attach_receipt: { Args: { p_expense_id: string; p_receipt_path: string }; Returns: Json };
       cancel_order: {
         Args: {
@@ -894,10 +898,12 @@ export type Database = {
       export_rows: { Args: { p_from: string; p_to: string }; Returns: Json };
       find_customer_by_phone: { Args: { p_phone: string }; Returns: Json };
       get_business: { Args: Record<PropertyKey, never>; Returns: Json };
+      get_customer: { Args: { p_id: string }; Returns: Json };
       get_order: { Args: { p_order_id: string }; Returns: Json };
       home_summary: { Args: Record<PropertyKey, never>; Returns: Json };
       income_summary: { Args: { p_from: string; p_to: string }; Returns: Json };
       latest_cash_count: { Args: { p_business_date: string }; Returns: Json };
+      list_customer_orders: { Args: { p_cursor?: string; p_customer_id: string; p_limit?: number }; Returns: Json };
       list_expense_categories: { Args: Record<PropertyKey, never>; Returns: Json };
       list_expenses: { Args: { p_cursor?: string; p_from?: string; p_limit?: number; p_to?: string }; Returns: Json };
       list_income: { Args: { p_cursor?: string; p_from?: string; p_limit?: number; p_to?: string }; Returns: Json };
@@ -941,9 +947,21 @@ export type Database = {
         };
         Returns: Json;
       };
+      search_customers: { Args: { p_cursor?: string; p_filter: string; p_limit?: number; p_q: string }; Returns: Json };
       set_category_active: { Args: { p_active: boolean; p_expected_version: number; p_id: string }; Returns: Json };
       set_product_active: { Args: { p_active: boolean; p_id: string }; Returns: Json };
       stock_overview: { Args: Record<PropertyKey, never>; Returns: Json };
+      update_customer: {
+        Args: {
+          p_accepts_promotions: boolean;
+          p_address: string;
+          p_expected_version: number;
+          p_id: string;
+          p_name: string;
+          p_note: string;
+        };
+        Returns: Json;
+      };
       update_settings: { Args: { p_expected_version: number; p_patch: Json }; Returns: Json };
       void_expense: { Args: { p_id: string; p_reason: string }; Returns: Json };
       void_manual_income: { Args: { p_id: string; p_reason: string }; Returns: Json };
