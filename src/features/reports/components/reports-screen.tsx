@@ -22,10 +22,7 @@ export function ReportsScreen({ onBack, onRanking }: Props) {
       <FormHeader title="Reportes" subtitle={period?.label ?? "Elige las fechas"} onBack={onBack} />
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerClassName="px-5 pb-8">
         <PeriodPicker choice={choice} today={today} onChoice={setChoice} onCustom={setCustom} />
-        {period ? (
-          // Con otro periodo, el gráfico vuelve a mostrar su última barra
-          <PeriodReport key={`${period.from}:${period.to}`} period={period} today={today} onRanking={onRanking} />
-        ) : null}
+        {period ? <PeriodReport period={period} today={today} onRanking={onRanking} /> : null}
       </ScrollView>
     </View>
   );

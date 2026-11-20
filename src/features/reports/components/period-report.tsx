@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Text, View } from "react-native";
 
@@ -28,7 +28,11 @@ type Props = {
 // «Exportar» (con las fechas del periodo ya elegidas)
 export function PeriodReport({ period, today, onRanking }: Props) {
   const online = useOnline();
-  const { data, isError, refetch, dataUpdatedAt } = useQuery(reportSummaryQuery(period));
+  // Al cambiar de periodo no parpadea: los números de antes quedan, atenuados, hasta que llegan los nuevos (§14.2)
+  const { data, isError, refetch, dataUpdatedAt, isPlaceholderData } = useQuery({
+    ...reportSummaryQuery(period),
+    placeholderData: keepPreviousData,
+  });
   const [exporting, setExporting] = useState(false);
   if (!data && isError) return <LoadError what="los reportes" onRetry={() => void refetch()} />;
   if (!data)
@@ -59,9 +63,15 @@ export function PeriodReport({ period, today, onRanking }: Props) {
           </Text>
         </View>
       ) : (
-        <>
+        <View className={isPlaceholderData ? "opacity-50" : ""}>
           <ReportKpis summary={data} against={period.previousLabel} />
-          <InOutChart bars={data.bars} unit={barUnit(period.from, period.to)} today={today} />
+          {/* Con otro periodo, el gráfico vuelve a mostrar su última barra */}
+          <InOutChart
+            key={`${period.from}:${period.to}`}
+            bars={data.bars}
+            unit={barUnit(period.from, period.to)}
+            today={today}
+          />
           <ByMethod byMethod={data.byMethod} />
           <View className="mt-6 gap-2.5">
             <Button
@@ -78,7 +88,7 @@ export function PeriodReport({ period, today, onRanking }: Props) {
             />
           </View>
           {exporting ? <ExportSheet initial={period} onClose={() => setExporting(false)} /> : null}
-        </>
+        </View>
       )}
     </>
   );

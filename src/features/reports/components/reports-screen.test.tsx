@@ -1,5 +1,5 @@
 import { onlineManager } from "@tanstack/react-query";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen } from "@testing-library/react-native";
 
 import { businessDate } from "@/lib/dates";
 import { renderWithProviders } from "@/test/render";
@@ -115,4 +115,20 @@ test("sin pedidos ni gastos en el periodo ni en el anterior, lo dice; sin señal
   expect(await screen.findByText("Todavía no hay datos")).toBeOnTheScreen();
   onlineManager.setOnline(false);
   expect(await screen.findByText(/^Sin conexión\. Ves los números cargados a las \d\d:\d\d\.$/)).toBeOnTheScreen();
+});
+
+test("al cambiar de periodo no parpadea: se ven los números de antes hasta que llegan los nuevos", async () => {
+  await renderWithProviders(<ReportsScreen {...handlers()} />);
+  await screen.findByText("S/\u00a03,380.00");
+  let release: (summary: ReportSummary) => void = () => undefined;
+  mockSummary.mockReturnValueOnce(
+    new Promise<ReportSummary>((resolve) => {
+      release = resolve;
+    }),
+  );
+  await fireEvent.press(screen.getByRole("radio", { name: "Mes" }));
+  expect(screen.queryByLabelText("Cargando")).toBeNull();
+  expect(screen.getByText("S/\u00a03,380.00")).toBeOnTheScreen();
+  await act(async () => release({ ...SUMMARY, profitCents: 500000 }));
+  expect(await screen.findByText("S/\u00a05,000.00")).toBeOnTheScreen();
 });
