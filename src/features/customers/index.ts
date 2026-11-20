@@ -8,3 +8,4 @@ export { useAnonymizeCustomer, useUpdateCustomer } from "./hooks/use-customer-ch
 export type { Customer, CustomerFilter, CustomerMatch, CustomerRow, RepeatLine } from "./schema/customer";
 export { CustomersScreen } from "./components/customers-screen";
 export { CustomersRow } from "./components/customers-row";
+export { CustomerCard } from "./components/customer-card";

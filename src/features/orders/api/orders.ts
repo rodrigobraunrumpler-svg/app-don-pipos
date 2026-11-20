@@ -126,6 +126,19 @@ export const changePaymentMethod = (input: { requestId: string; paymentId: strin
   );
 
 // Por cobrar, por páginas: el cursor lo da la página anterior
+// Los pedidos de un cliente, del más nuevo al más viejo, de 20 en 20 (list_customer_orders)
+export async function listCustomerOrders(input: {
+  customerId: string;
+  cursor: string | null;
+}): Promise<Page<OrderSummary>> {
+  const { data, error } = await supabase().rpc("list_customer_orders", {
+    p_customer_id: input.customerId,
+    p_cursor: input.cursor ?? undefined,
+  });
+  if (error) throw toAppError(error);
+  return parseResponse(pageSchema(orderSummarySchema), data);
+}
+
 export async function listReceivables(input: { cursor: string | null }): Promise<ReceivablesPage> {
   const { data, error } = await supabase().rpc("list_receivables", { p_cursor: input.cursor ?? undefined });
   if (error) throw toAppError(error);

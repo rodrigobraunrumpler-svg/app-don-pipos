@@ -6,4 +6,5 @@ export const ordersKeys = {
   counts: ["orders", "counts"] as const,
   detail: (orderId: string) => ["orders", "detail", orderId] as const,
   receivables: ["orders", "receivables"] as const,
+  customer: (customerId: string) => ["orders", "customer", customerId] as const,
 };

@@ -27,7 +27,7 @@ export {
   useRevertStatus,
 } from "./hooks/use-order-changes";
 export { ordersKeys } from "./queries/keys";
-export { orderCountsQuery, orderQuery, ordersQuery, receivablesQuery } from "./queries/orders";
+export { customerOrdersQuery, orderCountsQuery, orderQuery, ordersQuery, receivablesQuery } from "./queries/orders";
 export {
   useCancelOrder,
   useChangePaymentMethod,
@@ -38,6 +38,7 @@ export {
 export { receivableReason } from "./rules/receivable";
 export { OrderList } from "./components/order-list";
 export { OrderRow } from "./components/order-row";
+export { CustomerOrders } from "./components/customer-orders";
 export { Receivables } from "./components/receivables";
 export { ReceivablesRow } from "./components/receivables-row";
 export { NewMenu } from "./components/new-menu";

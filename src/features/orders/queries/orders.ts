@@ -2,7 +2,7 @@ import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 
 import { STALE_TIME } from "@/lib/query";
 
-import { getOrder, getOrderCounts, listOrders, listReceivables } from "../api/orders";
+import { getOrder, getOrderCounts, listCustomerOrders, listOrders, listReceivables } from "../api/orders";
 import type { OrderFilter } from "../schema/order";
 import { ordersKeys } from "./keys";
 
@@ -39,3 +39,13 @@ export const receivablesQuery = infiniteQueryOptions({
   getNextPageParam: (last) => (last.meta.hasMore ? last.meta.nextCursor : undefined),
   staleTime: STALE_TIME.live,
 });
+
+// Los pedidos de un cliente, para su ficha
+export const customerOrdersQuery = (customerId: string) =>
+  infiniteQueryOptions({
+    queryKey: ordersKeys.customer(customerId),
+    queryFn: ({ pageParam }) => listCustomerOrders({ customerId, cursor: pageParam }),
+    initialPageParam: null as string | null,
+    getNextPageParam: (last) => (last.meta.hasMore ? last.meta.nextCursor : undefined),
+    staleTime: STALE_TIME.live,
+  });

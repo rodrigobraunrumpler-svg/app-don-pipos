@@ -8,6 +8,7 @@ import { Linking } from "react-native";
 
 import More from "@/app/(main)/(tabs)/more";
 import CustomerProfile from "@/app/(main)/customers/[id]";
+import OrderScreen from "@/app/(main)/orders/[id]";
 import Loyalty from "@/app/(main)/more/loyalty";
 import Customers from "@/app/(main)/customers/index";
 import { createTestQueryClient } from "@/test/render";
@@ -23,10 +24,25 @@ jest.mock("@/features/income/api/income", () => ({
   getIncomeSummary: async () => ({ totalCents: 0, byMethod: { cash: 0, yape: 0, plin: 0, transfer: 0 }, byDay: [] }),
 }));
 jest.mock("@/features/cash/api/cash", () => ({ getLatestCashCount: async () => null }));
-jest.mock("@/features/orders/api/orders", () => ({
-  listReceivables: async () => ({
-    items: [],
-    meta: { limit: 20, total: 0, hasMore: false, nextCursor: null, totalDueCents: 0 },
+jest.mock("@/features/orders/api/orders", () => {
+  const { TEST_ORDER, summaryOf } = jest.requireActual("@/test/orders");
+  return {
+    listReceivables: async () => ({
+      items: [],
+      meta: { limit: 20, total: 0, hasMore: false, nextCursor: null, totalDueCents: 0 },
+    }),
+    listCustomerOrders: async () => ({
+      items: [summaryOf(TEST_ORDER)],
+      meta: { limit: 20, total: 1, hasMore: false, nextCursor: null },
+    }),
+    getOrder: async () => TEST_ORDER,
+  };
+});
+jest.mock("@/features/businesses/api/business", () => ({
+  getBusiness: async () => ({
+    id: "00000000-0000-4000-8000-0000000000b1",
+    name: "Don Pipos (DEMO)",
+    settings: { activePaymentMethods: ["cash", "yape"], deliveryFeeCents: 500, version: 1 },
   }),
 }));
 jest.mock("@/features/loyalty/api/loyalty", () => ({
@@ -80,15 +96,26 @@ function Providers({ children }: { children: ReactNode }) {
     </QueryClientProvider>
   );
 }
-const ROUTES = { more: More, "customers/index": Customers, "customers/[id]": CustomerProfile, "more/loyalty": Loyalty };
+const ROUTES = {
+  more: More,
+  "customers/index": Customers,
+  "customers/[id]": CustomerProfile,
+  "more/loyalty": Loyalty,
+  "orders/[id]": OrderScreen,
+};
 
-test("Más → Clientes → la ficha, y atrás vuelve paso a paso", async () => {
+test("Más → Clientes → la ficha → uno de sus pedidos, y atrás vuelve paso a paso", async () => {
   await renderRouter(ROUTES, { initialUrl: "/more", wrapper: Providers });
   await fireEvent.press(await screen.findByRole("button", { name: "Clientes, 1" }));
   expect(screen).toHavePathname("/customers");
   await fireEvent.press(await screen.findByRole("button", { name: /^Rosa T\. \(DEMO\)/ }));
   expect(screen).toHavePathname("/customers/c2");
   expect(await screen.findByText("900 000 505")).toBeOnTheScreen();
+  await fireEvent.press(await screen.findByRole("button", { name: /^#0042/ }));
+  expect(screen).toHavePathname("/orders/00000000-0000-4000-8000-0000000000f1");
+  expect(await screen.findByText("Pedido #0042")).toBeOnTheScreen();
+  await act(() => router.back());
+  expect(screen).toHavePathname("/customers/c2");
   await act(() => router.back());
   expect(screen).toHavePathname("/customers");
   await act(() => router.back());
