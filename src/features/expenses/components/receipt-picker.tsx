@@ -1,27 +1,17 @@
 import { Image } from "expo-image";
-import * as ImagePicker from "expo-image-picker";
-import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 
-export type Photo = { uri: string; width: number; height: number };
+import { useTakePhoto, type Photo } from "../hooks/use-take-photo";
+
 type Props = { photo: Photo | null; onChange: (photo: Photo | null) => void };
 
 // «Boleta» (la maqueta): «Tomar foto de la boleta» con la cámara, o la foto tomada con «Quitar». Sube después de
 // guardar el gasto
 export function ReceiptPicker({ photo, onChange }: Props) {
-  const [denied, setDenied] = useState(false);
-
-  async function take() {
-    const permission = await ImagePicker.requestCameraPermissionsAsync();
-    setDenied(!permission.granted);
-    if (!permission.granted) return;
-    const result = await ImagePicker.launchCameraAsync({ mediaTypes: ["images"], quality: 1 });
-    const asset = result.canceled ? null : result.assets[0];
-    if (asset) onChange({ uri: asset.uri, width: asset.width, height: asset.height });
-  }
+  const { take, denied } = useTakePhoto();
 
   if (photo)
     return (
@@ -50,7 +40,7 @@ export function ReceiptPicker({ photo, onChange }: Props) {
         variant="secondary"
         label="Tomar foto de la boleta"
         icon={<Icon name="camera-outline" size={18} />}
-        onPress={() => void take()}
+        onPress={() => void take().then((taken) => taken && onChange(taken))}
       />
       {denied ? (
         <Text className="text-sm text-text-secondary">

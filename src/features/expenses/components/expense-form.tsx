@@ -19,11 +19,12 @@ import { useOnline } from "@/lib/use-online";
 import { useRequestId } from "@/lib/use-request-id";
 
 import { useAttachPhoto, useCreateExpense } from "../hooks/use-expense-changes";
+import type { Photo } from "../hooks/use-take-photo";
 import { expenseCategoriesQuery } from "../queries/expenses";
 import { expenseSaveLabel } from "../rules/expense";
 import { CategoryChip } from "./category-chip";
 import { ExpenseCategoriesSheet } from "./expense-categories-sheet";
-import { ReceiptPicker, type Photo } from "./receipt-picker";
+import { ReceiptPicker } from "./receipt-picker";
 
 type Message = { text: string; onRetry?: () => void };
 

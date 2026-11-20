@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 
 import More from "@/app/(main)/(tabs)/more";
 import Products from "@/app/(main)/more/products";
+import Expenses from "@/app/(main)/expenses/index";
 import Receivables from "@/app/(main)/orders/receivables";
 import { createTestQueryClient } from "@/test/render";
 import { ThemeProvider } from "@/theme";
@@ -17,6 +18,8 @@ jest.mock("@/features/expenses/api/expenses", () => ({
   listExpenseCategories: async () => [
     { id: "c1", name: "Insumos", icon: "basket-outline", isActive: true, sortOrder: 1, version: 1 },
   ],
+  getExpensesSummary: async () => ({ totalCents: 13100, byCategory: [] }),
+  listExpenses: async () => ({ items: [], meta: { limit: 20, total: 0, hasMore: false, nextCursor: null } }),
 }));
 jest.mock("@/features/orders/api/orders", () => ({
   listReceivables: async () => ({
@@ -33,7 +36,7 @@ function Providers({ children }: { children: ReactNode }) {
   );
 }
 
-const ROUTES = { more: More, "more/products": Products, "orders/receivables": Receivables };
+const ROUTES = { more: More, "more/products": Products, "orders/receivables": Receivables, "expenses/index": Expenses };
 
 test("Más ordena «Tu negocio» y «Ajustes»: Por cobrar con lo que te deben, y los tipos de gasto en su hoja", async () => {
   await renderRouter(ROUTES, { initialUrl: "/more", wrapper: Providers });
@@ -47,4 +50,13 @@ test("Más ordena «Tu negocio» y «Ajustes»: Por cobrar con lo que te deben, 
   expect(await screen.findByText("1 tipo")).toBeOnTheScreen();
   await fireEvent.press(screen.getByRole("button", { name: /^Tipos de gasto/ }));
   expect(await screen.findByText("Los que eliges al anotar un gasto.")).toBeOnTheScreen();
+});
+
+test("Más → Gastos, con lo gastado en el mes, y atrás vuelve", async () => {
+  await renderRouter(ROUTES, { initialUrl: "/more", wrapper: Providers });
+  await fireEvent.press(await screen.findByRole("button", { name: /^Gastos, S\/.131\.00$/ }));
+  expect(screen).toHavePathname("/expenses");
+  expect(await screen.findByText("Todavía no hay gastos este mes")).toBeOnTheScreen();
+  await act(() => router.back());
+  expect(screen).toHavePathname("/more");
 });

@@ -16,3 +16,5 @@ export { iconFor } from "./rules/category";
 export { ExpenseCategoriesRow } from "./components/expense-categories-row";
 export { ExpenseCategoriesSheet } from "./components/expense-categories-sheet";
 export { ExpenseForm } from "./components/expense-form";
+export { ExpensesOverview } from "./components/expenses-overview";
+export { ExpensesRow } from "./components/expenses-row";
