@@ -215,3 +215,84 @@ Se escriben en `expenses.md`, `income.md` y `cash.md` en la tarea 1, antes de la
 - [ ] **Paso 2: Documentar y commit** — `docs: record phase 5 results and the phone test`.
 
 **Lo que pruebas tú en el celular** (va en «Lo que falta»): crear tus tipos de gasto en Más; anotar un gasto con la foto de la boleta y verla en su hoja; corregirlo y deshacer; anularlo y deshacer; anotar un ingreso a mano; cobrar un pedido en efectivo y verlo en Ingresos y en el cuadre; cuadrar la caja con un faltante y volver a contar.
+
+---
+
+## Resultado (2026-11-20)
+
+La fase 5 quedó construida en la rama `fase-5`, con un commit por tarea.
+
+| Comprobación | Resultado |
+|---|---|
+| `pnpm test:coverage` | 561 pruebas; 100 % en `lib/{money,dates,errors}`, `theme/tokens` y las cuentas de `features/*/rules` |
+| `pnpm db:check` | Pasa entera: 637 pruebas de la base en 31 archivos, consejos de Supabase sin nada pendiente y tipos al día |
+| `pnpm db:perf` | 34 casos, todos con índice y en menos de 50 ms: la lista de gastos 3–6 ms, el resumen del mes 1 ms, los ingresos 3–12 ms, el cuadre 4 ms |
+| `pnpm lint`, `pnpm lint:rules`, `pnpm typecheck`, `pnpm test:scripts` | Pasan |
+
+En el proyecto de desarrollo quedaron las cinco migraciones de la fase: gastos (con el bucket privado `receipts`), corregir y anular gastos, ingresos, el cuadre de caja y una que acelera la lista de ingresos. No se cargaron tipos de gasto ni gastos DEMO: los creas tú en la prueba.
+
+Llegaron dos librerías que ya trae Expo Go: `expo-image-picker` (la cámara) y `expo-image-manipulator` (achicar la foto). Después de juntar en `main`, se corre `pnpm install` en la copia principal.
+
+### Lo que falta: probar en el celular
+
+```bash
+cd /home/javier/var-mar/app && pnpm install && pnpm start --tunnel
+```
+
+Ingresa con el dueño DEMO (900 000 101, el PIN de tu `.env.local`):
+
+1. **Tipos de gasto:** Más → Ajustes → «Tipos de gasto» → «Agregar tipo de gasto»: crea los que usas, cada uno con su ícono. Renombra uno y apágalo: en la lista dice «Apagado» y ya no sale al anotar.
+2. **Un gasto con su boleta:** + → «Un gasto»: el monto, el tipo, en qué, cómo pagaste y «Tomar foto de la boleta» (la primera vez el celular pide permiso a la cámara) → «Guardar gasto de S/ …». Sale «Gasto guardado: S/ …» y el formulario queda listo para otro.
+3. **Gastos:** Más → «Gastos»: «Gastado en noviembre» con sus barras por tipo. Toca el gasto: se ve la foto. Cambia el monto → «Guardar corrección»: «Gasto corregido» con «Deshacer». Después «Anular gasto»: «Gasto anulado» con «Deshacer».
+4. **La foto después:** anota un gasto sin foto, ábrelo en Gastos y toca «Agregar foto de la boleta».
+5. **Ingresos:** Más → «Ingresos» → «Anotar ingreso»: uno de ayer, por Yape. Vuelve a la lista; tócalo y anúlalo. Toca el pago de un pedido: se abre el pedido, y atrás vuelve a Ingresos.
+6. **El efectivo del día:** cobra un pedido o una venta de mostrador en efectivo: aparece en Ingresos y suma en «Cobrado en efectivo» del cuadre.
+7. **Cuadre de caja:** Más → «Cuadre de caja»: «Abriste con» y, en «¿Cuánto hay en la caja?», un poco menos de lo que debería haber: «Faltan S/ …» en rojo. «Cerrar el día» → «Día cerrado». «Volver a contar» guarda otro conteo; en Más dice «Cerrado».
+8. **Sin señal (modo avión):** Anotar gasto dice «Sin conexión…» y «Guardar» se apaga; en el cuadre se puede contar, pero «Cerrar el día» espera la señal.
+
+### Lo que cambió respecto de este plan
+
+**Tarea 1**
+- El índice de `replaces_id` es completo, no parcial: la regla de estructura pide un índice entero por cada llave foránea. El de la lista lleva el id, para el cursor.
+- `create_expense` acepta una fecha de hasta 5 minutos adelante (el reloj del celular); la app manda «ahora».
+
+**Tarea 2**
+- «Deshacer» lee el registro de cambios: corregir anota «corregido» en el gasto viejo y «corrección» en el nuevo, así solo se deshace desde el nuevo y mientras sea lo último.
+- Una corrección puede dejar el tipo o el medio de antes aunque estén apagados; uno nuevo tiene que estar activo.
+
+**Tarea 3**
+- En la lista de ingresos, una devolución trae su monto en positivo con la clase «refund» (la app pone el «−»); el resumen sí la resta.
+- Las filas de ingresos de un periodo (`private.income_rows`) las comparten el resumen y el cuadre.
+
+**Tarea 4**
+- `cash_expected` recibe solo el día (ver «Cambios respecto de la especificación»). Los otros medios son netos: sus pagos e ingresos a mano menos sus devoluciones.
+- Cada cierre guarda la hora exacta (`clock_timestamp`), así «manda el último» también con dos conteos seguidos.
+
+**Tarea 5**
+- Las ventas de mostrador de los demás negocios del medidor tienen su pago: los del negocio medido son una parte de la tabla, como en producción.
+- La lista de ingresos ahora pide primero los pagos de la página y después sus pedidos (una migración nueva): la página siguiente bajó de 47 a 12 ms.
+
+**Tarea 6**
+- «Cuándo» de cada fila es `formatWhen` de `lib/dates` (lo usan gastos e ingresos), no `expenseWhen`; la fila arma el texto con el medio de pago.
+- Los nombres de los medios de pago para los módulos nuevos viven en `businesses` (dueño de los medios activos); pedidos conserva su copia porque sus cuentas la usan.
+- `orNull` y `rpcResult` pasaron a `lib/rpc.ts`. Gastos, ingresos y caja nunca importan pedidos: no hay importaciones en círculo.
+
+**Tarea 7**
+- Más suma cada fila cuando su pantalla existe: Gastos, Ingresos y Cuadre de caja llegaron en las tareas 9 a 11.
+- «Productos y precios» pasó a la fila común de Más. Un tipo nuevo empieza sin ícono: «Guardar» espera el nombre y el ícono.
+
+**Tarea 8**
+- Después de guardar, el aviso dice «Subiendo la foto de la boleta…» y luego «Gasto guardado: S/ X», o «… La foto no se subió.» con «Reintentar» (la misma foto, el mismo gasto).
+- La nota dice «Los tipos de gasto se cambian en Más.» (la maqueta decía «en Ajustes»).
+
+**Tarea 9**
+- La hoja del gasto ofrece los tipos y medios activos más los del gasto, aunque estén apagados. Anular manda el motivo «Anulado por el dueño».
+- «Agregar foto de la boleta» espera los datos del negocio (la ruta de la foto los necesita). La cámara vive en `hooks/use-take-photo.ts`, para el formulario y la hoja.
+
+**Tarea 10**
+- «Ayer» usa `previousDay` de `lib/dates`.
+- La lista de ingresos muestra en su tarjeta solo los medios con monto.
+
+**Tarea 11**
+- La pantalla es `CashCountView`: `CashCount` es el tipo del cierre, como en el glosario.
+- Un cierre que ya se había guardado con otros números lo dice y pide volver a contar.
