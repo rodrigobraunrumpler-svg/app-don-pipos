@@ -3,7 +3,7 @@ import { View } from "react-native";
 
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
-import { errorMessage, toAppError } from "@/lib/errors";
+import { errorMessage, isRetryable, toAppError } from "@/lib/errors";
 import { formatCents } from "@/lib/money";
 
 import { useRevertCancel, useRevertEdit } from "../hooks/use-order-corrections";
@@ -30,29 +30,27 @@ export function OrderCorrections({ order, methods, online, onMessage }: Props) {
   const revertEdit = useRevertEdit(order.id);
   const revertCancel = useRevertCancel(order.id);
   const number = orderNumber(order.number);
-  const undone = (text: string) => ({
+  // Si falló por la señal, el aviso vuelve a ofrecer «Deshacer» (la base lo acepta por 10 minutos)
+  const undone = (text: string, retry: () => void) => ({
     onSuccess: () => onMessage({ text }),
-    onError: (error: unknown) => onMessage({ text: undoFailure(error) }),
+    onError: (error: unknown) =>
+      onMessage({ text: undoFailure(error), onUndo: isRetryable(error) ? retry : undefined }),
   });
 
   function edited(updated: Order) {
     setSheet(null);
-    onMessage({
-      text: `Pedido ${number} actualizado: ${formatCents(updated.totalCents)}`,
-      onUndo: () =>
-        revertEdit.mutate(
-          { orderId: order.id, version: updated.version },
-          undone(`Pedido ${number}: se deshizo el cambio.`),
-        ),
-    });
+    const undo = () =>
+      revertEdit.mutate(
+        { orderId: order.id, version: updated.version },
+        undone(`Pedido ${number}: se deshizo el cambio.`, undo),
+      );
+    onMessage({ text: `Pedido ${number} actualizado: ${formatCents(updated.totalCents)}`, onUndo: undo });
   }
 
   function cancelled() {
     setSheet(null);
-    onMessage({
-      text: `Pedido ${number} anulado`,
-      onUndo: () => revertCancel.mutate(order.id, undone(`Pedido ${number}: se deshizo la anulación.`)),
-    });
+    const undo = () => revertCancel.mutate(order.id, undone(`Pedido ${number}: se deshizo la anulación.`, undo));
+    onMessage({ text: `Pedido ${number} anulado`, onUndo: undo });
   }
 
   if (order.status === "cancelled") return null;

@@ -10,8 +10,8 @@ export default function More() {
     <Screen bottom={false}>
       <ScrollView contentContainerClassName="gap-5 px-5 pb-6 pt-4">
         <Text className="font-extrabold text-3xl text-text">Más</Text>
-        <ProductsLink onPress={() => router.push("/more/products")} />
-        <AccountSection onChangePin={() => router.push("/more/change-pin")} />
+        <ProductsLink onPress={() => router.navigate("/more/products")} />
+        <AccountSection onChangePin={() => router.navigate("/more/change-pin")} />
       </ScrollView>
     </Screen>
   );

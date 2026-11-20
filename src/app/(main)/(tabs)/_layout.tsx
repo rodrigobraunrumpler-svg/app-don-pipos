@@ -12,7 +12,7 @@ export default function TabsLayout() {
   const [menu, setMenu] = useState(false);
   const go = (href: Href) => {
     setMenu(false);
-    router.push(href);
+    router.navigate(href);
   };
   return (
     <>

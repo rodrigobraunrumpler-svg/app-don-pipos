@@ -18,3 +18,12 @@ test("por qué le deben, en la fila de Por cobrar (la maqueta)", () => {
   expect(receivableReason(base, NOW)).toBe("Se cobra al recoger");
   expect(receivableReason({ ...base, fulfillment: "delivery" }, NOW)).toBe("Se cobra al entregar");
 });
+
+test("con un adelanto para un día que ya pasó, dice para cuándo era", () => {
+  expect(receivableReason({ ...base, paidCents: 2000, scheduledFor: "2026-11-18" }, NOW)).toBe(
+    "Adelanto de S/ 20.00, era para ayer",
+  );
+  expect(receivableReason({ ...base, paidCents: 2000, scheduledFor: "2026-11-16" }, NOW)).toBe(
+    "Adelanto de S/ 20.00, era para el lunes 16",
+  );
+});

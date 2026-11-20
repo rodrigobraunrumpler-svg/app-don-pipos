@@ -1,5 +1,6 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 
+import { AppError } from "@/lib/errors";
 import { TEST_ORDER } from "@/test/orders";
 import { renderWithProviders } from "@/test/render";
 
@@ -53,4 +54,14 @@ test("no deja devolver más de lo pagado", async () => {
   await fireEvent.changeText(screen.getByLabelText("Monto devuelto en soles"), "25");
   expect(screen.getByText("No puede pasar de lo pagado: S/ 20.00.")).toBeOnTheScreen();
   expect(screen.getByRole("button", { name: "Anular pedido" })).toBeDisabled();
+});
+
+test("si esa anulación ya se había guardado con otros datos, lo dice sin invitar a repetir", async () => {
+  mockCancel.mockRejectedValueOnce(new AppError("conflict"));
+  await open();
+  await fireEvent.press(screen.getByRole("button", { name: "Sin stock" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Anular pedido" }));
+  expect(
+    await screen.findByText("Este pedido ya se había anulado antes de tu cambio. Cierra la hoja para ver cómo quedó."),
+  ).toBeOnTheScreen();
 });

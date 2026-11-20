@@ -17,6 +17,7 @@ import { useRequestId } from "@/lib/use-request-id";
 import { PAYMENT_METHOD_LABELS } from "../constants";
 import { useEditOrder } from "../hooks/use-order-corrections";
 import { orderNumber } from "../rules/number";
+import { editedTotals } from "../rules/totals";
 import type { Order, PaymentMethod } from "../schema/order";
 
 type Props = { order: Order; methods: PaymentMethod[]; onClose: () => void; onDone: (order: Order) => void };
@@ -25,7 +26,7 @@ const CONFLICT_TEXT = "Este pedido cambió mientras lo editabas. Ciérralo y vue
 
 // Editar un pedido (la hoja de la maqueta): lo que ya estaba, con su precio congelado, y después los alfajores activos
 // que no lleva, al precio de hoy. Si el total baja de lo pagado, la devolución de la diferencia va en el mismo cambio.
-// ponytail: un total negativo (descuento mayor que lo que queda) lo rechaza la base con su mensaje
+// ponytail: con un descuento mayor que lo que queda, la vista previa dice S/ 0.00 y la base lo rechaza (invalid)
 export function EditOrderSheet({ order, methods, onClose, onDone }: Props) {
   const online = useOnline();
   const edit = useEditOrder(order.id);
@@ -53,16 +54,15 @@ export function EditOrderSheet({ order, methods, onClose, onDone }: Props) {
       })),
   ];
   const quantity = (id: string) => quantities[id] ?? 0;
-  const lines = rows
-    .filter((row) => quantity(row.id) > 0)
-    .map((row) => ({ productId: row.id, quantity: quantity(row.id) }));
-  const total =
-    rows.reduce((sum, row) => sum + quantity(row.id) * row.priceCents, 0) +
-    order.deliveryFeeCents -
-    order.discountCents;
+  const chosen = rows.filter((row) => quantity(row.id) > 0);
+  const lines = chosen.map((row) => ({ productId: row.id, quantity: quantity(row.id) }));
+  const { totalCents: total, refundCents } = editedTotals({
+    lines: chosen.map((row) => ({ quantity: quantity(row.id), unitPriceCents: row.priceCents })),
+    deliveryFeeCents: order.deliveryFeeCents,
+    discountCents: order.discountCents,
+    paidCents: order.paidCents,
+  });
   const changed = rows.some((row) => quantity(row.id) !== (before[row.id] ?? 0));
-  const refundCents = lines.length ? Math.max(order.paidCents - total, 0) : 0;
-
   async function save() {
     setFailure(null);
     try {

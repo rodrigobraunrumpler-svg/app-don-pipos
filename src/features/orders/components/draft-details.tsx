@@ -34,6 +34,8 @@ type Props = {
   onChange: (patch: Partial<DraftState>) => void;
   onBack: () => void;
   onSaved: (order: Order) => void;
+  // Avisa cuándo empieza y termina de guardar (la pantalla no deja salir mientras tanto)
+  onSaving?: (saving: boolean) => void;
 };
 
 const METHODS = Object.keys(PAYMENT_METHOD_LABELS) as PaymentMethod[];
@@ -42,7 +44,7 @@ const CONFLICT_TEXT =
 
 // Nuevo pedido, paso 2 (pedido2 de la maqueta): el cliente por su teléfono, la entrega, el día y la hora, el descuento
 // y el pago de ahora, con el resumen. Guardar espera la respuesta («Guardando…») y sin señal se apaga
-export function DraftDetails({ draft, onChange, onBack, onSaved }: Props) {
+export function DraftDetails({ draft, onChange, onBack, onSaved, onSaving }: Props) {
   const online = useOnline();
   const products = useQuery({ ...productsQuery, select: (list) => list.filter((product) => product.isActive) });
   const settings = useQuery({ ...businessQuery, select: (business) => business.settings });
@@ -77,6 +79,7 @@ export function DraftDetails({ draft, onChange, onBack, onSaved }: Props) {
   async function save() {
     if (!phone || missing) return;
     setFailure(null);
+    onSaving?.(true);
     try {
       // El código viaja con el borrador: el reintento después de una respuesta perdida, aunque se haya cerrado la app,
       // devuelve el mismo pedido. Al guardar, el borrador se vacía y el siguiente trae otro código
@@ -90,8 +93,10 @@ export function DraftDetails({ draft, onChange, onBack, onSaved }: Props) {
         }),
       });
       confirmTap();
+      onSaving?.(false);
       onSaved(order);
     } catch (error) {
+      onSaving?.(false);
       // El mismo código ya se guardó con otros datos: se explica y el siguiente intento es otro pedido
       const conflict = toAppError(error).kind === "conflict";
       if (conflict) onChange({ requestId: randomUUID() });

@@ -125,7 +125,7 @@ test("cuánto le alcanza y cómo se vende, con la nota de las últimas 4 semanas
   await renderWithProviders(<ProductStock productId={COQUETA_ID} price={1200} onBack={jest.fn()} />);
   expect(await screen.findByText("3 días")).toBeOnTheScreen();
   expect(screen.getByText("le alcanza")).toBeOnTheScreen();
-  expect(screen.getByText("Cómo se vende")).toBeOnTheScreen();
+  expect(await screen.findByText("Cómo se vende")).toBeOnTheScreen();
   expect(
     await screen.findByText(
       "Unas 5 al día de lunes a viernes y 9 los sábados y domingos, según las últimas 4 semanas.",

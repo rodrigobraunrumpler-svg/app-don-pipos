@@ -33,6 +33,7 @@ function paidWhen(paidAt: string, now: Date): string {
 export function OrderPayments({ order, now, canPay, disabled, methods, onPay, onMessage }: Props) {
   const [changing, setChanging] = useState<Payment | null>(null);
   const due = order.totalCents - order.paidCents;
+  const cancelled = order.status === "cancelled";
   const payments = order.payments.filter((payment) => !payment.voidedAt);
   return (
     <View className="mt-5">
@@ -82,16 +83,23 @@ export function OrderPayments({ order, now, canPay, disabled, methods, onPay, on
           <View className="flex-row items-center gap-3 px-4 py-3">
             <Icon name="timer-sand" size={20} tone="textMuted" />
             <View>
-              <Text className="font-bold text-base text-text">Sin pagos todavía</Text>
-              <Text className="text-[13px] text-text-secondary">
-                {order.fulfillment === "pickup" ? "Se cobra al recoger" : "Se cobra al entregar"}
-              </Text>
+              <Text className="font-bold text-base text-text">{cancelled ? "Sin pagos" : "Sin pagos todavía"}</Text>
+              {cancelled ? null : (
+                <Text className="text-[13px] text-text-secondary">
+                  {order.fulfillment === "pickup" ? "Se cobra al recoger" : "Se cobra al entregar"}
+                </Text>
+              )}
             </View>
           </View>
         )}
       </View>
-      <Text className={`mt-2 font-bold text-sm ${due > 0 ? "text-text-secondary" : "text-accent"}`}>
-        {due > 0 ? `Falta cobrar ${formatCents(due)}` : "Pagado completo"}
+      {/* Anulado no se cobra: dice con cuánto se quedó el negocio, si no lo devolvió todo */}
+      <Text className={`mt-2 font-bold text-sm ${due > 0 || cancelled ? "text-text-secondary" : "text-accent"}`}>
+        {cancelled
+          ? `Anulado: no se cobra${order.paidCents > 0 ? `. Te quedaste con ${formatCents(order.paidCents)}` : ""}.`
+          : due > 0
+            ? `Falta cobrar ${formatCents(due)}`
+            : "Pagado completo"}
       </Text>
       {changing ? (
         <ChangeMethodSheet

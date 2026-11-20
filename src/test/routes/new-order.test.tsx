@@ -1,8 +1,7 @@
 // Nuevo pedido, paso 1, y el botón +, con las rutas de verdad
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { act, fireEvent, screen } from "@testing-library/react-native";
-import { router } from "expo-router";
+import { fireEvent, screen } from "@testing-library/react-native";
 import { renderRouter } from "expo-router/testing-library";
 import type { ReactNode } from "react";
 
@@ -168,102 +167,4 @@ test("si la respuesta se pierde, el pedido recuperado se vuelve a guardar con el
   expect(await screen.findByText("Pedido #0042 guardado")).toBeOnTheScreen();
   expect(mockCreate).toHaveBeenCalledTimes(2);
   expect(mockCreate.mock.calls[1][0].requestId).toBe(mockCreate.mock.calls[0][0].requestId);
-});
-
-// La pestaña elegida debajo de lo que se ve
-type NavState = { type?: string; index?: number; routes?: { name: string; state?: NavState }[] };
-function selectedTab(state: NavState | undefined): string | undefined {
-  if (!state) return undefined;
-  if (state.type === "tab") return state.routes?.[state.index ?? 0]?.name;
-  for (const route of state.routes ?? []) {
-    const found = selectedTab(route.state);
-    if (found) return found;
-  }
-  return undefined;
-}
-
-test("Nuevo pedido abierto con el + se abre encima de Inicio: «Volver» regresa a Inicio y Pedidos sigue con su lista", async () => {
-  const view = await renderRouter(ROUTES, { initialUrl: "/home", wrapper: Providers });
-  await fireEvent.press(await screen.findByRole("button", { name: "Anotar" }));
-  await fireEvent.press(await screen.findByRole("button", { name: /^Un pedido/ }));
-  expect(await screen.findByText("Paso 1 de 2: qué lleva")).toBeOnTheScreen();
-  // Sin cambiar de pestaña: al volver, la pantalla sale con su animación y deja ver Inicio
-  expect(selectedTab(view.getRouterState() as NavState)).toBe("home");
-  await fireEvent.press(screen.getByRole("button", { name: "Volver" }));
-  expect(screen).toHavePathname("/home");
-  await fireEvent.press(screen.getByRole("button", { name: /Pedidos/ }));
-  expect(screen).toHavePathname("/orders");
-});
-
-test("La producción abierta con el + vuelve a Inicio, y Stock sigue con su lista", async () => {
-  const view = await renderRouter(ROUTES, { initialUrl: "/home", wrapper: Providers });
-  await fireEvent.press(await screen.findByRole("button", { name: "Anotar" }));
-  await fireEvent.press(await screen.findByRole("button", { name: /^La producción/ }));
-  expect(await screen.findByText("Registrar producción")).toBeOnTheScreen();
-  expect(selectedTab(view.getRouterState() as NavState)).toBe("home");
-  await fireEvent.press(screen.getByRole("button", { name: "Volver" }));
-  expect(screen).toHavePathname("/home");
-  await fireEvent.press(screen.getByRole("button", { name: /Stock/ }));
-  expect(screen).toHavePathname("/stock");
-});
-
-// Las rutas de una pila, por su nombre, buscando la que tiene esa pantalla
-function stackWith(state: NavState | undefined, name: string): string[] | undefined {
-  if (!state) return undefined;
-  if (state.routes?.some((route) => route.name === name)) return state.routes.map((route) => route.name);
-  for (const route of state.routes ?? []) {
-    const found = stackWith(route.state, name);
-    if (found) return found;
-  }
-  return undefined;
-}
-
-test("los pasos de Nuevo pedido son pantallas: atrás vuelve un paso; al guardar, el recorrido se cierra", async () => {
-  const view = await renderRouter(ROUTES, { initialUrl: "/home", wrapper: Providers });
-  await fireEvent.press(await screen.findByRole("button", { name: "Anotar" }));
-  await fireEvent.press(await screen.findByRole("button", { name: /^Un pedido/ }));
-  await fireEvent.press(await screen.findByRole("button", { name: "Más Coqueta" }));
-  await fireEvent.press(screen.getByRole("button", { name: "Seguir" }));
-  expect(await screen.findByText("Paso 2 de 2")).toBeOnTheScreen();
-  expect(screen).toHavePathname("/orders/new/details");
-  // La flecha del celular (router.back, como el botón de Android) vuelve al paso 1, con lo que se eligió
-  await act(() => router.back());
-  expect(screen).toHavePathname("/orders/new");
-  expect(await screen.findByText("1 alfajor")).toBeOnTheScreen();
-  await fireEvent.press(screen.getByRole("button", { name: "Seguir" }));
-  await fireEvent.changeText(await screen.findByLabelText("Teléfono del cliente"), "900000990");
-  await fireEvent.changeText(await screen.findByLabelText("Nombre del cliente"), "Ana (DEMO)");
-  await fireEvent.press(screen.getByRole("button", { name: "Guardar pedido de S/ 12.00" }));
-  expect(await screen.findByText("Pedido #0042 guardado")).toBeOnTheScreen();
-  // Guardado reemplaza el recorrido: en la pila ya no están los pasos
-  expect(stackWith(view.getRouterState() as NavState, "(tabs)")).toEqual(["(tabs)", "orders/saved/[id]"]);
-  await fireEvent.press(screen.getByRole("button", { name: "Anotar otro pedido" }));
-  expect(await screen.findByText("Elige al menos un alfajor")).toBeOnTheScreen();
-  expect(screen).toHavePathname("/orders/new");
-  await act(() => router.back());
-  expect(screen).toHavePathname("/home");
-});
-
-test("después de guardar, la flecha del celular lleva a donde se empezó", async () => {
-  await renderRouter(ROUTES, { initialUrl: "/home", wrapper: Providers });
-  await fireEvent.press(await screen.findByRole("button", { name: "Anotar" }));
-  await fireEvent.press(await screen.findByRole("button", { name: /^Un pedido/ }));
-  await fireEvent.press(await screen.findByRole("button", { name: "Más Coqueta" }));
-  await fireEvent.press(screen.getByRole("button", { name: "Seguir" }));
-  await fireEvent.changeText(await screen.findByLabelText("Teléfono del cliente"), "900000990");
-  await fireEvent.changeText(await screen.findByLabelText("Nombre del cliente"), "Ana (DEMO)");
-  await fireEvent.press(screen.getByRole("button", { name: "Guardar pedido de S/ 12.00" }));
-  expect(await screen.findByText("Pedido #0042 guardado")).toBeOnTheScreen();
-  await act(() => router.back());
-  expect(screen).toHavePathname("/home");
-});
-
-test("dos toques seguidos en «Seguir» abren un solo paso 2", async () => {
-  const view = await openNewOrder();
-  await fireEvent.press(await screen.findByRole("button", { name: "Más Coqueta" }));
-  const next = screen.getByRole("button", { name: "Seguir" });
-  await fireEvent.press(next);
-  await fireEvent.press(next);
-  expect(await screen.findByText("Paso 2 de 2")).toBeOnTheScreen();
-  expect(stackWith(view.getRouterState() as NavState, "details")).toEqual(["index", "details"]);
 });

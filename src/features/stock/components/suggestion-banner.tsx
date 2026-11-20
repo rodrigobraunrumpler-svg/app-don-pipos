@@ -4,14 +4,14 @@ import { Pressable, Text, View } from "react-native";
 import { Icon } from "@/components/ui/icon";
 
 import { productionSuggestionQuery } from "../queries/stock";
-import { suggestionTitle, upToDateText } from "../rules/suggestion";
+import { suggestedTotal, suggestionTitle, upToDateText } from "../rules/suggestion";
 
 // Arriba de Stock (la maqueta): cuánto conviene hacer para los días de producción, que lleva a Registrar producción
 // con lo sugerido de cada alfajor, o que la producción está al día. Sin 7 días de ventas no dice nada
 export function SuggestionBanner({ onOpen }: { onOpen: () => void }) {
   const { data } = useQuery(productionSuggestionQuery);
   if (!data?.ready) return null;
-  const total = data.items.reduce((sum, item) => sum + item.suggested, 0);
+  const total = suggestedTotal(data.items);
   if (!total)
     return (
       <View className="mt-3 flex-row items-center gap-2">

@@ -6,7 +6,7 @@ import { Chip } from "@/components/ui/chip";
 import { MoneyInput } from "@/components/ui/money-input";
 import { Notice } from "@/components/ui/notice";
 import { Sheet } from "@/components/ui/sheet";
-import { errorMessage } from "@/lib/errors";
+import { errorMessage, toAppError } from "@/lib/errors";
 import { confirmTap } from "@/lib/haptics";
 import { formatCents, parseSoles } from "@/lib/money";
 import { useOnline } from "@/lib/use-online";
@@ -20,6 +20,8 @@ import type { Order, PaymentMethod } from "../schema/order";
 type Props = { order: Order; methods: PaymentMethod[]; onClose: () => void; onDone: (order: Order) => void };
 
 const REASONS = ["El cliente canceló", "Error al anotar", "Sin stock", "Otro"];
+// El mismo código ya anuló con otros datos (una respuesta perdida y después un cambio): no invita a repetir
+const CONFLICT_TEXT = "Este pedido ya se había anulado antes de tu cambio. Cierra la hoja para ver cómo quedó.";
 
 // Anular (la hoja de la maqueta): el motivo, sin uno marcado de antemano, y con pagos, cuánto se devolvió (todo por
 // defecto; se puede bajar, también a 0) y con qué (el medio del último pago)
@@ -56,7 +58,7 @@ export function CancelOrderSheet({ order, methods, onClose, onDone }: Props) {
       confirmTap();
       onDone(updated);
     } catch (error) {
-      setFailure(errorMessage(error));
+      setFailure(toAppError(error).kind === "conflict" ? CONFLICT_TEXT : errorMessage(error));
     }
   }
 

@@ -1,4 +1,4 @@
-import { suggestionTitle, upToDateText, weekdayNote, whyText } from "./suggestion";
+import { suggestedTotal, suggestionTitle, upToDateText, weekdayNote, whyText } from "./suggestion";
 
 const COQUETA = {
   suggested: 36,
@@ -41,4 +41,9 @@ test("la nota de «Cómo se vende»: el promedio de lunes a viernes y el de los 
   expect(weekdayNote(days)).toBe(
     "Unas 5 al día de lunes a viernes y 9 los sábados y domingos, según las últimas 4 semanas.",
   );
+});
+
+test("lo sugerido de la semana: la suma de cada alfajor", () => {
+  expect(suggestedTotal([{ suggested: 36 }, { suggested: 109 }, { suggested: 0 }])).toBe(145);
+  expect(suggestedTotal([])).toBe(0);
 });

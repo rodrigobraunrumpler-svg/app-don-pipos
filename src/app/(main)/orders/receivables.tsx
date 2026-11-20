@@ -8,7 +8,7 @@ export default function ReceivablesScreen() {
     <Screen>
       <Receivables
         onBack={() => router.back()}
-        onOpen={(id) => router.push({ pathname: "/orders/[id]", params: { id } })}
+        onOpen={(id) => router.navigate({ pathname: "/orders/[id]", params: { id } })}
       />
     </Screen>
   );

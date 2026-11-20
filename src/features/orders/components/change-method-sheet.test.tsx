@@ -36,3 +36,22 @@ test("cambiar manda el pago y el medio con su código, el mismo en el reintento"
   expect(first).toEqual({ requestId: expect.any(String), paymentId: payment.id, method: "plin" });
   expect(second!.requestId).toBe(first!.requestId);
 });
+
+test("si ese cambio ya se había guardado con otro medio, lo dice sin invitar a repetir", async () => {
+  mockChange.mockReset();
+  mockChange.mockRejectedValueOnce(new AppError("conflict"));
+  await renderWithProviders(
+    <ChangeMethodSheet
+      order={TEST_ORDER}
+      payment={payment}
+      methods={["cash", "yape"]}
+      onClose={jest.fn()}
+      onDone={jest.fn()}
+    />,
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Efectivo" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Guardar medio" }));
+  expect(
+    await screen.findByText("Este pago ya se había cambiado antes. Cierra la hoja para ver cómo quedó."),
+  ).toBeOnTheScreen();
+});

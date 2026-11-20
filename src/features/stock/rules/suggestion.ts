@@ -12,6 +12,11 @@ type Why = {
 const period = (days: number) => (days === 7 ? "esta semana" : `los próximos ${days} días`);
 const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
+// Cuánto conviene hacer en total: lo sugerido de cada alfajor
+export function suggestedTotal(items: { suggested: number }[]): number {
+  return items.reduce((sum, item) => sum + item.suggested, 0);
+}
+
 // «Esta semana conviene hacer 145 alfajores» (la maqueta), según cada cuánto produce el negocio
 export function suggestionTitle(total: number, horizonDays: number): string {
   const when = horizonDays === 7 ? "Esta semana" : `Para ${period(horizonDays)}`;

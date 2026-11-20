@@ -46,6 +46,11 @@ export function OrderDetail({ orderId, onBack }: Props) {
   const [sheet, setSheet] = useState<"pay" | "delivery" | null>(null);
   const [message, setMessage] = useState<OrderMessage | null>(null);
   const hideMessage = useCallback(() => setMessage(null), []);
+  // «Deshacer» se va del aviso al tocarlo: un segundo toque con la señal lenta mandaba otro deshacer
+  const runUndo = (undo?: () => void) => {
+    setMessage(null);
+    undo?.();
+  };
   const now = new Date();
 
   if (!order)
@@ -202,7 +207,7 @@ export function OrderDetail({ orderId, onBack }: Props) {
         <Toast
           message={message.text}
           actionLabel={message.onUndo ? "Deshacer" : undefined}
-          onAction={message.onUndo}
+          onAction={message.onUndo ? () => runUndo(message.onUndo) : undefined}
           onHide={hideMessage}
         />
       ) : null}

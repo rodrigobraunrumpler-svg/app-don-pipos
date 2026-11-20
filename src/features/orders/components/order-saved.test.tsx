@@ -1,6 +1,7 @@
 import { fireEvent, screen } from "@testing-library/react-native";
 import { Linking } from "react-native";
 
+import { businessDate } from "@/lib/dates";
 import { TEST_ORDER } from "@/test/orders";
 import { renderWithProviders } from "@/test/render";
 
@@ -26,7 +27,9 @@ jest.mock("@/features/businesses/api/business", () => ({
 test("guardado: el número, el detalle, lo que falta cobrar y la confirmación llena con el pedido", async () => {
   const open = jest.spyOn(Linking, "openURL").mockResolvedValue(undefined);
   const onAnother = jest.fn();
-  await renderWithProviders(<OrderSaved order={TEST_ORDER} onAnother={onAnother} />);
+  // Un pedido de hoy, el día de Lima en que corre la prueba
+  const order = { ...TEST_ORDER, dueDate: businessDate(new Date()) };
+  await renderWithProviders(<OrderSaved order={order} onAnother={onAnother} />);
   expect(screen.getByText("Pedido #0042 guardado")).toBeOnTheScreen();
   expect(screen.getByText("Ana (DEMO), delivery hoy")).toBeOnTheScreen();
   for (const text of ["2 Coquetas", "1 Pipo Crush", "Delivery", "Falta cobrar S/ 22.00", "Así le llega a Ana"])

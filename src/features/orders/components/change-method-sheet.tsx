@@ -4,7 +4,7 @@ import { Text, View } from "react-native";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { Sheet } from "@/components/ui/sheet";
-import { errorMessage } from "@/lib/errors";
+import { errorMessage, toAppError } from "@/lib/errors";
 import { confirmTap } from "@/lib/haptics";
 import { formatCents } from "@/lib/money";
 import { useOnline } from "@/lib/use-online";
@@ -13,6 +13,9 @@ import { useRequestId } from "@/lib/use-request-id";
 import { PAYMENT_METHOD_LABELS } from "../constants";
 import { useChangePaymentMethod } from "../hooks/use-order-corrections";
 import type { Order, Payment, PaymentMethod } from "../schema/order";
+
+// El mismo código ya cambió el medio a otro (una respuesta perdida y después otro medio): no invita a repetir
+const CONFLICT_TEXT = "Este pago ya se había cambiado antes. Cierra la hoja para ver cómo quedó.";
 
 type Props = {
   order: Order;
@@ -39,7 +42,7 @@ export function ChangeMethodSheet({ order, payment, methods, onClose, onDone }: 
       confirmTap();
       onDone(method);
     } catch (error) {
-      setFailure(errorMessage(error));
+      setFailure(toAppError(error).kind === "conflict" ? CONFLICT_TEXT : errorMessage(error));
     }
   }
 

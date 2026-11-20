@@ -9,9 +9,9 @@ export default function Stock() {
   return (
     <Screen bottom={false}>
       <StockOverview
-        onOpenProduct={(productId) => router.push({ pathname: "/stock/[productId]", params: { productId } })}
-        onRegisterProduction={() => router.push("/stock/production")}
-        onGoToProducts={() => router.push("/more/products")}
+        onOpenProduct={(productId) => router.navigate({ pathname: "/stock/[productId]", params: { productId } })}
+        onRegisterProduction={() => router.navigate("/stock/production")}
+        onGoToProducts={() => router.navigate("/more/products")}
       />
     </Screen>
   );

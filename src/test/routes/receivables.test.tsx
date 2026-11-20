@@ -11,7 +11,7 @@ import Orders from "@/app/(main)/(tabs)/orders";
 import MainLayout from "@/app/(main)/_layout";
 import OrderScreen from "@/app/(main)/orders/[id]";
 import ReceivablesScreen from "@/app/(main)/orders/receivables";
-import { TEST_ORDER } from "@/test/orders";
+import { TEST_ORDER, summaryOf } from "@/test/orders";
 import { createTestQueryClient } from "@/test/render";
 import { ThemeProvider } from "@/theme";
 
@@ -28,8 +28,9 @@ const mockReceivable = {
   scheduledFor: null,
   remind: true,
 };
+const mockListOrders = jest.fn();
 jest.mock("@/features/orders/api/orders", () => ({
-  listOrders: async () => ({ items: [], meta: { limit: 20, total: 0, hasMore: false, nextCursor: null } }),
+  listOrders: () => mockListOrders(),
   getOrderCounts: async () => ({ today: 0, toDeliver: 0, upcoming: 0, toCollect: 1, all: 1 }),
   listReceivables: async () => ({
     items: [mockReceivable],
@@ -56,6 +57,12 @@ function Providers({ children }: { children: ReactNode }) {
   );
 }
 
+const page = (items: unknown[]) => ({
+  items,
+  meta: { limit: 20, total: items.length, hasMore: false, nextCursor: null },
+});
+beforeEach(() => mockListOrders.mockResolvedValue(page([])));
+
 const ROUTES = {
   _layout: MainLayout,
   "(tabs)/_layout": TabsLayout,
@@ -81,4 +88,25 @@ test("Pedidos → «Por cobrar» → Ver por cobrar → un pedido, y la flecha v
   expect(screen).toHavePathname("/orders");
   // La pestaña sigue en «Por cobrar», como la dejó
   expect(await screen.findByText("Te deben S/ 22.00")).toBeOnTheScreen();
+});
+
+test("dos toques seguidos en una fila de Pedidos abren un solo pedido", async () => {
+  mockListOrders.mockResolvedValue(page([summaryOf(TEST_ORDER)]));
+  await renderRouter(ROUTES, { initialUrl: "/orders", wrapper: Providers });
+  const row = await screen.findByRole("button", { name: /^#0042/ });
+  await fireEvent.press(row);
+  await fireEvent.press(row);
+  expect(await screen.findByText("Pedido #0042")).toBeOnTheScreen();
+  await act(() => router.back());
+  expect(screen).toHavePathname("/orders");
+});
+
+test("dos toques seguidos en una fila de Por cobrar abren un solo pedido", async () => {
+  await renderRouter(ROUTES, { initialUrl: "/orders/receivables", wrapper: Providers });
+  const row = await screen.findByRole("button", { name: /^#0042/ });
+  await fireEvent.press(row);
+  await fireEvent.press(row);
+  expect(await screen.findByText("Pedido #0042")).toBeOnTheScreen();
+  await act(() => router.back());
+  expect(screen).toHavePathname("/orders/receivables");
 });
