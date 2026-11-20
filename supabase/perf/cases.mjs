@@ -30,6 +30,7 @@ const EXPENSE_TABLES = ["expenses", "expense_categories"];
 const INCOME_TABLES = ["payments", "manual_incomes"];
 const TODAY = "(now() at time zone 'America/Lima')::date";
 const MONTH_START = "date_trunc('month', now() at time zone 'America/Lima')::date";
+const WEEK_START = "date_trunc('week', now() at time zone 'America/Lima')::date";
 
 export const cases = [
   { name: "get_business", as: OWNER, sql: "select public.get_business()", tables: ["businesses", "business_settings"] },
@@ -198,6 +199,37 @@ export const cases = [
     as: OWNER,
     sql: `select public.latest_cash_count(${TODAY})`,
     tables: ["businesses", "cash_counts"],
+  },
+  // Fase 6: Inicio y reportes, con los 3 años del negocio medido
+  {
+    name: "home_summary",
+    as: OWNER,
+    sql: "select public.home_summary()",
+    tables: ["businesses", ...INCOME_TABLES, "orders", "cash_counts"],
+  },
+  {
+    name: "report_summary de la semana",
+    as: OWNER,
+    sql: `select public.report_summary(${WEEK_START}, ${TODAY})`,
+    tables: ["businesses", ...INCOME_TABLES, "expenses"],
+  },
+  {
+    name: "report_summary del mes",
+    as: OWNER,
+    sql: `select public.report_summary(${MONTH_START}, ${TODAY})`,
+    tables: ["businesses", ...INCOME_TABLES, "expenses"],
+  },
+  {
+    name: "report_ranking del mes",
+    as: OWNER,
+    sql: `select public.report_ranking(${MONTH_START}, ${TODAY})`,
+    tables: ["businesses", "orders", "order_lines", "products"],
+  },
+  {
+    name: "export_rows del mes",
+    as: OWNER,
+    sql: `select public.export_rows(${MONTH_START}, ${TODAY})`,
+    tables: ["businesses", "orders", ...INCOME_TABLES, ...EXPENSE_TABLES],
   },
 ];
 
