@@ -1,4 +1,4 @@
-import { canEdit, nextStatus, nextStatusLabel } from "./status";
+import { canEdit, nextStatus, nextStatusLabel, statusLabel } from "./status";
 
 test.each([
   ["delivery", "new", "preparing"],
@@ -27,4 +27,9 @@ test("se edita antes de entregar y sin anular (el mostrador nace entregado)", ()
   expect((["new", "preparing", "on_the_way", "ready"] as const).every(canEdit)).toBe(true);
   expect(canEdit("delivered")).toBe(false);
   expect(canEdit("cancelled")).toBe(false);
+});
+
+test("lo que dice cada estado, para el archivo de Excel", () => {
+  expect(statusLabel("delivered")).toBe("Entregado");
+  expect(statusLabel("cancelled")).toBe("Anulado");
 });

@@ -1,5 +1,6 @@
 import * as dates from "@/lib/dates";
 import {
+  addDays,
   businessDate,
   businessDayRange,
   formatLongDate,
@@ -156,4 +157,10 @@ test("el día anterior, también al cambiar de mes y de año", () => {
   expect(previousDay("2026-11-20")).toBe("2026-11-19");
   expect(previousDay("2026-12-01")).toBe("2026-11-30");
   expect(previousDay("2027-01-01")).toBe("2026-12-31");
+});
+
+test("sumar o restar días a un día de Lima", () => {
+  expect(addDays("2026-11-30", 1)).toBe("2026-12-01");
+  expect(addDays("2026-03-01", -1)).toBe("2026-02-28");
+  expect(addDays("2026-11-18", -7)).toBe("2026-11-11");
 });

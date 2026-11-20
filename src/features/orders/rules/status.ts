@@ -1,3 +1,4 @@
+import { STATUS_LABELS } from "../constants";
 import type { Fulfillment, OrderStatus } from "../schema/order";
 
 const FLOW: Record<Fulfillment, OrderStatus[]> = {
@@ -34,3 +35,6 @@ export function nextStatusLabel(status: OrderStatus): string {
 export function canEdit(status: OrderStatus): boolean {
   return status !== "delivered" && status !== "cancelled";
 }
+
+// Lo que dice cada estado («Entregado»), para otros módulos (el archivo de Excel de reports)
+export const statusLabel = (status: OrderStatus): string => STATUS_LABELS[status];

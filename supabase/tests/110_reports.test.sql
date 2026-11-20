@@ -1,6 +1,6 @@
 -- Inicio y reportes (docs/spec/reports.md §3 y §8): el resumen de hoy, el periodo con el anterior, el ranking y lo que
 -- se exporta, con dos semanas de noviembre armadas a mano
-select plan(25);
+select plan(28);
 
 select tests.make_user('00000000-0000-4000-8000-0000000014c1');
 select tests.make_user('00000000-0000-4000-8000-0000000014c2');
@@ -89,6 +89,15 @@ select is(current_setting('t.w')::jsonb -> 'bars' -> 2, '{"from": "2026-11-11", 
   'la devolución resta el día en que se devolvió');
 select is((public.report_summary('2026-11-08', '2026-11-08') ->> 'incomeCents')::integer, 1200,
   'el pago de las 23:30 del domingo cuenta el domingo, no el lunes');
+
+-- El periodo anterior: el de la semana pasada en los mismos días (lunes a miércoles), si la app lo pide; si no, los
+-- días justo anteriores
+select is(public.report_summary('2026-11-09', '2026-11-11', '2026-11-02') -> 'previous',
+  '{"incomeCents": 2400, "expensesCents": 500, "profitCents": 1900}'::jsonb, 'lunes a miércoles frente a lunes a miércoles de la semana pasada');
+select is(public.report_summary('2026-11-09', '2026-11-11') -> 'previous',
+  '{"incomeCents": 1200, "expensesCents": 0, "profitCents": 1200}'::jsonb, 'sin pedirlo, los tres días justo anteriores');
+select throws_ok('select public.report_summary(''2026-11-09'', ''2026-11-11'', ''2026-11-08'')', 'P0001', 'invalid',
+  'el anterior tiene que terminar antes de que empiece el periodo');
 
 -- Un mes: barras por semana del mes; un rango largo, por mes
 select set_config('t.m30', public.report_summary('2026-11-01', '2026-11-30')::text, true);

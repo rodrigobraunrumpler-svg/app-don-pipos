@@ -65,8 +65,11 @@ export function formatMonth(instant: Date): string {
   return format(inLima(instant), "MMMM", { locale: es });
 }
 
-// El día anterior a un día de Lima («2026-11-01» → «2026-10-31»)
-export function previousDay(date: string): string {
+// Sumar o restar días a un día de Lima («2026-11-30», 1 → «2026-12-01»)
+export function addDays(date: string, days: number): string {
   const { from } = businessDayRange(date);
-  return businessDate(new Date(from.getTime() - DAY_MS));
+  return businessDate(new Date(from.getTime() + days * DAY_MS));
 }
+
+// El día anterior a un día de Lima («2026-11-01» → «2026-10-31»)
+export const previousDay = (date: string): string => addDays(date, -1);

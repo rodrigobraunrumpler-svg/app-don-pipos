@@ -22,6 +22,8 @@ const config: ExpoConfig = {
     // La sesión cifrada (LargeSecureStore) y la huella; en Expo Go ya vienen, en la APK los agregan estos plugins
     "expo-secure-store",
     "expo-local-authentication",
+    // Compartir el archivo de Excel (Exportar)
+    "expo-sharing",
     // La foto de la boleta: solo la cámara (ni la galería ni el micrófono)
     [
       "expo-image-picker",

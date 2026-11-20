@@ -919,7 +919,7 @@ export type Database = {
         Returns: Json;
       };
       report_ranking: { Args: { p_from: string; p_to: string }; Returns: Json };
-      report_summary: { Args: { p_from: string; p_to: string }; Returns: Json };
+      report_summary: { Args: { p_from: string; p_previous_from?: string; p_to: string }; Returns: Json };
       revert_cancel: { Args: { p_order_id: string }; Returns: Json };
       revert_edit: { Args: { p_order_id: string; p_version: number }; Returns: Json };
       revert_expense_change: { Args: { p_expense_id: string }; Returns: Json };

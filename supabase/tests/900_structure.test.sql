@@ -198,7 +198,7 @@ create function pg_temp.unlisted_functions_for_app() returns setof text language
       'public.close_cash_day(uuid, date, integer, integer)',
       'public.latest_cash_count(date)',
       'public.home_summary()',
-      'public.report_summary(date, date)',
+      'public.report_summary(date, date, date)',
       'public.report_ranking(date, date)',
       'public.export_rows(date, date)',
       -- lo que usan por dentro las reglas de acceso y las funciones de arriba
