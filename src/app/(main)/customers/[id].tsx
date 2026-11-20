@@ -8,14 +8,15 @@ import { Notice } from "@/components/ui/notice";
 import { Screen } from "@/components/ui/screen";
 import { SkeletonRows } from "@/components/ui/skeleton";
 import { CustomerCard, customerQuery, customersKeys, formatPhone } from "@/features/customers";
-import { loyaltySettingsQuery, StampsCard } from "@/features/loyalty";
+import { loyaltyKeys, loyaltySettingsQuery, StampsCard } from "@/features/loyalty";
 import { CustomerOrders, ordersKeys } from "@/features/orders";
 import { formatTime } from "@/lib/dates";
 import { useOnline } from "@/lib/use-online";
 import { useRefreshOnFocus } from "@/lib/use-refresh-on-focus";
 
 // La ficha del cliente: la arma esta pantalla con sus datos (customers), su tarjeta de sellos (loyalty, con la fidelidad
-// encendida) y sus pedidos (orders). Borrar sus datos también refresca los pedidos, que dejan de tener su nombre
+// encendida) y sus pedidos (orders). Borrar sus datos también refresca los pedidos y «Cerca del premio», que dejan de
+// tener su nombre
 export default function CustomerProfile() {
   const { id } = useLocalSearchParams<{ id: string }>();
   useRefreshOnFocus(customersKeys.all);
@@ -43,7 +44,7 @@ export default function CustomerProfile() {
           )}
           <CustomerCard
             customer={data}
-            alsoRefresh={[ordersKeys.all]}
+            alsoRefresh={[ordersKeys.all, loyaltyKeys.all]}
             stamps={loyalty?.isActive ? <StampsCard rule={loyalty} stamps={data.stamps} /> : null}
             orders={
               <CustomerOrders
