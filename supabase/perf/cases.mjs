@@ -238,7 +238,11 @@ export const cases = [
     ["todos", "null, 'all'"],
     ["los que más compran", "null, 'top'"],
     ["no vuelven", "null, 'lapsed'"],
-    ["la página siguiente de todos", "null, 'all', 20, public.search_customers(null, 'all') -> 'meta' ->> 'nextCursor'"],
+    // El cursor de un cliente del medio (el 20 de los 300), sin otra búsqueda para sacarlo
+    [
+      "la página siguiente de todos",
+      "null, 'all', 20, (select c.last_order_at::text || '~' || c.id from public.customers c where c.id = '00000000-0000-4000-d000-000000000014')",
+    ],
     ["buscar «sofia 25»", "'sofia 25', 'all'"],
     ["buscar «966 000 12»", "'966 000 12', 'all'"],
     ["buscar «lucia» en no vuelven", "'lucia', 'lapsed'"],
@@ -253,6 +257,12 @@ export const cases = [
     as: OWNER,
     sql: `select public.get_customer('${CUSTOMER}')`,
     tables: ["businesses", "customers", "orders", "order_lines"],
+  },
+  {
+    name: "loyalty_overview",
+    as: OWNER,
+    sql: "select public.loyalty_overview(10)",
+    tables: ["businesses", "customers"],
   },
   {
     name: "list_customer_orders",

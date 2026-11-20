@@ -144,6 +144,11 @@ select
 from generate_series(1, 5000) as b, generate_series(1, 12) as k
 where b <> 2500;
 
+-- La fidelidad del negocio medido encendida, con los 30,000 clientes de 0 a 11 sellos (meta 10)
+update public.loyalty_settings set is_active = true, goal = 10 where business_id = '00000000-0000-4000-a000-0000000009c4';
+update public.customers c set stamps = (('x' || right(c.id::text, 8))::bit(32)::integer) % 12
+where c.business_id = '00000000-0000-4000-a000-0000000009c4' and c.id::text like '00000000-0000-4000-f000-%';
+
 analyze public.customers;
 analyze public.orders;
 analyze public.order_lines;

@@ -206,6 +206,9 @@ create function pg_temp.unlisted_functions_for_app() returns setof text language
       'public.update_customer(uuid, integer, text, text, text, boolean)',
       'public.anonymize_customer(uuid)',
       'public.list_customer_orders(uuid, integer, text)',
+      'public.get_loyalty_settings()',
+      'public.update_loyalty_settings(integer, boolean, text, integer, text, integer, text)',
+      'public.loyalty_overview(integer)',
       -- lo que usan por dentro las reglas de acceso y las funciones de arriba
       'private.owned_business_ids()',
       'private.fail(text)',
@@ -253,7 +256,9 @@ create function pg_temp.unlisted_functions_for_app() returns setof text language
       'private.customer_json(uuid)',
       'private.update_customer(uuid, integer, text, text, text, boolean)',
       'private.anonymize_customer(uuid)',
-      'private.search_customers(text, text, integer, text)'
+      'private.search_customers(text, text, integer, text)',
+      'private.update_loyalty_settings(integer, boolean, text, integer, text, integer, text)',
+      'private.loyalty_json(loyalty_settings)'
     )
 $$;
 

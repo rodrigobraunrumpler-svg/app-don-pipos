@@ -325,6 +325,110 @@ export type Database = {
           },
         ];
       };
+      loyalty_settings: {
+        Row: {
+          business_id: string;
+          created_at: string;
+          goal: number;
+          is_active: boolean;
+          reward_amount_cents: number | null;
+          reward_kind: string;
+          reward_text: string | null;
+          stamp_unit: string;
+          updated_at: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          business_id: string;
+          created_at?: string;
+          goal?: number;
+          is_active?: boolean;
+          reward_amount_cents?: number | null;
+          reward_kind?: string;
+          reward_text?: string | null;
+          stamp_unit?: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          business_id?: string;
+          created_at?: string;
+          goal?: number;
+          is_active?: boolean;
+          reward_amount_cents?: number | null;
+          reward_kind?: string;
+          reward_text?: string | null;
+          stamp_unit?: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_settings_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: true;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      loyalty_stamps: {
+        Row: {
+          business_id: string;
+          created_at: string;
+          customer_id: string;
+          delta: number;
+          id: string;
+          order_id: string | null;
+          reason: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          business_id: string;
+          created_at?: string;
+          customer_id: string;
+          delta: number;
+          id?: string;
+          order_id?: string | null;
+          reason: string;
+          updated_at?: string;
+        };
+        Update: {
+          business_id?: string;
+          created_at?: string;
+          customer_id?: string;
+          delta?: number;
+          id?: string;
+          order_id?: string | null;
+          reason?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_stamps_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "loyalty_stamps_customer_fkey";
+            columns: ["business_id", "customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["business_id", "id"];
+          },
+          {
+            foreignKeyName: "loyalty_stamps_order_fkey";
+            columns: ["business_id", "order_id"];
+            isOneToOne: false;
+            referencedRelation: "orders";
+            referencedColumns: ["business_id", "id"];
+          },
+        ];
+      };
       manual_incomes: {
         Row: {
           amount_cents: number;
@@ -899,6 +1003,7 @@ export type Database = {
       find_customer_by_phone: { Args: { p_phone: string }; Returns: Json };
       get_business: { Args: Record<PropertyKey, never>; Returns: Json };
       get_customer: { Args: { p_id: string }; Returns: Json };
+      get_loyalty_settings: { Args: Record<PropertyKey, never>; Returns: Json };
       get_order: { Args: { p_order_id: string }; Returns: Json };
       home_summary: { Args: Record<PropertyKey, never>; Returns: Json };
       income_summary: { Args: { p_from: string; p_to: string }; Returns: Json };
@@ -915,6 +1020,7 @@ export type Database = {
       list_products: { Args: Record<PropertyKey, never>; Returns: Json };
       list_receivables: { Args: { p_cursor?: string; p_limit?: number }; Returns: Json };
       list_templates: { Args: Record<PropertyKey, never>; Returns: Json };
+      loyalty_overview: { Args: { p_limit?: number }; Returns: Json };
       order_counts: { Args: Record<PropertyKey, never>; Returns: Json };
       product_sales_by_weekday: { Args: { p_product_id: string }; Returns: Json };
       production_suggestion: { Args: Record<PropertyKey, never>; Returns: Json };
@@ -959,6 +1065,18 @@ export type Database = {
           p_id: string;
           p_name: string;
           p_note: string;
+        };
+        Returns: Json;
+      };
+      update_loyalty_settings: {
+        Args: {
+          p_expected_version: number;
+          p_goal: number;
+          p_is_active: boolean;
+          p_reward_amount_cents: number;
+          p_reward_kind: string;
+          p_reward_text: string;
+          p_stamp_unit: string;
         };
         Returns: Json;
       };
