@@ -318,7 +318,7 @@ Un revisor aparte leyó toda la fase, en la app y en la web. **La web pasó sin 
 - **Un cambio de precio ya no toca la fila del alfajor en la base:** la copia no la bloquea mientras sube las fotos de otros.
 - **Los alfajores que nacieron en el panel conservan su nombre:** cambiarles la foto o la descripción desde la app ya no convierte «Alfajor de Manteadita» en «Alfajor Manteadita». Sus alérgenos del panel tampoco se borran si la app no tiene ninguno. Los que creó la app siguen tomando el nombre de la app.
 
-**Quedó para después** (detalles menores, en orden de lo que más se notaría)
+**Quedó para después** (detalles menores, en orden de lo que más se notaría; arreglados el mismo día, ver «Los detalles, arreglados»)
 1. En Editar, cambiar el nombre a uno que ya existe dice «ya tenía otro cambio guardado», no «nombre repetido»: la base responde lo mismo para los dos casos.
 2. Los alfajores de la puesta en marcha empiezan con «Se ve» prendido: al ponerles foto y descripción se publican sin el aviso «se publicó». Y la hoja de la puesta en marcha todavía dice que la foto y la descripción se ponen en el panel.
 3. En Ordenar, mover alfajores y después prender «Los más vendidos primero» guarda el orden a mano.
@@ -340,3 +340,25 @@ Un revisor aparte leyó toda la fase, en la app y en la web. **La web pasó sin 
 - **Una dirección cambiada después en Studio** deja vieja la de la app: es una acción del equipo, y el modelo de contenido de la web ya lo advierte.
 - **Mientras no se reinicie la base,** los alfajores del negocio que no se copia dicen «Subiendo a la web…».
 - **Los avatares cargan la foto completa de Sanity,** como desde la fase 8.
+
+### Los detalles, arreglados (2026-11-21, a tu pedido)
+
+Los 10 de «Quedó para después», en la rama `fase-9-detalles`, cada uno con una prueba que primero falló. Pasan:
+- 820 pruebas de Jest;
+- 69 de los scripts y las funciones;
+- 913 de la base, en 46 archivos, y los casos de velocidad;
+- los consejos de Supabase, lint, tipos y formato.
+
+1. **Cambiar el nombre a uno que ya tienes** dice «Ya tienes un alfajor con ese nombre.»: la app compara con los nombres de la lista, como en la web.
+2. **Un alfajor de la puesta en marcha** que recibe su foto y su descripción se publica con el aviso «se publicó» y «Deshacer». La hoja de la puesta en marcha ahora dice «La foto y la descripción se agregan después, en Productos y precios.».
+3. **Ordenar:** con «Los más vendidos primero» prendido, lo movido a mano antes no se guarda.
+4. **Guardar:**
+   - «Guardando…» dura mientras se prepara la foto;
+   - si la foto no se puede preparar, o todavía no se sabe el negocio, lo dice y no guarda nada;
+   - las fotos suben de a una, en orden.
+5. **«Nuevo» solo si la app creó la página:** enlazado a una que ya existía, no es nuevo y queda como uno del panel (conserva su nombre).
+6. **Una página que solo existe como borrador de Studio** ya no traba la copia: se crea la publicada con esa dirección.
+7. **`pnpm web connect`** se detiene si ningún alfajor del negocio coincide con los de la web, y la web sí tiene alfajores (casi seguro es otro negocio). El mensaje de los que no tienen página dice que se crean solos cuando estén completos.
+8. **El registro de cambios** anota los más vendidos, el enlace de reseñas, y el nombre, la descripción y los alérgenos de cada alfajor.
+9. **Lo pendiente de otro negocio no se ve:** la revisión mira el usuario de la app (su token), no `current_user`.
+10. **Guardar sin la descripción o sin los alérgenos los deja como están;** vacíos a propósito, los borra. Un llamado viejo o incompleto ya no los pierde.
