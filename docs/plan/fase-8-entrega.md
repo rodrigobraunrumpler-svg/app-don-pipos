@@ -255,11 +255,18 @@
    - un monitor de latidos (healthchecks.io gratis, cada 24 horas con 2 de gracia);
    - restaurar una copia de verdad una vez.
 4. **Expo y Sentry:**
-   - `eas init`;
-   - instalar `expo-updates` y `@sentry/react-native`, con `beforeSend` sin datos personales;
-   - compilar la APK `preview` y probarla en un Android de verdad;
-   - después, la de `production`.
+   - **Hecho el 2026-11-21:**
+     - el proyecto en Expo, `@javierfullstacks-team/varmar-app` (`eas init`, con un robot de rol Developer y su `EXPO_TOKEN` en `.env.local`);
+     - `expo-updates`: las correcciones llegan sin reinstalar, a las APK de la misma versión (`runtimeVersion` por versión de la app);
+     - las variables públicas de la app (la dirección de Supabase, su llave publicable y el WhatsApp del equipo) guardadas en Expo, en `preview` y `production`;
+     - los perfiles compilan con Node 24 y pnpm 10.33;
+     - la primera APK `preview` enviada a compilar (la llave de firma la creó y la guarda Expo).
+   - **Falta:**
+     - probar la APK `preview` en un Android de verdad;
+     - `@sentry/react-native`, con `beforeSend` sin datos personales (la primera APK va sin Sentry, decidido el 2026-11-21);
+     - después, la de `production`.
    - Pendiente: ¿el celular del cliente es Android?
+   - **Para mandar una corrección sin reinstalar** (solo cambios de pantallas y lógica, no librerías nuevas): `eas update --channel prueba --environment preview --message "<qué cambió>"`.
 5. **La revisión nocturna** (`private.check_consistency`), que avisa por Sentry.
 6. **El cierre:**
    - tus pruebas en el celular de las fases 3 a 7c;
@@ -323,7 +330,7 @@ Un revisor aparte leyó toda la parte 1, sabiendo que este proyecto de Supabase 
 **Decidido sin arreglar**
 - **`pg_net` queda abierta a todos los roles:** es de `supabase_admin`, y nuestro rol no puede cerrarla (se probó). Su esquema, `net`, no sale por la API, y la regla 8 de `900_structure` deja cerrada a la app toda función de `public` y `private`.
 
-**Quedó para después** (detalles menores, en orden de lo que más se notaría)
+**Quedó para después** (detalles menores, en orden de lo que más se notaría; arreglados el 2026-11-21, ver «Los detalles, arreglados»)
 1. En el script del VPS, un fallo en `mkdir`, `stat` o `find` sale sin anotar la copia fallida ni avisar «fail»: el monitor avisa recién cuando pasa su plazo.
 2. Borrar en R2 alcanza todo lo viejo del remoto, no solo estas copias. Con `KEEP_DAYS=0` borraría hasta la de hoy.
 3. La revisión de la copia lee solo el índice (`pg_restore --list`), no cada bloque.
@@ -338,3 +345,23 @@ Un revisor aparte leyó toda la parte 1, sabiendo que este proyecto de Supabase 
    - `finish_web_sync` podría reabrir filas ya enviadas;
    - la respuesta buena de Sanity no se lee;
    - a la 1 de la mañana diría «hasta las 01:20» en vez de «hasta la 01:20».
+
+### Los detalles, arreglados (2026-11-21, junto con la APK)
+
+Los siete de «Quedó para después», en las ramas `fase-8-apk` y `fase-8-detalles`:
+
+1. **El programa de la copia** ya no sale en silencio: cualquier paso que falle (crear la carpeta, medir la copia, borrar las viejas) anota la copia fallida y avisa «fail» al monitor.
+2. **En R2 solo borra las copias de Don Pipos** (`donpipos-*.dump`), y `KEEP_DAYS` tiene que ser un número de días, al menos 1: con 0 no corre.
+3. **La revisión lee la copia entera,** no solo su índice (`pg_restore --file=/dev/null`).
+4. **«Tu cuenta está bloqueada»** dice «El equipo la bloqueó por seguridad. Escríbenos para revisarla.»: ningún PIN equivocado bloquea la cuenta.
+5. **El error se recorta sin partir una letra** (`iconv -c`): la falla siempre se puede anotar.
+6. **Pruebas:**
+   - `tsc -p supabase/functions` revisa también cada `index.ts` (con lo mínimo de Deno en `deno.d.ts`); encontró un error de tipos en `sync-to-web`, ya corregido. El lint sigue sin mirar las funciones: son de Deno;
+   - «hoy», «ayer» y «mañana» se prueban de noche, cuando en UTC ya es el día siguiente;
+   - todos los archivos de pgTAP cierran con `finish()`;
+   - los relojes falsos se apagan después de cada prueba.
+7. **Detalles:**
+   - a la una dice «hasta la 01:20»;
+   - `finish_web_sync` solo toca filas pendientes desde la fase 9: ya no reabre enviadas;
+   - la respuesta buena de Sanity se sigue sin leer, a propósito: un 2xx dice que la transacción se aplicó entera.
+
