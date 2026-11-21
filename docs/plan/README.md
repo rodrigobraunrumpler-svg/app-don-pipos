@@ -82,6 +82,6 @@ Cómo se construye la app de Don Pipos, por fases. Cada fase deja algo que funci
 | 7a. Clientes, fidelidad y mensajes | Construida, revisada y juntada en `main` el 2026-11-20; las correcciones están en `fase-7a-clientes-fidelidad.md`, «Después de la revisión final». Falta tu prueba en el celular («Lo que falta») |
 | 7b. Primera vez, avisos y ajustes | Construida, revisada y juntada en `main` el 2026-11-20; las correcciones están en `fase-7b-primera-vez-avisos.md`, «Después de la revisión final». Falta tu prueba en el celular («Lo que falta») |
 | 7c. La app sin «Más» | Construida y juntada en `main` el 2026-11-20 (pedido tuyo, maqueta aprobada). Falta tu prueba en el celular («Lo que falta» en `fase-7c-navegacion.md`) |
-| 8. Web y entrega | Su plan se escribe al terminar la fase anterior |
+| 8. Web y entrega | Parte 1 construida el 2026-11-21 ([plan](fase-8-entrega.md)): las esperas del PIN, la copia de seguridad (base, Ajustes y el script del VPS), la copia a la web (apagada hasta el token) y los íconos de la APK. La parte 2 espera tus cuentas |
 
 Las fases 0, 1 y 2 se juntaron en `main` el 2026-11-19, con todas sus pruebas en verde.

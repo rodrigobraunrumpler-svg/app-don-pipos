@@ -165,7 +165,8 @@ Un concepto nuevo se agrega aquí antes de usarlo en el código.
 | Ganancia | `profit` | — | Ingresos menos gastos |
 | Más vendidos | `ranking` | función `report_ranking` | En unidades y en soles |
 | Periodo | `period` | — | `week`, `month`, `custom` |
-| Copia a la web | `webSync` | función `sync-to-web` | Precio y «Agotado» a Sanity (D13) |
+| Copia a la web | `webSync` | función `sync-to-web` | Precio, «Agotado» y si se ve, a Sanity (D13). La llama la base con pg_net y su secreto de Vault |
+| Espera del PIN | `locked` | `sign_in_attempts.locked_until` | Cada 5 PIN equivocados: 15 minutos, 1 hora y después 24 horas. Ningún error bloquea la cuenta |
 
 ## Generales
 

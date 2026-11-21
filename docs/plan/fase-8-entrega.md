@@ -262,3 +262,31 @@
    - la verificación de Google;
    - una guía corta de uso para el dueño;
    - la entrega.
+
+## Resultado de la parte 1 (2026-11-21)
+
+La parte 1 quedó construida en la rama `fase-8`, con un commit por tarea. Pasan:
+- 779 pruebas de Jest;
+- 56 de los scripts y las funciones;
+- 806 de la base, en 39 archivos, y los 50 casos de velocidad;
+- lint, tipos y formato.
+
+En el proyecto de desarrollo ya están las migraciones (`pin_waits`, `backups`, `web_sync` y `pg_net_schema`) y la función `sync-to-web`. La función responde 401 a quien no trae el secreto, y hasta la parte 2 no tiene secreto: está apagada.
+
+### Lo que falta: probar en el celular
+
+```bash
+cd /home/javier/var-mar/app && pnpm start --tunnel
+```
+
+1. **Las esperas del PIN** (opcional: deja ese número 15 minutos sin entrar). Cierra sesión y entra con el número DEMO y un PIN equivocado 5 veces. Sale «Espera hasta las …», con la hora de Lima y sin «bloqueada».
+2. **Ajustes no cambia todavía:** la línea de la copia de seguridad aparece con la primera copia del VPS.
+3. **Los íconos** se ven recién en la APK (parte 2): en Expo Go la app sigue con los de Expo Go.
+
+### Lo que cambió respecto de este plan
+
+- **Las funciones de Sanity viven en `supabase/functions/_shared/sanity.ts`:** la configuración de tipos de las funciones solo revisa `_shared`, como `owner-password.ts`.
+- **`supabase/config.toml` no cambió:** `pnpm functions:deploy` ya sube todas las funciones sin JWT, y `sync-to-web` se sumó a su lista.
+- **Con 10 intentos fallidos, el cron llama solo a la hora en punto** (`private.web_sync_due`): un `sanity_id` mal escrito o un token vencido no insisten cada minuto. Un cambio nuevo del mismo alfajor igual llama al momento.
+- **La llave de la consulta de la copia es `["backup"]`,** fuera de la del negocio: guardar un ajuste no la cancela ni la vuelve a pedir.
+- **`pg_net` se volvió a crear en el esquema `extensions`** (migración `pg_net_schema`): el revisor de Supabase no la quería en `public`, y no se puede mover. Sus funciones siguen en `net`.
