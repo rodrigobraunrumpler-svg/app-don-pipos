@@ -174,15 +174,16 @@ app/
 │   │   ├── biometrics.tsx          «¿Entrar con tu huella?», recién ingresado
 │   │   ├── (setup)/                Puesta en marcha: productos, stock, gastos
 │   │   └── (main)/                 Todo lo que pide sesión
-│   │       ├── _layout.tsx         Pestañas: Inicio, Pedidos, +, Stock, Más
-│   │       ├── home.tsx            Inicio
-│   │       ├── orders/             index · new · [id] · counter · receivables
-│   │       ├── stock/              index · production · [productId]
+│   │       ├── _layout.tsx         La pila: las pestañas y, encima, las demás pantallas con «Volver»
+│   │       ├── (tabs)/             Pestañas: Inicio, Pedidos (con Clientes), +, Stock y Reportes
+│   │       ├── orders/             new · [id] · counter · receivables
+│   │       ├── stock/              production · [productId]
 │   │       ├── expenses/           index · new
+│   │       ├── income/             index · new
 │   │       ├── cash.tsx            Cuadre de caja
-│   │       ├── reports/            index · ranking
-│   │       ├── customers/          index · [id]
-│   │       └── more/               index · products · messages · loyalty
+│   │       ├── reports/            ranking
+│   │       ├── customers/          [id]
+│   │       └── settings/           Ajustes (el ⚙ de Inicio) · products · messages · loyalty · change-pin
 │   ├── features/                   Un módulo por tema, todos con la misma forma (§9.1)
 │   │   ├── orders/                 Pedidos, estados, pagos, venta de mostrador, demorados
 │   │   ├── stock/                  Movimientos, producción, merma, conteo, sugerencia
@@ -386,7 +387,7 @@ Precios consultados el 2026-11-18.
   - Máximo 2 proyectos gratis activos por cuenta.
   - Plan Pro: US$ 25 al mes, con copias diarias (7 días) y sin pausas.
 - **Desarrollo y producción en dos proyectos de Supabase en la nube** (ver §14.1).
-- **Copia diaria de la base de datos** desde el VPS (Vultr, Santiago, plan de US$ 24 al mes, el mismo de la web) a un almacenamiento externo, por ejemplo Cloudflare R2 (gratis hasta 10 GB). Restaurarla de verdad al menos una vez. El script anota cada copia en la base (el dueño ve la última en Más) y avisa a un monitor de latidos: si un día falla, el equipo se entera.
+- **Copia diaria de la base de datos** desde el VPS (Vultr, Santiago, plan de US$ 24 al mes, el mismo de la web) a un almacenamiento externo, por ejemplo Cloudflare R2 (gratis hasta 10 GB). Restaurarla de verdad al menos una vez. El script anota cada copia en la base (el dueño ve la última arriba de Ajustes) y avisa a un monitor de latidos: si un día falla, el equipo se entera.
 - **La APK** se arma con Expo (EAS Build). Las actualizaciones llegan por internet con EAS Update (gratis hasta 1,000 usuarios al mes), en dos canales: prueba y producción. La llave de firma la guarda Expo; tener un respaldo.
 - **Google:** desde 2027 exige un desarrollador verificado también para las APK instaladas fuera de Play Store. Hay que registrarse antes.
 - **Avisos de errores:** Sentry, plan gratis.
@@ -404,8 +405,8 @@ Precios consultados el 2026-11-18.
   - **El PIN se revisa en el servidor:** una Edge Function lo compara con su hash (bcrypt, con pgcrypto) y, si es correcto, abre la sesión de Supabase y se la entrega a la app. La cuenta lleva un correo interno y una contraseña larga que solo conoce el servidor; el dueño nunca los ve.
   - **Intentos por cuenta, no por celular:** 5 errores seguidos dan 15 minutos de espera; 10 bloquean la cuenta hasta que el equipo la revise. Supabase solo limita por IP, y su número es público: sin este conteo, alguien podría probar los millones de PIN desde internet.
   - **En el celular:** la sesión queda cifrada: la llave en expo-secure-store (Keystore de Android) y la sesión cifrada en AsyncStorage (`auth.md` §5). Después entra con huella o PIN, revisado en el celular, también sin señal. 5 errores seguidos, o cerrar sesión, borran la sesión de ese celular y lo que la app guardó (PIN, número, ajustes y caché); vuelve a ingresar con su número y su PIN.
-  - **Bloqueo automático:** tras 5 minutos con la app en segundo plano pide huella o PIN otra vez (lo cambia en Más → Cuenta).
-  - **Cambiar PIN:** desde Más → Cuenta, con el PIN actual; se cambia en el servidor. Se rechazan los fáciles: seguidos (123456), repetidos (111111, 121212, 123123) y el final de su número.
+  - **Bloqueo automático:** tras 5 minutos con la app en segundo plano pide huella o PIN otra vez (lo cambia en Ajustes → Tu cuenta y este celular).
+  - **Cambiar PIN:** desde Ajustes → Tu cuenta y este celular, con el PIN actual; se cambia en el servidor. Se rechazan los fáciles: seguidos (123456), repetidos (111111, 121212, 123123) y el final de su número.
   - **Olvidó su PIN o perdió el celular:** escribe al equipo por WhatsApp (un enlace, sin servicio de mensajes). El equipo cierra sus sesiones desde Supabase y le crea un PIN nuevo.
 - **Sin datos personales en los reportes de errores:** Sentry borra teléfonos, nombres y direcciones antes de enviar (`beforeSend`).
 - **De los clientes, solo lo necesario** para el pedido (nombre, teléfono, dirección), cuidado como pide la ley de datos personales (Ley 29733).

@@ -66,7 +66,7 @@ Los comunes: el dueño lee sus cierres y escribe solo con las funciones.
   - «Cerrar el día», fijo abajo. Se activa cuando ya hay un conteo.
 - **Día cerrado:** el resultado y «Volver a contar».
 - **Sin internet:** puede contar, pero el cierre espera a que vuelva la señal.
-- **Acceso:** «Cuadrar caja ›» en la tarjeta de lo cobrado hoy, en Inicio. Dice «Caja cerrada» cuando ya se cuadró.
+- **Acceso:** «Cuadrar caja ›» en la tarjeta de lo cobrado hoy, en Inicio, siempre: también un día sin ventas, que puede tener gastos en efectivo. Dice «Caja cerrada» cuando ya se cuadró.
 
 ## 7. Con otros módulos
 

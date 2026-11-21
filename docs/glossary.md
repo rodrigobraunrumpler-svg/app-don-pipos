@@ -172,7 +172,7 @@ Un concepto nuevo se agrega aquí antes de usarlo en el código.
 | En pantalla | En el código | En la base | Nota |
 |---|---|---|---|
 | Fecha del negocio | `businessDate` | — | El día en `America/Lima` |
-| Copia de seguridad | `backup` | `private.backup_runs` | La anota el VPS; el dueño ve la última en Más |
+| Copia de seguridad | `backup` | `private.backup_runs` | La anota el VPS; el dueño ve la última arriba de Ajustes |
 | Página de una lista | `Page<T>` | — | `{ items, meta: { limit, total, hasMore, nextCursor } }` (§14.3) |
 | Error | `AppError` | — | Tipos: `offline`, `notFound`, `forbidden`, `invalid`, `conflict` y `unexpected` (cualquier otra cosa) |
 | Intentos de ingreso | `signInAttempts` | `private.sign_in_attempts` | Contados por número: 5 errores, 15 minutos; 10, cuenta bloqueada |

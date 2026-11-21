@@ -102,6 +102,7 @@ Los comunes: el dueño lee su stock y escribe solo con las funciones.
 ## 6. Pantallas y estados
 
 - **Stock:**
+  - arriba, «Productos y precios» (fase 7c), que abre la lista de `products`;
   - «Actualizado a las…» y «Contar stock»;
   - la sugerencia: «Esta semana conviene hacer 145 alfajores» (fase 4);
   - cada alfajor con su foto, su estado en color, el número grande y «Agotado en la web» o «Ya disponible en la web»;
@@ -125,7 +126,7 @@ Los comunes: el dueño lee su stock y escribe solo con las funciones.
 
 ## 7. Con otros módulos
 
-**Usa:** `products`: los nombres, `ProductAvatar` y el mínimo.
+**Usa:** `products`: los nombres, `ProductAvatar`, el mínimo y `ProductsRow` (la fila «Productos y precios», fase 7c).
 
 **Expone:**
 - Consultas: `stockOverviewQuery` y, desde la fase 4, `productionSuggestionQuery`.

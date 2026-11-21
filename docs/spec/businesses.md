@@ -125,7 +125,7 @@ La anota el script de copia del VPS. No lleva `business_id` porque la copia es d
   - *Tus clientes:* Fidelidad, Mensajes de WhatsApp y Clientes que no vuelven.
   - *Tu cuenta y este celular:* tu número, la huella, cuándo pedir huella o PIN, Recordatorios, cambiar PIN y cerrar sesión (`auth.md`).
 
-  Algunos se abren también donde se usan: Productos y precios desde Stock, Tipos de gasto desde Gastos, Fidelidad y Clientes que no vuelven desde Pedidos › Clientes, Recordatorios desde la campana de Inicio.
+  Algunos se abren también donde se usan: Productos y precios desde Stock, Tipos de gasto desde Gastos, Fidelidad y Clientes que no vuelven desde Pedidos › Clientes. La campana de Inicio muestra los avisos, no los interruptores de Recordatorios.
 - **Ajustes, sus hojas:**
   - «Medios de pago»: interruptores. Los apagados dejan de aparecer al anotar pedidos y gastos.
   - «Delivery»: el costo. La zona de reparto no se muestra ni se pide hasta que algo la use (la web, en su fase 2).

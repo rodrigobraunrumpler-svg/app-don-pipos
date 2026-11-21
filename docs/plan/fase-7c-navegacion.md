@@ -154,6 +154,7 @@ cd /home/javier/var-mar/app && pnpm start --tunnel
 - **Todo lo de Reportes se hizo en la tarea 1:** el título sin «Volver», «Exportar a Excel» y las tarjetas que abren su lista. Era la misma pantalla y las mismas pruebas.
 - **«Pedidos | Clientes» se guarda en la ruta** (`?ver=clientes`): sigue elegido al volver de la ficha de un cliente, aunque la pantalla se vuelva a armar.
 - **Clientes muestra «N clientes» encima de la lista,** ya que el título de la pestaña es Pedidos.
+- **Stock usa `ProductsRow` directo,** sin un espacio que llene la pantalla: `stock` ya dependía de `products`, así que no suma ninguna dependencia nueva.
 
 ## Después de la revisión final (2026-11-20)
 
@@ -176,3 +177,19 @@ Un revisor aparte leyó toda la rama y probó la navegación con las pestañas y
 6. Nombres: `?ver=clientes` está en español (la regla pide inglés, `?view=customers`), y `type View` tapa el `View` de React Native en `orders.tsx`.
 7. Pruebas que faltan: la barra de abajo sin Más, el área segura de `/settings` y de la pestaña Reportes, la sección de la cuenta de verdad con su título nuevo, y + → «Un ingreso» con las rutas de verdad.
 8. Dos desvíos sin anotar: Stock importa `ProductsRow` directo (no por un espacio) y `reports` sigue exportando `ExportRow`, que nadie usa afuera.
+
+## Los detalles que quedaban (arreglados el 2026-11-20)
+
+A pedido tuyo se arreglaron también los ocho detalles menores, en la rama `fase-7c-detalles`.
+
+1. **Pedidos y Clientes quedan armados** al cambiar de vista: volver a Pedidos deja el filtro y la búsqueda como estaban. Clientes se arma la primera vez que se mira.
+2. **«Cuadrar caja ›» sale siempre en Inicio,** también un día sin nada (puede haber gastos en efectivo). Lo decidió el equipo: así nunca falta la entrada al cuadre.
+3. **Gastos sin ningún gasto** muestra «Tipos de gasto» arriba, como con gastos.
+4. **Los documentos** ya no hablan de Más: `PROJECT_CONTEXT.md` (el árbol de rutas y la cuenta), `glossary.md`, `businesses.md` (la campana muestra los avisos, no los interruptores), `stock.md` y `products.md` («Productos y precios» también desde Stock), `cash.md` y `reports.md` («Cuadrar caja» siempre).
+5. **Los comentarios del código y los títulos de las pruebas** dicen dónde vive cada cosa ahora. Quedan los que cuentan el cambio («en el lugar de Más, fase 7c»).
+6. **Nombres:** la ruta usa `?view=customers` (antes `?ver=clientes`), y el tipo de la vista se llama `Shown`, para no tapar el `View` de React Native.
+7. **Pruebas nuevas:**
+   - `tabs.test.tsx`, con las pestañas y la pila de verdad: la barra de abajo sin Más, + → «Un ingreso» → `/income/new` y atrás, un filtro desde Inicio mirando Clientes, y volver de Clientes sin perder el filtro ni la búsqueda;
+   - el área segura de `/settings` y de la pestaña Reportes;
+   - la sección de la cuenta con su título y lo que se le pone antes de «Cambiar PIN».
+8. **Lo que no estaba anotado:** Stock usa `ProductsRow` directo (ver «Lo que cambió»), y `reports` ya no exporta `ExportRow`, que solo usa Reportes por dentro.

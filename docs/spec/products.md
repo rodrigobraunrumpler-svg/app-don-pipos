@@ -78,7 +78,7 @@ Solo para productos enlazados a la web (`sanity_id` con valor): lo que no está 
 
 ## 6. Pantallas y estados
 
-- **Productos y precios:**
+- **Productos y precios** (se abre desde Ajustes y desde Stock, fase 7c):
   - cada alfajor con su foto o sus iniciales, el precio, «Mínimo 6, cuesta S/ 5.10» y, si está enlazado, «En la web» u «Oculto»;
   - si hay alguno enlazado, el aviso «Se copian solos a la web». Sin enlazar, la app no promete nada de la web.
 - **La hoja del producto:**
@@ -95,6 +95,7 @@ Solo para productos enlazados a la web (`sanity_id` con valor): lo que no está 
 - `productsQuery` y las mutaciones.
 - El tipo `Product`.
 - `ProductAvatar`: la foto o las iniciales, que usan `stock`, `orders` y `reports`.
+- `ProductsRow`: la fila «Productos y precios», en Ajustes y arriba de Stock (fase 7c).
 
 ## 8. Pruebas que deben pasar
 

@@ -70,7 +70,7 @@ Los comunes: solo lectura, de los datos del negocio del dueño.
 
 - **Inicio:**
   - lo urgente arriba, en filas que se tocan;
-  - «Cobrado hoy», sin los medios en cero (uno en negativo, por una devolución de hoy, sí se ve), con «Cuadrar caja ›»;
+  - «Cobrado hoy», sin los medios en cero (uno en negativo, por una devolución de hoy, sí se ve), con «Cuadrar caja ›» (siempre, también en un día sin nada);
   - los números del día, que abren Pedidos con el filtro puesto;
   - la bandeja de stock y qué producir;
   - por entregar y próximos;
