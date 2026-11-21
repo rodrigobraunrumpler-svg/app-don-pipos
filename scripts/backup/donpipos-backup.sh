@@ -1,19 +1,20 @@
 #!/usr/bin/env bash
 # La copia de seguridad diaria de la base de Don Pipos, desde el VPS (docs/plan/fase-8-entrega.md, tarea 3).
 #
-# Copia toda la base con pg_dump, revisa que el archivo se pueda leer, lo sube a Cloudflare R2 con rclone, borra lo
-# viejo, lo anota en la base (Ajustes muestra la última copia buena) y avisa a un monitor de latidos. Si un paso falla,
-# anota la copia fallida con su error, avisa «fail» al monitor y sale con 1: el monitor le escribe al equipo.
+# Copia toda la base con pg_dump, revisa que el archivo se pueda leer entero, lo sube a Cloudflare R2 con rclone, borra
+# sus copias viejas, lo anota en la base (Ajustes muestra la última copia buena) y avisa a un monitor de latidos. Si un
+# paso falla (también uno inesperado, como no poder crear la carpeta), anota la copia fallida con su error, avisa «fail»
+# al monitor y sale con 1: el monitor le escribe al equipo.
 #
 # Lee /etc/donpipos-backup.env (o BACKUP_ENV_FILE), que solo puede leer root:
 #   DATABASE_URL    la conexión a la base (la de «Session pooler» del panel de Supabase), sin la contraseña
 #   PGPASSWORD      la contraseña de la base: viaja por el entorno, nunca en la línea de comandos (se vería en `ps`)
 #   RCLONE_REMOTE   adónde subir, por ejemplo r2:donpipos-backups
 #   HEARTBEAT_URL   el latido del monitor (healthchecks.io: …/<uuid>; con «/fail» avisa que falló)
-#   KEEP_DAYS       cuántos días se guardan en R2 (30)
+#   KEEP_DAYS       cuántos días se guardan en R2 (30; al menos 1)
 #   BACKUP_DIR      dónde queda la copia en el VPS (/var/backups/donpipos; se guardan 3 días)
 # Las pruebas cambian los programas con PG_DUMP, PG_RESTORE, PSQL, RCLONE y CURL.
-set -euo pipefail
+set -Eeuo pipefail
 # Las copias tienen los datos de los clientes y los hash de los PIN: solo root las lee (la web corre en el mismo VPS)
 umask 077
 
@@ -40,6 +41,10 @@ RCLONE="${RCLONE:-rclone}"
 CURL="${CURL:-curl}"
 KEEP_DAYS="${KEEP_DAYS:-30}"
 BACKUP_DIR="${BACKUP_DIR:-/var/backups/donpipos}"
+if ! [[ "$KEEP_DAYS" =~ ^[1-9][0-9]*$ ]]; then
+  echo "KEEP_DAYS tiene que ser un número de días, al menos 1 (con 0 se borraría hasta la copia de hoy)" >&2
+  exit 1
+fi
 
 now() { date -u +%Y-%m-%dT%H:%M:%SZ; }
 started_at="$(now)"
@@ -66,25 +71,34 @@ fail() {
 # La contraseña de la base solo para sus programas (pg_dump y psql), por el entorno de ese programa y nada más
 db() { PGPASSWORD="$PGPASSWORD" "$@"; }
 
+# Lo último que dijo un programa, en 500 bytes y sin partir una letra (un texto roto no se podría anotar en la base)
+last_words() { tail -c 500 | { iconv -f UTF-8 -t UTF-8 -c 2>/dev/null || cat; }; }
+
 # Corre un paso; si falla, la copia falla con lo último que dijo el programa
 run() {
   local output
   if ! output="$("$@" 2>&1)"; then
-    fail "$(printf '%s' "$output" | tail -c 500)"
+    fail "$(printf '%s' "$output" | last_words)"
   fi
 }
+# Y cualquier otra cosa que falle sin pasar por run (set -e la cortaría en silencio)
+trap 'fail "falló en la línea $LINENO"' ERR
 
-mkdir -p "$BACKUP_DIR"
+run mkdir -p "$BACKUP_DIR"
 step="pg_dump"
 run db "$PG_DUMP" --format=custom --no-owner --no-privileges --file="$file" "$DATABASE_URL"
+# Lee la copia entera, no solo su índice: la convierte a SQL y lo descarta
 step="pg_restore"
-run "$PG_RESTORE" --list "$file"
+run "$PG_RESTORE" --file=/dev/null "$file"
+step="medir la copia"
 size="$(stat -c %s "$file")"
 step="rclone copyto"
 run "$RCLONE" copyto "$file" "$RCLONE_REMOTE/$(basename "$file")"
+# Solo las copias de Don Pipos: nada más de lo que haya en ese lugar de R2
 step="rclone delete"
-run "$RCLONE" delete --min-age "${KEEP_DAYS}d" "$RCLONE_REMOTE"
-find "$BACKUP_DIR" -name 'donpipos-*.dump' -mtime +3 -delete
+run "$RCLONE" delete --min-age "${KEEP_DAYS}d" --include 'donpipos-*.dump' "$RCLONE_REMOTE"
+step="borrar las copias viejas del VPS"
+run find "$BACKUP_DIR" -name 'donpipos-*.dump' -mtime +3 -delete
 step="anotar en la base"
 run record true "$size" ""
 if ! "$CURL" -fsS -m 10 --retry 3 "$HEARTBEAT_URL" >/dev/null; then

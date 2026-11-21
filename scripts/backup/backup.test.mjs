@@ -76,7 +76,15 @@ const psqlVar = (call, name) => call.find((line) => line.startsWith(`${name}=`))
 test("todo bien: copia, revisa, sube, limpia, anota que salió bien y avisa al monitor", () => {
   const { status, calls, stderr } = run();
   assert.equal(status, 0, stderr);
-  assert.deepEqual(names(calls), ["pg_dump", "pg_restore --list", "rclone copyto", "rclone delete", "psql", "curl"]);
+  // La revisión lee la copia entera (no solo su índice): la convierte a SQL y lo descarta
+  assert.deepEqual(names(calls), [
+    "pg_dump",
+    "pg_restore --file=/dev/null",
+    "rclone copyto",
+    "rclone delete",
+    "psql",
+    "curl",
+  ]);
   const [dump] = calls;
   assert.ok(dump.includes("--format=custom") && dump.includes("--no-owner") && dump.includes("--no-privileges"));
   const psql = calls[4];
@@ -86,6 +94,40 @@ test("todo bien: copia, revisa, sube, limpia, anota que salió bien y avisa al m
   assert.equal(calls[5].at(-1), "https://hc-ping.invalid/latido");
   const remove = calls[3];
   assert.ok(remove.includes("--min-age") && remove.includes("30d") && remove.includes("r2:donpipos-prueba"));
+  // Solo las copias de Don Pipos: nada más de lo que haya en ese lugar de R2
+  assert.equal(remove[remove.indexOf("--include") + 1], "donpipos-*.dump");
+});
+
+test("KEEP_DAYS tiene que ser un número de días, al menos 1: con 0 borraría hasta la copia de hoy", () => {
+  for (const days of ["0", "-3", "muchos"]) {
+    const { status, calls, stderr } = run({ env: { KEEP_DAYS: days } });
+    assert.equal(status, 1, days);
+    assert.match(stderr, /KEEP_DAYS/);
+    assert.deepEqual(calls, []);
+  }
+});
+
+test("un paso inesperado que falla (no se puede crear la carpeta) también anota la falla y avisa «fail»", () => {
+  const blocker = join(ROOT, "no-es-carpeta");
+  writeFileSync(blocker, "");
+  const { status, calls, stderr } = run({ env: { BACKUP_DIR: join(blocker, "backups") } });
+  assert.equal(status, 1);
+  assert.deepEqual(names(calls), ["psql", "curl"], stderr);
+  assert.equal(psqlVar(calls[0], "ok"), "false");
+  assert.match(psqlVar(calls[0], "error"), /^preparar: /);
+  assert.equal(calls[1].at(-1), "https://hc-ping.invalid/latido/fail");
+});
+
+test("un error largo se recorta sin partir una letra: la falla igual se puede anotar", () => {
+  // 300 «€» son 900 bytes: el recorte a 500 cae en medio de una letra
+  const { status, calls } = run({ env: { FAIL_CMD: "pg_dump", FAIL_MESSAGE: "€".repeat(300) } });
+  assert.equal(status, 1);
+  const error = psqlVar(
+    calls.find(([name]) => name === "psql"),
+    "error",
+  );
+  assert.match(error, /^pg_dump: €+$/);
+  assert.ok(error.length > 100);
 });
 
 test("si la subida falla, anota la copia fallida con su error, avisa «fail» al monitor y sale con 1", () => {
@@ -93,7 +135,7 @@ test("si la subida falla, anota la copia fallida con su error, avisa «fail» al
     env: { FAIL_CMD: "rclone", FAIL_ARG: "copyto", FAIL_MESSAGE: "sin conexión con R2" },
   });
   assert.equal(status, 1);
-  assert.deepEqual(names(calls), ["pg_dump", "pg_restore --list", "rclone copyto", "psql", "curl"]);
+  assert.deepEqual(names(calls), ["pg_dump", "pg_restore --file=/dev/null", "rclone copyto", "psql", "curl"]);
   assert.equal(psqlVar(calls[3], "ok"), "false");
   assert.match(psqlVar(calls[3], "error"), /^rclone copyto: sin conexión con R2/);
   assert.equal(calls[4].at(-1), "https://hc-ping.invalid/latido/fail");
