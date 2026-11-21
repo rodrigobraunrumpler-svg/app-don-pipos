@@ -242,12 +242,14 @@
    - el dueño real con su PIN;
    - sus 5 alfajores y sus ajustes;
    - la vista «servidor en pausa», cuando se pueda ver cómo responde un proyecto pausado.
-2. **Sanity:**
-   - primero, limpiar los datos DEMO y cargar los reales (el dueño, sus alfajores y su stock);
-   - el token de escritura en `.env.local`;
-   - `pnpm web connect`: los secretos de la función, y en Vault la URL, el secreto y el negocio de la web;
-   - `pnpm web link`: cada alfajor con su documento;
-   - revisar que el outbox se vacía y que `net._http_response` responde 200: un secreto que no coincide falla cada minuto sin sumar intentos.
+2. **Sanity:** conectado y probado de punta a punta el 2026-11-21 en el dataset `development`, con el negocio DEMO.
+   - Funciona: `pnpm web connect --dataset development --business <id DEMO>` enlazó los 5 alfajores por el nombre, con su foto.
+   - Un precio puesto mal a propósito en `development` se corrigió desde la app en unos 2 segundos (`{"sent":1,"failed":0}`).
+   - El dataset `production` todavía tiene los precios del volante viejo (S/ 15 y 13); la copia los corrige al encenderse.
+   - **El día de la entrega:**
+     1. reiniciar la base y crear el dueño real; él hace la puesta en marcha;
+     2. `pnpm web connect --dataset production --business <id real>`;
+     3. `pnpm web status`: nada pendiente y respuestas 200.
 3. **El VPS:**
    - `postgresql-client-17`, `rclone` con R2, `/etc/donpipos-backup.env` (con `chmod 600`, la contraseña en `PGPASSWORD` y no en `DATABASE_URL`) y el cron;
    - un monitor de latidos (healthchecks.io gratis, cada 24 horas con 2 de gracia);

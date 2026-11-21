@@ -69,6 +69,7 @@ Solo para productos enlazados a la web (`sanity_id` con valor): lo que no está 
   - Después, `private.finish_web_sync` marca `sent_at`, o suma un intento y guarda el error. Con 10 intentos fallidos lo escribe en los registros de la función; el aviso al equipo por Sentry llega con la APK.
   - Sin los secretos de Sanity, la función responde `not_configured` y no toca el outbox.
   - **Enlazar un producto:** el equipo corre `private.link_product(id, sanity_id, image_url)`, solo para el negocio de la web, y anota su estado completo.
+  - **Para el equipo:** `pnpm web connect --dataset <production|development> --business <id>` guarda los secretos de la función y los de Vault y enlaza cada alfajor con su documento por el nombre (sin «Alfajor», «de» ni tildes), con su foto. Se puede repetir: cambia el secreto. `pnpm web status` muestra lo pendiente, los errores y las últimas respuestas de la función.
   - El historial de pg_cron se limpia cada día (`private.purge_cron_history`, lo de más de 7 días): el reintento deja una fila por minuto.
   - La web se refresca con el webhook firmado que ya existe.
 
