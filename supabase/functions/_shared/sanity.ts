@@ -95,6 +95,8 @@ export function createMutations(
         slug: { _type: "slug", current: slug },
         category: { _type: "reference", _ref: categoryId },
         ...webFields(item, imageAssetId).set,
+        // Recién creado siempre es «Nuevo»: la base anota desde cuándo al terminar
+        badge: "nuevo",
       },
     },
   ];

@@ -88,7 +88,8 @@ Deno.serve(async (request) => {
     let failed = 0;
     for (const item of (row?.items ?? []) as WebSyncItem[]) {
       const { error, result } = await syncOne(item);
-      await tx`select private.finish_web_sync(${item.ids}::bigint[], ${error}, ${result ? JSON.stringify(result) : null}::jsonb)`;
+      // tx.json: un texto ya convertido se volvería a convertir, y la base recibiría un texto en vez del objeto
+      await tx`select private.finish_web_sync(${item.ids}::bigint[], ${error}, ${result ? tx.json(result) : null}::jsonb)`;
       if (!error) {
         sent += 1;
         continue;

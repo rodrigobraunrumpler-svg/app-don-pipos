@@ -100,7 +100,8 @@ test("el cambio va al documento y, si alguien lo tiene abierto en Studio, a su b
 });
 
 test("un alfajor nuevo se crea con su marca, su categoría, su dirección, su foto y la etiqueta «Nuevo»", () => {
-  const nuevo = item({ sanityId: null, slug: null, content: CONTENT, payload: { ...STATE, isNew: true } });
+  // Recién creado siempre es «Nuevo», aunque la base todavía no sepa desde cuándo sale en la web
+  const nuevo = item({ sanityId: null, slug: null, content: CONTENT, payload: { ...STATE, isNew: false } });
   assert.deepEqual(createMutations(nuevo, "alfajor-tropi", "category-don-pipos-alfajores", "image-abc-1024x1024-jpg"), [
     {
       createIfNotExists: {
