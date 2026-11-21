@@ -1,11 +1,10 @@
-// Más → Productos y precios, con las rutas de verdad de esas dos pantallas
+// Productos y precios (Ajustes › Productos y precios, o Stock), con la ruta de verdad
 import { QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { screen } from "@testing-library/react-native";
 import { renderRouter } from "expo-router/testing-library";
 import type { ReactNode } from "react";
 
-import More from "@/app/(main)/(tabs)/more";
-import Products from "@/app/(main)/more/products";
+import Products from "@/app/(main)/settings/products";
 import { createQueryClient } from "@/lib/query";
 import { ThemeProvider } from "@/theme";
 
@@ -39,9 +38,7 @@ function Providers({ children }: { children: ReactNode }) {
   );
 }
 
-test("desde Más, «Productos y precios» abre la lista", async () => {
-  await renderRouter({ more: More, "more/products": Products }, { initialUrl: "/more", wrapper: Providers });
-  await fireEvent.press(await screen.findByRole("button", { name: /^Productos y precios/ }));
+test("Productos y precios abre la lista con sus alfajores", async () => {
+  await renderRouter({ "settings/products": Products }, { initialUrl: "/settings/products", wrapper: Providers });
   expect(await screen.findByRole("button", { name: /^Coqueta/ })).toBeOnTheScreen();
-  expect(screen).toHavePathname("/more/products");
 });

@@ -17,7 +17,7 @@ export default function Ranking() {
         to={period.to}
         label={period.label}
         onBack={() => router.back()}
-        onProducts={() => router.navigate("/more/products")}
+        onProducts={() => router.navigate("/settings/products")}
       />
     </Screen>
   );

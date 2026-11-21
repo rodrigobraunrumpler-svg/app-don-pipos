@@ -11,7 +11,7 @@ export default function Stock() {
       <StockOverview
         onOpenProduct={(productId) => router.navigate({ pathname: "/stock/[productId]", params: { productId } })}
         onRegisterProduction={() => router.navigate("/stock/production")}
-        onGoToProducts={() => router.navigate("/more/products")}
+        onGoToProducts={() => router.navigate("/settings/products")}
       />
     </Screen>
   );

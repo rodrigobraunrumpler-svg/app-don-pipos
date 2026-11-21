@@ -22,11 +22,13 @@ type Props = {
   period: Period;
   today: string;
   onRanking: (period: { from: string; to: string; label: string }) => void;
+  onIncome: () => void;
+  onExpenses: () => void;
 };
 
 // Los números de un periodo: la ganancia con ingresos y gastos, «Entra y sale», por medio de pago, «Ver alfajores» y
 // «Exportar» (con las fechas del periodo ya elegidas)
-export function PeriodReport({ period, today, onRanking }: Props) {
+export function PeriodReport({ period, today, onRanking, onIncome, onExpenses }: Props) {
   const online = useOnline();
   // Al cambiar de periodo no parpadea: los números de antes quedan, atenuados, hasta que llegan los nuevos (§14.2)
   const { data, isError, refetch, dataUpdatedAt, isPlaceholderData } = useQuery({
@@ -64,7 +66,7 @@ export function PeriodReport({ period, today, onRanking }: Props) {
         </View>
       ) : (
         <View className={isPlaceholderData ? "opacity-50" : ""}>
-          <ReportKpis summary={data} against={period.previousLabel} />
+          <ReportKpis summary={data} against={period.previousLabel} onIncome={onIncome} onExpenses={onExpenses} />
           {/* Con otro periodo, el gráfico vuelve a mostrar su última barra */}
           <InOutChart
             key={`${period.from}:${period.to}`}

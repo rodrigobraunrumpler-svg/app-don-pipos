@@ -1,12 +1,13 @@
-// Más → Reportes → Alfajores → atrás, y Más → Exportar a Excel, con las rutas de verdad
+// Reportes (una pestaña) → Alfajores → atrás, sus tarjetas → Gastos e Ingresos, y «Exportar a Excel», con las rutas de verdad
 import { QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { renderRouter } from "expo-router/testing-library";
 import type { ReactNode } from "react";
 
-import More from "@/app/(main)/(tabs)/more";
-import Reports from "@/app/(main)/reports/index";
+import Reports from "@/app/(main)/(tabs)/reports";
+import Expenses from "@/app/(main)/expenses/index";
+import Income from "@/app/(main)/income/index";
 import Ranking from "@/app/(main)/reports/ranking";
 import { businessDate } from "@/lib/dates";
 import { createTestQueryClient } from "@/test/render";
@@ -17,9 +18,11 @@ jest.mock("@/features/products/api/products", () => ({ listProducts: async () =>
 jest.mock("@/features/expenses/api/expenses", () => ({
   listExpenseCategories: async () => [],
   getExpensesSummary: async () => ({ totalCents: 0, byCategory: [] }),
+  listExpenses: async () => ({ items: [], meta: { limit: 20, total: 0, hasMore: false, nextCursor: null } }),
 }));
 jest.mock("@/features/income/api/income", () => ({
   getIncomeSummary: async () => ({ totalCents: 0, byMethod: { cash: 0, yape: 0, plin: 0, transfer: 0 }, byDay: [] }),
+  listIncome: async () => ({ items: [], meta: { limit: 20, total: 0, hasMore: false, nextCursor: null } }),
 }));
 jest.mock("@/features/cash/api/cash", () => ({ getLatestCashCount: async () => null }));
 jest.mock("@/features/orders/api/orders", () => ({
@@ -70,26 +73,38 @@ function Providers({ children }: { children: ReactNode }) {
   );
 }
 
-test("Más → Reportes de la semana → sus alfajores, y atrás vuelve paso a paso", async () => {
-  await renderRouter(
-    { more: More, "reports/index": Reports, "reports/ranking": Ranking },
-    { initialUrl: "/more", wrapper: Providers },
-  );
-  await fireEvent.press(await screen.findByRole("button", { name: /^Reportes, / }));
-  expect(screen).toHavePathname("/reports");
+const ROUTES = {
+  reports: Reports,
+  "reports/ranking": Ranking,
+  "expenses/index": Expenses,
+  "income/index": Income,
+};
+
+test("Reportes es una pestaña: sin «Volver»; sus alfajores se abren encima y atrás vuelve", async () => {
+  await renderRouter(ROUTES, { initialUrl: "/reports", wrapper: Providers });
   expect(await screen.findByText("Ganancia")).toBeOnTheScreen();
+  expect(screen.queryByRole("button", { name: "Volver" })).toBeNull();
   await fireEvent.press(screen.getByRole("button", { name: "Ver alfajores" }));
   expect(screen).toHavePathname("/reports/ranking");
   expect(await screen.findByText(/, pedidos entregados$/)).toBeOnTheScreen();
   expect(mockRanking).toHaveBeenCalledWith(expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/), businessDate(new Date()));
   await act(() => router.back());
   expect(screen).toHavePathname("/reports");
-  await act(() => router.back());
-  expect(screen).toHavePathname("/more");
 });
 
-test("Más → Ayuda → «Exportar a Excel» abre su hoja", async () => {
-  await renderRouter({ more: More }, { initialUrl: "/more", wrapper: Providers });
+test.each([
+  ["Gastos: ver la lista", "/expenses"],
+  ["Ingresos: ver la lista", "/income"],
+])("Reportes → la tarjeta «%s» abre su lista, y «Volver» regresa a Reportes", async (card, path) => {
+  await renderRouter(ROUTES, { initialUrl: "/reports", wrapper: Providers });
+  await fireEvent.press(await screen.findByRole("button", { name: card }));
+  expect(screen).toHavePathname(path);
+  await act(() => router.back());
+  expect(screen).toHavePathname("/reports");
+});
+
+test("En Reportes, «Exportar a Excel» abre su hoja", async () => {
+  await renderRouter(ROUTES, { initialUrl: "/reports", wrapper: Providers });
   await fireEvent.press(await screen.findByRole("button", { name: "Exportar a Excel" }));
   expect(await screen.findByRole("header", { name: "Exportar a Excel" })).toBeOnTheScreen();
   expect(screen.getByRole("radio", { name: "Este mes", checked: true })).toBeOnTheScreen();

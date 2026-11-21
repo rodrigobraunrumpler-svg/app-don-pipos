@@ -5,7 +5,7 @@ import { router } from "expo-router";
 import { renderRouter } from "expo-router/testing-library";
 import type { ReactNode } from "react";
 
-import More from "@/app/(main)/(tabs)/more";
+import Reports from "@/app/(main)/(tabs)/reports";
 import IncomeScreen from "@/app/(main)/income/index";
 import NewIncome from "@/app/(main)/income/new";
 import OrderScreen from "@/app/(main)/orders/[id]";
@@ -57,6 +57,16 @@ jest.mock("@/features/businesses/api/business", () => ({
   }),
 }));
 jest.mock("@/features/messages/api/templates", () => ({ listTemplates: async () => [] }));
+jest.mock("@/features/reports/api/reports", () => ({
+  getReportSummary: async () => ({
+    incomeCents: 2400,
+    expensesCents: 0,
+    profitCents: 2400,
+    previous: { incomeCents: 0, expensesCents: 0, profitCents: 0 },
+    bars: [],
+    byMethod: { cash: 0, yape: 2400, plin: 0, transfer: 0 },
+  }),
+}));
 
 function Providers({ children }: { children: ReactNode }) {
   return (
@@ -66,11 +76,11 @@ function Providers({ children }: { children: ReactNode }) {
   );
 }
 
-const ROUTES = { more: More, "income/index": IncomeScreen, "income/new": NewIncome, "orders/[id]": OrderScreen };
+const ROUTES = { reports: Reports, "income/index": IncomeScreen, "income/new": NewIncome, "orders/[id]": OrderScreen };
 
-test("Más → Ingresos → el pago de un pedido abre el pedido; atrás vuelve a Ingresos y a Más", async () => {
-  await renderRouter(ROUTES, { initialUrl: "/more", wrapper: Providers });
-  await fireEvent.press(await screen.findByRole("button", { name: /^Ingresos, S\/.24\.00$/ }));
+test("Reportes → Ingresos → el pago de un pedido abre el pedido; atrás vuelve a Ingresos y a Reportes", async () => {
+  await renderRouter(ROUTES, { initialUrl: "/reports", wrapper: Providers });
+  await fireEvent.press(await screen.findByRole("button", { name: "Ingresos: ver la lista" }));
   expect(screen).toHavePathname("/income");
   await fireEvent.press(await screen.findByRole("button", { name: /^Pedido #0042/ }));
   expect(await screen.findByText("Pedido #0042")).toBeOnTheScreen();
@@ -81,5 +91,5 @@ test("Más → Ingresos → el pago de un pedido abre el pedido; atrás vuelve a
   expect(screen).toHavePathname("/income/new");
   await act(() => router.back());
   await act(() => router.back());
-  expect(screen).toHavePathname("/more");
+  expect(screen).toHavePathname("/reports");
 });

@@ -28,7 +28,7 @@ const SUMMARY: ReportSummary = {
   ],
   byMethod: { cash: 2400, yape: 0, plin: 0, transfer: 700 },
 };
-const handlers = () => ({ onBack: jest.fn(), onRanking: jest.fn() });
+const handlers = () => ({ onRanking: jest.fn(), onIncome: jest.fn(), onExpenses: jest.fn() });
 
 beforeEach(() => mockSummary.mockReset().mockResolvedValue(SUMMARY));
 afterEach(() => onlineManager.setOnline(true));

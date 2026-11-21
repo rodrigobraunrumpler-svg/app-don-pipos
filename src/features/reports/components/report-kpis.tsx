@@ -6,8 +6,11 @@ import type { ReportSummary } from "../schema/report";
 import { DeltaChip } from "./delta-chip";
 import { KpiCard } from "./kpi-card";
 
-// La ganancia (ingresos menos gastos) grande, y debajo ingresos y gastos, cada uno con su comparación
-export function ReportKpis({ summary, against }: { summary: ReportSummary; against: string }) {
+type Props = { summary: ReportSummary; against: string; onIncome: () => void; onExpenses: () => void };
+
+// La ganancia (ingresos menos gastos) grande, y debajo ingresos y gastos, cada uno con su comparación; cada uno abre su
+// lista
+export function ReportKpis({ summary, against, onIncome, onExpenses }: Props) {
   const { previous } = summary;
   return (
     <View className="mt-4 gap-2.5">
@@ -24,10 +27,10 @@ export function ReportKpis({ summary, against }: { summary: ReportSummary; again
         <DeltaChip current={summary.profitCents} previous={previous.profitCents} upIsGood against={against} onBrand />
       </View>
       <View className="flex-row gap-2.5">
-        <KpiCard title="Ingresos" cents={summary.incomeCents} note="Pagos recibidos">
+        <KpiCard title="Ingresos" cents={summary.incomeCents} note="Pagos recibidos" onPress={onIncome}>
           <DeltaChip current={summary.incomeCents} previous={previous.incomeCents} upIsGood against={against} />
         </KpiCard>
-        <KpiCard title="Gastos" cents={summary.expensesCents} note="Lo anotado">
+        <KpiCard title="Gastos" cents={summary.expensesCents} note="Lo anotado" onPress={onExpenses}>
           <DeltaChip
             current={summary.expensesCents}
             previous={previous.expensesCents}

@@ -1,4 +1,4 @@
-// Más → Clientes → la ficha → atrás, «Escribirle» en «No vuelven» y Más → Fidelidad, con las rutas de verdad
+// Clientes → la ficha → atrás, y «Escribirle» en «No vuelven», con las rutas de verdad
 import { QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
@@ -6,11 +6,8 @@ import { renderRouter } from "expo-router/testing-library";
 import type { ReactNode } from "react";
 import { Linking } from "react-native";
 
-import More from "@/app/(main)/(tabs)/more";
 import CustomerProfile from "@/app/(main)/customers/[id]";
 import OrderScreen from "@/app/(main)/orders/[id]";
-import Loyalty from "@/app/(main)/more/loyalty";
-import Messages from "@/app/(main)/more/messages";
 import Customers from "@/app/(main)/customers/index";
 import { createTestQueryClient } from "@/test/render";
 import { ThemeProvider } from "@/theme";
@@ -98,18 +95,13 @@ function Providers({ children }: { children: ReactNode }) {
   );
 }
 const ROUTES = {
-  more: More,
   "customers/index": Customers,
   "customers/[id]": CustomerProfile,
-  "more/loyalty": Loyalty,
-  "more/messages": Messages,
   "orders/[id]": OrderScreen,
 };
 
-test("Más → Clientes → la ficha → uno de sus pedidos, y atrás vuelve paso a paso", async () => {
-  await renderRouter(ROUTES, { initialUrl: "/more", wrapper: Providers });
-  await fireEvent.press(await screen.findByRole("button", { name: "Clientes, 1" }));
-  expect(screen).toHavePathname("/customers");
+test("Clientes → la ficha → uno de sus pedidos, y atrás vuelve paso a paso", async () => {
+  await renderRouter(ROUTES, { initialUrl: "/customers", wrapper: Providers });
   await fireEvent.press(await screen.findByRole("button", { name: /^Rosa T\. \(DEMO\)/ }));
   expect(screen).toHavePathname("/customers/c2");
   expect(await screen.findByText("900 000 505")).toBeOnTheScreen();
@@ -120,8 +112,6 @@ test("Más → Clientes → la ficha → uno de sus pedidos, y atrás vuelve pas
   expect(screen).toHavePathname("/customers/c2");
   await act(() => router.back());
   expect(screen).toHavePathname("/customers");
-  await act(() => router.back());
-  expect(screen).toHavePathname("/more");
 });
 
 test("en «No vuelven», «Escribirle» abre WhatsApp con el mensaje lleno", async () => {
@@ -133,23 +123,4 @@ test("en «No vuelven», «Escribirle» abre WhatsApp con el mensaje lleno", asy
     `https://wa.me/51900000505?text=${encodeURIComponent("Hola Rosa, hace tiempo que no te vemos por Don Pipos.")}`,
   );
   open.mockRestore();
-});
-
-test("Más → Fidelidad (apagada) y atrás vuelve", async () => {
-  await renderRouter(ROUTES, { initialUrl: "/more", wrapper: Providers });
-  await fireEvent.press(await screen.findByRole("button", { name: "Fidelidad, Apagada" }));
-  expect(screen).toHavePathname("/more/loyalty");
-  expect(await screen.findByText("La fidelidad está apagada")).toBeOnTheScreen();
-  await act(() => router.back());
-  expect(screen).toHavePathname("/more");
-});
-
-test("Más → Mensajes de WhatsApp, cada uno con su texto, y atrás vuelve", async () => {
-  await renderRouter(ROUTES, { initialUrl: "/more", wrapper: Providers });
-  await fireEvent.press(await screen.findByRole("button", { name: "Mensajes de WhatsApp, 1" }));
-  expect(screen).toHavePathname("/more/messages");
-  await fireEvent.press(await screen.findByRole("button", { name: "Te extrañamos (solo con permiso)" }));
-  expect(screen.getByLabelText("Texto del mensaje Te extrañamos (solo con permiso)")).toBeOnTheScreen();
-  await act(() => router.back());
-  expect(screen).toHavePathname("/more");
 });

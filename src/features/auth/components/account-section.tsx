@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Pressable, Switch, Text, View } from "react-native";
 
 import { Icon, type IconName } from "@/components/ui/icon";
@@ -11,8 +11,9 @@ import { AutoLockSheet } from "./auto-lock-sheet";
 
 const ROW = "min-h-[54px] flex-row items-center gap-3 border-b border-border px-4";
 
-// Más → Cuenta: el número, la huella, cuándo pedir huella o PIN, cambiar el PIN y cerrar la sesión de este celular
-export function AccountSection({ onChangePin }: { onChangePin: () => void }) {
+// Ajustes → Tu cuenta y este celular: el número, la huella, cuándo pedir huella o PIN, lo que agregue la pantalla
+// (Recordatorios), cambiar el PIN y cerrar la sesión de este celular
+export function AccountSection({ onChangePin, extra }: { onChangePin: () => void; extra?: ReactNode }) {
   const { phone, biometricsEnabled, setBiometricsEnabled, autoLockMinutes, setAutoLockMinutes, signOutHere } =
     useUnlock();
   const { colors } = useTheme();
@@ -30,7 +31,9 @@ export function AccountSection({ onChangePin }: { onChangePin: () => void }) {
 
   return (
     <View className="gap-2">
-      <Text className="px-1 font-extrabold text-sm text-text-secondary">Cuenta</Text>
+      <Text accessibilityRole="header" className="px-1 font-extrabold text-sm text-text-secondary">
+        Tu cuenta y este celular
+      </Text>
       <View className="overflow-hidden rounded-md border border-border bg-surface">
         <View className={ROW}>
           <Icon name="cellphone" size={20} tone="olive" />
@@ -49,6 +52,7 @@ export function AccountSection({ onChangePin }: { onChangePin: () => void }) {
           />
         </View>
         {link("timer-outline", "Pedir huella o PIN", () => setChoosing(true), AUTO_LOCK_LABELS[autoLockMinutes])}
+        {extra}
         {link("key-variant", "Cambiar PIN", onChangePin)}
         <Pressable
           accessibilityRole="button"

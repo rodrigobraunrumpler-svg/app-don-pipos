@@ -8,8 +8,8 @@ import { StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import Orders from "@/app/(main)/(tabs)/orders";
-import ChangePin from "@/app/(main)/more/change-pin";
-import Products from "@/app/(main)/more/products";
+import ChangePin from "@/app/(main)/settings/change-pin";
+import Products from "@/app/(main)/settings/products";
 import OrderScreen from "@/app/(main)/orders/[id]";
 import Counter from "@/app/(main)/orders/counter";
 import NewOrderLayout from "@/app/(main)/orders/new/_layout";
@@ -43,8 +43,8 @@ test.each<[string, Record<string, ComponentType>]>([
   ["/orders/00000000-0000-4000-8000-0000000000f1", { "orders/[id]": OrderScreen }],
   ["/stock/production", { "stock/production": Production }],
   ["/stock/00000000-0000-4000-8000-000000000a01", { "stock/[productId]": ProductStockScreen }],
-  ["/more/products", { "more/products": Products }],
-  ["/more/change-pin", { "more/change-pin": ChangePin }],
+  ["/settings/products", { "settings/products": Products }],
+  ["/settings/change-pin", { "settings/change-pin": ChangePin }],
 ])("%s deja abajo el espacio de la barra del sistema", async (url, routes) => {
   await renderRouter(routes, { initialUrl: url, wrapper: Providers });
   expect(padding()).toMatchObject({ paddingTop: 24, paddingBottom: 48 });

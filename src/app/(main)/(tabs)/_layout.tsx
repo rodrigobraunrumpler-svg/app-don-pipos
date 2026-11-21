@@ -6,7 +6,7 @@ import { Pressable, View } from "react-native";
 import { NewMenu } from "@/features/orders";
 import { fonts, useTheme } from "@/theme";
 
-// Las pestañas: Inicio, Pedidos, +, Stock y Más. El + abre «¿Qué quieres anotar?»
+// Las pestañas: Inicio, Pedidos, +, Stock y Reportes (en el lugar de Más, fase 7c). El + abre «¿Qué quieres anotar?»
 export default function TabsLayout() {
   const { colors } = useTheme();
   const [menu, setMenu] = useState(false);
@@ -85,12 +85,12 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
-          name="more"
+          name="reports"
           options={{
-            title: "Más",
+            title: "Reportes",
             tabBarIcon: ({ focused, size }) => (
               <MaterialCommunityIcons
-                name="dots-horizontal"
+                name="chart-bar"
                 color={focused ? colors.primary : colors.textMuted}
                 size={size}
               />
