@@ -154,3 +154,25 @@ cd /home/javier/var-mar/app && pnpm start --tunnel
 - **Todo lo de Reportes se hizo en la tarea 1:** el título sin «Volver», «Exportar a Excel» y las tarjetas que abren su lista. Era la misma pantalla y las mismas pruebas.
 - **«Pedidos | Clientes» se guarda en la ruta** (`?ver=clientes`): sigue elegido al volver de la ficha de un cliente, aunque la pantalla se vuelva a armar.
 - **Clientes muestra «N clientes» encima de la lista,** ya que el título de la pestaña es Pedidos.
+
+## Después de la revisión final (2026-11-20)
+
+Un revisor aparte leyó toda la rama y probó la navegación con las pestañas y la pila de verdad: los tres focos de revisión se cumplen. No encontró nada crítico: cuatro arreglos importantes y ocho detalles menores. Lo importante se corrigió en la rama `fase-7c-review`, cada arreglo con una prueba que primero falló. Gates: 764 pruebas de Jest y lint, tipos y formato limpios.
+
+**Arreglado**
+- **«Un gasto» decía «Los tipos de gasto se cambian en Más».** Ahora dice «en Ajustes».
+- **TalkBack leía las tarjetas de Reportes sin el monto** («Ingresos: ver la lista»). Ahora lee todo lo que muestran: el título, el monto, qué es, la comparación y «Ver la lista».
+- **Cambiar «Clientes que no vuelven» no actualizaba la lista de abajo.** En Pedidos › Clientes, pasar de 30 a 60 días dejaba en «No vuelven» a los de 30. Ahora guardar ese ajuste vuelve a pedir los clientes.
+- **En Clientes, con el teclado abierto no se veían los resultados.** Lo de arriba (título, «Pedidos | Clientes», buscador, filtros y los dos atajos) ocupaba unos 400 dp. Ahora, mientras escribes en el buscador, los atajos se esconden.
+
+**Para probar en el celular:** en Pedidos › Clientes, busca un cliente con el teclado abierto: se ven los resultados.
+
+**Quedó para después** (detalles menores, en orden de lo que más se notaría)
+1. Pasar de Pedidos a Clientes y volver deja la lista de pedidos en «Hoy» y borra la búsqueda.
+2. En un día sin cobros, entregas, pendientes ni deudas, Inicio no muestra «Cuadrar caja ›», y sin Más ese día no hay otra entrada. La maqueta aprobada tiene el mismo hueco: decide el dueño si se muestra siempre.
+3. Gastos, sin ningún gasto todavía, no muestra «Tipos de gasto» arriba (Ajustes sí).
+4. Documentos que todavía dicen «Más»: `PROJECT_CONTEXT.md` (árbol de rutas y «Más → Cuenta») y `glossary.md`. `businesses.md` dice que Recordatorios se abre desde la campana, y `stock.md` y `products.md` no mencionan «Productos y precios» en Stock.
+5. Unos 20 comentarios del código y títulos de pruebas dicen «Más».
+6. Nombres: `?ver=clientes` está en español (la regla pide inglés, `?view=customers`), y `type View` tapa el `View` de React Native en `orders.tsx`.
+7. Pruebas que faltan: la barra de abajo sin Más, el área segura de `/settings` y de la pestaña Reportes, la sección de la cuenta de verdad con su título nuevo, y + → «Un ingreso» con las rutas de verdad.
+8. Dos desvíos sin anotar: Stock importa `ProductsRow` directo (no por un espacio) y `reports` sigue exportando `ExportRow`, que nadie usa afuera.

@@ -130,7 +130,7 @@ export function ExpenseForm({ onBack }: { onBack: () => void }) {
               ))}
             </View>
           )}
-          <Text className="text-[13px] text-text-secondary">Los tipos de gasto se cambian en Más.</Text>
+          <Text className="text-[13px] text-text-secondary">Los tipos de gasto se cambian en Ajustes.</Text>
         </Section>
         <Section title="En qué">
           <Field

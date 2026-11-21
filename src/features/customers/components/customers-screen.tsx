@@ -111,7 +111,8 @@ export function CustomersScreen({ header, shortcuts, onOpen, lapsedAction }: Pro
                 <Chip key={key} label={label} selected={filter === key} onPress={() => setFilter(key)} />
               ))}
             </ScrollView>
-            {shortcuts ? <View className="px-5">{shortcuts}</View> : null}
+            {/* Mientras busca, los atajos se esconden: con el teclado abierto no quedaría espacio para los resultados */}
+            {shortcuts && !text ? <View className="px-5">{shortcuts}</View> : null}
             {everyone && list.data ? (
               <Text className="px-5 text-[13px] text-text-secondary">{`${total} ${total === 1 ? "cliente" : "clientes"}`}</Text>
             ) : null}

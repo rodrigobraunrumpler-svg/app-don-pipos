@@ -131,3 +131,8 @@ test("dos gastos con foto seguidos: si la primera foto falla después, igual lo 
   fail(new AppError("offline"));
   expect(await screen.findByText("La foto del gasto de S/ 86.00 no se subió.")).toBeOnTheScreen();
 });
+
+test("los tipos de gasto se cambian en Ajustes (Más ya no existe)", async () => {
+  await renderWithProviders(<ExpenseForm onBack={jest.fn()} />);
+  expect(await screen.findByText("Los tipos de gasto se cambian en Ajustes.")).toBeOnTheScreen();
+});

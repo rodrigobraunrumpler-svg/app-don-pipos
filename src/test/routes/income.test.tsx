@@ -80,7 +80,7 @@ const ROUTES = { reports: Reports, "income/index": IncomeScreen, "income/new": N
 
 test("Reportes → Ingresos → el pago de un pedido abre el pedido; atrás vuelve a Ingresos y a Reportes", async () => {
   await renderRouter(ROUTES, { initialUrl: "/reports", wrapper: Providers });
-  await fireEvent.press(await screen.findByRole("button", { name: "Ingresos: ver la lista" }));
+  await fireEvent.press(await screen.findByRole("button", { name: /^Ingresos S\/\s[\d,.]+ .*Ver la lista/ }));
   expect(screen).toHavePathname("/income");
   await fireEvent.press(await screen.findByRole("button", { name: /^Pedido #0042/ }));
   expect(await screen.findByText("Pedido #0042")).toBeOnTheScreen();

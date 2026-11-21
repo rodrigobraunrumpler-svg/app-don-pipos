@@ -42,9 +42,19 @@ jest.mock("@/features/orders/api/orders", () => {
     getOrderCounts: async () => ({ today: 1, toDeliver: 1, upcoming: 0, toCollect: 1, all: 1 }),
   };
 });
-jest.mock("@/features/businesses/api/business", () => ({
-  getBusiness: async () => jest.requireActual("@/test/business").TEST_BUSINESS,
-}));
+// Los días de «No vuelven» como los tiene la base: guardarlos cambia quiénes salen en esa lista
+let mockLapsedDays = 30;
+jest.mock("@/features/businesses/api/business", () => {
+  const { TEST_BUSINESS } = jest.requireActual("@/test/business");
+  const settings = () => ({ ...TEST_BUSINESS.settings, lapsedAfterDays: mockLapsedDays });
+  return {
+    getBusiness: async () => ({ ...TEST_BUSINESS, settings: settings() }),
+    updateSettings: async (_version: number, patch: { lapsedAfterDays: number }) => {
+      mockLapsedDays = patch.lapsedAfterDays;
+      return settings();
+    },
+  };
+});
 jest.mock("@/features/loyalty/api/loyalty", () => ({
   getLoyaltySettings: async () => ({
     isActive: false,
@@ -77,7 +87,10 @@ const ROSA = {
   acceptsPromotions: true,
 };
 jest.mock("@/features/customers/api/customers", () => ({
-  searchCustomers: async () => ({ items: [ROSA], meta: { limit: 20, total: 1, hasMore: false, nextCursor: null } }),
+  searchCustomers: async ({ filter }: { filter: string }) => {
+    const items = filter === "lapsed" && mockLapsedDays > 30 ? [] : [ROSA];
+    return { items, meta: { limit: 20, total: items.length, hasMore: false, nextCursor: null } };
+  },
   getCustomer: async () => ({
     ...ROSA,
     address: null,
@@ -101,6 +114,10 @@ const ROUTES = {
   "customers/[id]": CustomerProfile,
   "orders/[id]": OrderScreen,
 };
+
+beforeEach(() => {
+  mockLapsedDays = 30;
+});
 
 async function openCustomers() {
   await renderRouter(ROUTES, { initialUrl: "/orders", wrapper: Providers });
@@ -144,4 +161,23 @@ test("en «No vuelven», «Escribirle» abre WhatsApp con el mensaje lleno", asy
     `https://wa.me/51900000505?text=${encodeURIComponent("Hola Rosa, hace tiempo que no te vemos por Don Pipos.")}`,
   );
   open.mockRestore();
+});
+
+test("cambiar desde cuándo un cliente no vuelve actualiza la lista de «No vuelven» que está debajo", async () => {
+  await openCustomers();
+  await fireEvent.press(await screen.findByRole("button", { name: "No vuelven" }));
+  expect(await screen.findByRole("button", { name: "Escribirle" })).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: "Clientes que no vuelven, 30 días" }));
+  await fireEvent.press(await screen.findByRole("button", { name: "Más días sin pedir" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Guardar" }));
+  expect(await screen.findByText("Nadie en esta lista.")).toBeOnTheScreen();
+});
+
+test("mientras busca, los atajos de arriba se esconden para que se vean los clientes", async () => {
+  await openCustomers();
+  expect(await screen.findByRole("button", { name: "Fidelidad, Apagada" })).toBeOnTheScreen();
+  await fireEvent.changeText(screen.getByLabelText("Buscar clientes"), "ro");
+  expect(screen.queryByRole("button", { name: "Fidelidad, Apagada" })).toBeNull();
+  expect(screen.queryByRole("button", { name: /^Clientes que no vuelven/ })).toBeNull();
+  expect(await screen.findByRole("button", { name: /^Rosa T\. \(DEMO\)/ })).toBeOnTheScreen();
 });

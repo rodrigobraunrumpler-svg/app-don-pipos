@@ -5,12 +5,12 @@ import { formatCents } from "@/lib/money";
 
 type Props = { title: string; cents: number; note: string; onPress: () => void; children?: ReactNode };
 
-// «Ingresos» o «Gastos» en Reportes: el monto, qué es y su comparación. Tocarla abre su lista
+// «Ingresos» o «Gastos» en Reportes: el monto, qué es y su comparación. Tocarla abre su lista. Sin etiqueta propia:
+// el lector de pantalla lee todo lo que muestra
 export function KpiCard({ title, cents, note, onPress, children }: Props) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${title}: ver la lista`}
       onPress={onPress}
       className="flex-1 rounded-md border border-border bg-surface p-3.5"
     >

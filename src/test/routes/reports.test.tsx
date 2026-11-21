@@ -93,15 +93,20 @@ test("Reportes es una pestaña: sin «Volver»; sus alfajores se abren encima y 
 });
 
 test.each([
-  ["Gastos: ver la lista", "/expenses"],
-  ["Ingresos: ver la lista", "/income"],
-])("Reportes → la tarjeta «%s» abre su lista, y «Volver» regresa a Reportes", async (card, path) => {
-  await renderRouter(ROUTES, { initialUrl: "/reports", wrapper: Providers });
-  await fireEvent.press(await screen.findByRole("button", { name: card }));
-  expect(screen).toHavePathname(path);
-  await act(() => router.back());
-  expect(screen).toHavePathname("/reports");
-});
+  ["Gastos", "/expenses"],
+  ["Ingresos", "/income"],
+])(
+  "Reportes → la tarjeta «%s» se lee con su monto, abre su lista y «Volver» regresa a Reportes",
+  async (card, path) => {
+    await renderRouter(ROUTES, { initialUrl: "/reports", wrapper: Providers });
+    await fireEvent.press(
+      await screen.findByRole("button", { name: new RegExp(`^${card} S/\\s[\\d,.]+ .*Ver la lista`) }),
+    );
+    expect(screen).toHavePathname(path);
+    await act(() => router.back());
+    expect(screen).toHavePathname("/reports");
+  },
+);
 
 test("En Reportes, «Exportar a Excel» abre su hoja", async () => {
   await renderRouter(ROUTES, { initialUrl: "/reports", wrapper: Providers });
