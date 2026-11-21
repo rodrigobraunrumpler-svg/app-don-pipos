@@ -1,4 +1,5 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { Linking } from "react-native";
 
 import { AppError } from "@/lib/errors";
 import { TEST_ORDER } from "@/test/orders";
@@ -24,13 +25,24 @@ jest.mock("@/features/businesses/api/business", () => ({
   getBusiness: async () => ({
     id: "00000000-0000-4000-8000-0000000000b1",
     name: "Don Pipos (DEMO)",
-    settings: { activePaymentMethods: ["cash", "yape"], deliveryFeeCents: 500, version: 1 },
+    settings: {
+      activePaymentMethods: ["cash", "yape"],
+      deliveryFeeCents: 500,
+      reviewUrl: "https://g.page/r/demo/review",
+      version: 1,
+    },
   }),
 }));
 jest.mock("@/features/messages/api/templates", () => ({
   listTemplates: async () => [
     { key: "on_the_way", body: "Hola {nombre}, tu pedido {numero} va en camino. {pago}", version: 1, isDefault: true },
     { key: "delivered", body: "¡Gracias por tu compra, {nombre}! {sellos}", version: 1, isDefault: true },
+    {
+      key: "ask_review",
+      body: "Hola {nombre}, ¿nos dejas tu opinión en Google? {enlace}",
+      version: 1,
+      isDefault: true,
+    },
   ],
 }));
 const mockLoyalty = jest.fn();
@@ -171,4 +183,20 @@ test("el mensaje de entregado dice cuántos sellos lleva", async () => {
   expect(
     await screen.findByText("¡Gracias por tu compra, Ana! Llevas 7 de 10 sellos para tu premio."),
   ).toBeOnTheScreen();
+});
+
+test("en un pedido entregado, «Pedir reseña» abre WhatsApp con el enlace de Google; en los demás no sale", async () => {
+  const openUrl = jest.spyOn(Linking, "openURL").mockResolvedValue(undefined);
+  await open(withStatus("delivered"));
+  await fireEvent.press(await screen.findByRole("button", { name: "Pedir reseña" }));
+  expect(openUrl).toHaveBeenCalledWith(
+    `https://wa.me/51900000990?text=${encodeURIComponent("Hola Ana, ¿nos dejas tu opinión en Google? https://g.page/r/demo/review")}`,
+  );
+  openUrl.mockRestore();
+});
+
+test("antes de entregarlo, no se pide reseña", async () => {
+  await open(withStatus("on_the_way"));
+  expect(await screen.findByText(/va en camino/)).toBeOnTheScreen();
+  expect(screen.queryByRole("button", { name: "Pedir reseña" })).toBeNull();
 });

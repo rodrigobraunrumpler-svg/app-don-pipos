@@ -13,8 +13,8 @@ $$;
 grant execute on function pg_temp.template(text) to authenticated;
 
 select tests.login_as('00000000-0000-4000-8000-0000000017c1');
-select is((select count(*)::integer from jsonb_array_elements(public.list_templates()) as e where (e ->> 'isDefault')::boolean), 6,
-  'un negocio nuevo tiene sus 6 textos por defecto');
+select is((select count(*)::integer from jsonb_array_elements(public.list_templates()) as e where (e ->> 'isDefault')::boolean), 7,
+  'un negocio nuevo tiene sus 7 textos por defecto (con «Pedir reseña», fase 9)');
 select throws_ok('select public.update_template(''on_the_way'', 1, ''Hola {nombre}, llevas {sellos}'')', 'P0001', 'invalid',
   'un marcador de otra plantilla no vale');
 select throws_ok('select public.update_template(''on_the_way'', 1, ''Hola {nombre}, cuesta {precio}'')', 'P0001', 'invalid',

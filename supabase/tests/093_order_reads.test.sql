@@ -87,7 +87,7 @@ select throws_ok($$select public.list_orders('all', null, 20, 'abc')$$, 'P0001',
 
 -- Las plantillas
 select is(array(select t ->> 'key' from jsonb_array_elements(public.list_templates()) as t order by 1),
-  array['balance_reminder', 'confirmation', 'delivered', 'on_the_way', 'ready', 'we_miss_you'], 'las seis plantillas de WhatsApp');
+  array['ask_review', 'balance_reminder', 'confirmation', 'delivered', 'on_the_way', 'ready', 'we_miss_you'], 'las siete plantillas de WhatsApp');
 
 -- Otro dueño no ve nada
 select tests.login_as('00000000-0000-4000-8000-0000000009a4');

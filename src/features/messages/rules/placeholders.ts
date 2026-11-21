@@ -6,6 +6,8 @@ export const PLACEHOLDERS = {
   delivered: ["nombre", "sellos"],
   balance_reminder: ["nombre", "numero", "falta"],
   we_miss_you: ["nombre"],
+  // Fase 9: el enlace es el de reseñas de Google del negocio (Ajustes)
+  ask_review: ["nombre", "enlace"],
 } as const;
 
 export type TemplateKey = keyof typeof PLACEHOLDERS;

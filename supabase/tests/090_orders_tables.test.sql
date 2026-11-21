@@ -70,7 +70,7 @@ select throws_ok($$insert into public.customers (business_id, name, phone) value
 select throws_ok($$insert into public.customers (business_id, name, phone) values ('00000000-0000-4000-8000-0000000009b1', 'Otra', '987654321')$$, '23514', null, 'el teléfono con +51');
 
 -- Textos de WhatsApp
-select is((select count(*)::integer from public.message_templates where business_id = '00000000-0000-4000-8000-0000000009b1'), 6, 'un negocio nuevo nace con sus seis textos');
+select is((select count(*)::integer from public.message_templates where business_id = '00000000-0000-4000-8000-0000000009b1'), 7, 'un negocio nuevo nace con sus siete textos (con «Pedir reseña», fase 9)');
 select is((select body from public.message_templates where business_id = '00000000-0000-4000-8000-0000000009b1' and key = 'on_the_way'),
   'Hola {nombre}, tu pedido {numero} va en camino. {pago}', 'los de la maqueta');
 select is((select count(*)::integer from public.businesses b where not exists (select 1 from public.message_templates t where t.business_id = b.id)), 0, 'los negocios de antes también los tienen');

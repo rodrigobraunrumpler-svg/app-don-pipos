@@ -5,7 +5,14 @@ import { FormHeader } from "@/components/ui/form-header";
 import { MenuSection } from "@/components/ui/menu-section";
 import { Screen } from "@/components/ui/screen";
 import { AccountSection } from "@/features/auth";
-import { BackupStatus, DeliveryRow, LapsedRow, PaymentMethodsRow, ProductionRow } from "@/features/businesses";
+import {
+  BackupStatus,
+  DeliveryRow,
+  LapsedRow,
+  PaymentMethodsRow,
+  ProductionRow,
+  ReviewUrlRow,
+} from "@/features/businesses";
 import { ExpenseCategoriesRow } from "@/features/expenses";
 import { LoyaltyRow } from "@/features/loyalty";
 import { MessagesRow } from "@/features/messages";
@@ -32,6 +39,7 @@ export default function Settings() {
           <LoyaltyRow onPress={() => router.navigate("/settings/loyalty")} />
           <MessagesRow onPress={() => router.navigate("/settings/messages")} />
           <LapsedRow />
+          <ReviewUrlRow />
         </MenuSection>
         <AccountSection onChangePin={() => router.navigate("/settings/change-pin")} extra={<RemindersRow />} />
       </ScrollView>

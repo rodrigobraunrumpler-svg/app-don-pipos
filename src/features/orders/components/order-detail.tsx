@@ -30,6 +30,7 @@ import { OrderCorrections, type OrderMessage } from "./order-corrections";
 import { OrderItems } from "./order-items";
 import { OrderPayments } from "./order-payments";
 import { OrderTimeline } from "./order-timeline";
+import { ReviewRequest } from "./review-request";
 import { PaymentSheet } from "./payment-sheet";
 import { StatusChip } from "./status-chip";
 
@@ -153,6 +154,7 @@ export function OrderDetail({ orderId, onBack }: Props) {
             />
           </View>
         ) : null}
+        {order.status === "delivered" && phone ? <ReviewRequest name={customerName} phone={phone} /> : null}
         <OrderItems order={order} />
         <OrderPayments
           order={order}

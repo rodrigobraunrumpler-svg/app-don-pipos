@@ -6,6 +6,7 @@ export const TEMPLATE_TITLES = {
   delivered: "Entregado",
   balance_reminder: "Recordatorio de saldo",
   we_miss_you: "Te extrañamos (solo con permiso)",
+  ask_review: "Pedir reseña",
 } as const;
 
 // «Así le llega (con el pedido #0042)»: los datos de ejemplo de la vista previa (2 Coquetas, 1 Pipo Crush y el
@@ -20,4 +21,5 @@ export const SAMPLE_CONTEXT = {
   pago: "Total a pagar: S/ 22.00 (Yape, Plin, transferencia o efectivo).",
   falta: "S/ 22.00",
   sellos: "Llevas 7 de 10 sellos para tu premio.",
+  enlace: "https://g.page/r/…",
 } as const;

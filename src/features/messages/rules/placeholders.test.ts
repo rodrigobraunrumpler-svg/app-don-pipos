@@ -8,3 +8,8 @@ test("los que no valen", () => {
   expect(unknownPlaceholders("on_the_way", "Hola {nombre}, {apodo} y {sellos}")).toEqual(["apodo", "sellos"]);
   expect(unknownPlaceholders("delivered", "¡Gracias, {nombre}! {sellos}")).toEqual([]);
 });
+
+test("«Pedir reseña» vale el nombre y el enlace de Google (fase 9)", () => {
+  expect(PLACEHOLDERS.ask_review).toEqual(["nombre", "enlace"]);
+  expect(unknownPlaceholders("ask_review", "Hola {nombre}, {numero}: {enlace}")).toEqual(["numero"]);
+});
