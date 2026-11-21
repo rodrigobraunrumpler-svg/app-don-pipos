@@ -1,0 +1,250 @@
+# Fase 9: Los alfajores, de la app a la web — Plan de implementación
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Objetivo:** el dueño crea o cambia un alfajor en la app, con su foto, su descripción y sus alérgenos, y sale solo en la web. Con todas las mejoras que aprobó (maqueta `docs/design/pantallas/alfajores-web.html`, 2026-11-21).
+
+**Arquitectura:**
+- **La base** guarda la descripción, los alérgenos, la foto (en Storage) y el estado de la web de cada alfajor.
+  - El outbox de la fase 8 separa dos tipos de cambio:
+    - `state`: precio, stock, si se ve, orden y etiqueta;
+    - `content`: nombre, descripción, alérgenos y foto.
+- **La función `sync-to-web`:**
+  - crea en Sanity la página de un alfajor que todavía no está (`product-don-pipos-<slug>`, en la categoría de Don Pipos);
+  - sube la foto a Sanity cuando cambió;
+  - manda cada cambio al documento y a su borrador;
+  - después anota en la base el enlace, el slug y la foto subida.
+- **La app:**
+  - la hoja del alfajor pasa a ser pantallas de la pila: Nuevo, Editar, Vista previa y Ordenar;
+  - la foto se sube como la boleta de un gasto, con su cola de reintentos.
+- **La web** (la página de cada alfajor y lo de Google) la construye otro asistente, en el proyecto de la web. Esta fase solo deja en Sanity los campos que esa página lee.
+
+**Stack:** Postgres (pg_net, pg_cron, Storage), Edge Functions en Deno, Expo SDK 58 con expo-image-picker (que ya trae Expo Go). Sin librerías nuevas.
+
+**Especificación:** `docs/spec/products.md` (se actualiza), la maqueta aprobada y `docs/plan/fase-8-entrega.md` (la copia a la web).
+
+## Decisiones
+
+1. **La app manda en estos campos de la web:** nombre (como «Alfajor X»), descripción, foto principal, alérgenos, precio, disponible, si se ve, orden y la etiqueta «Nuevo».
+   - El contenido (nombre, descripción, alérgenos, foto) se manda solo cuando cambia en la app.
+   - Lo que alguien edite en el panel (más fotos, ingredientes) no se pisa.
+2. **Una página nueva en la web** se crea solo cuando el alfajor tiene foto y descripción y «Se ve en la web» está prendido. Mientras le falte algo, sus cambios quedan cerrados como `incomplete`, y se vuelven a anotar cuando llega la foto.
+3. **«Se ve en la web»:**
+   - Un alfajor que todavía no está en la web necesita descripción para prenderlo; la foto llega justo después.
+   - Los que ya están en la web (enlazados) no lo necesitan: su foto y su texto ya existen allá.
+4. **La foto:**
+   - El bucket es `product-photos`, privado, de hasta 4 MB, solo JPEG, con la ruta `<negocio>/<alfajor>/<uuid>.jpg`.
+   - La app la recorta en cuadrado (el recortador del celular), avisa si el lado menor tiene menos de 1080 px y la achica a 2048 px antes de subirla.
+   - En Sanity va con `alt` «Alfajor X de Don Pipos» y `rightsConfirmed: true`, porque la sube el dueño.
+5. **«Nuevo»:** por 30 días desde que el alfajor sale por primera vez en la web (`web_published_at`). Solo para los creados en la app; los que ya estaban en la web no lo llevan.
+6. **El orden:** `sortOrder` en la web es `sort_order × 10`. «Los más vendidos primero» (ajuste `products_by_sales`) ordena por lo vendido en los últimos 30 días: al prenderlo, y el día 1 de cada mes.
+7. **El estado en la app** (`webState`):
+   - `none`: no va a la web;
+   - `pending`: hay una fila pendiente;
+   - `failing`: una pendiente con 3 intentos o más;
+   - `sent`: todo enviado.
+   - Si alguno falla, Productos y precios avisa «La web no se está actualizando», con «Avisar al equipo».
+8. **«Compartir»** usa `EXPO_PUBLIC_WEB_URL` + `/don-pipos/<slug>`. Sin esa variable (todavía no hay dominio), el botón no sale.
+9. **«Pedir reseña»:**
+   - Sale en un pedido entregado con teléfono, si el negocio guardó su enlace de reseñas de Google (ajuste `review_url`, https).
+   - Usa la plantilla nueva `ask_review` («Hola {nombre}, gracias por tu pedido de Don Pipos. ¿Nos dejas tu opinión en Google? Nos ayuda mucho: {enlace}»).
+10. **La categoría de Don Pipos en Sanity** la busca `pnpm web connect` (`brand == "don-pipos"`) y la guarda como secreto de la función (`SANITY_DON_PIPOS_CATEGORY`). La función no la tiene escrita.
+11. **Los alérgenos** son los mismos 13 valores de la web (`gluten`, `lacteos`, `huevo`, `pescado`, `crustaceos`, `moluscos`, `mani`, `frutos-secos`, `soya`, `ajonjoli`, `mostaza`, `apio`, `sulfitos`), con los mismos títulos.
+
+## Restricciones globales
+
+- **Solo el proyecto de Supabase de siempre** (también es el de producción) y el dataset `development` de Sanity.
+- **Secretos:** nunca se imprimen.
+- **Sin librerías nuevas.**
+- **Una migración subida no se edita;** los nombres de migración van con la hora UTC.
+- **Código:** un componente por archivo, hasta 250 líneas por archivo y colores solo del tema.
+- **Navegación suave:** Nuevo, Editar, Vista previa y Ordenar son pantallas de la pila, con «Volver».
+- **Commits** en inglés, hasta 100 caracteres, sin cuerpo.
+
+## Foco de revisión
+
+1. **Un alfajor sin foto no crea una página vacía:** la foto que llega después la crea.
+2. **Cambiar el precio no vuelve a subir la foto ni pisa la descripción del panel:** `state` y `content` van separados.
+3. **Dos alfajores con el mismo nombre en la web,** o un slug ocupado: el nuevo lleva `-2`.
+4. **Sin señal al guardar la foto:** el alfajor queda guardado y la foto se sube sola después.
+5. **Deshacer justo después de publicar:** la web no muestra el alfajor (o lo esconde enseguida).
+
+---
+
+### Task 1: La base: descripción, alérgenos, foto y estado de la web
+
+**Archivos:**
+- Migración `<UTC>_products_web.sql`.
+- `supabase/tests/072_products_web.test.sql` y `900_structure.test.sql` (la lista de funciones).
+- `src/features/products/{schema,api,queries}` y sus pruebas.
+
+**La base:**
+- **`public.products` suma:**
+  - `description` (hasta 400 letras);
+  - `allergens text[]`, con los 13 valores;
+  - `photo_path`, `web_slug`, `web_published_at` y `web_photo_path`.
+- **`private.web_sync_outbox` suma** `kind text` (`state` o `content`, por defecto `state`).
+  - El chequeo del payload se mantiene.
+  - `queue_web_sync(p_product_id uuid, p_kind text default 'state')` anota también los alfajores sin enlazar que se ven en la web: la copia puede crearlos.
+- **`save_product`** con `p_description` y `p_allergens`.
+  - Anota `content` si cambió el nombre, la descripción o los alérgenos, y `state` si cambió el precio o si se ve.
+  - Pone `web_published_at` la primera vez que un alfajor sin enlazar queda visible.
+  - Rechaza «se ve» sin descripción en un alfajor sin enlazar (`invalid`).
+- **`set_product_photo(p_product_id uuid, p_path text)`:** la ruta tiene que empezar con `<negocio>/<alfajor>/`, y anota `content`.
+- **`product_json`** suma `description`, `allergens`, `hasPhoto`, `webSlug`, `webState` e `isNew`.
+- **Storage:** el bucket `product-photos` con sus reglas (lee y sube solo el dueño de la carpeta).
+
+- [ ] **Paso 1:** las pruebas que fallan.
+  - pgTAP:
+    - los campos nuevos y sus límites;
+    - qué tipo de cambio anota `save_product` según lo que cambió;
+    - «se ve» sin descripción;
+    - la ruta de la foto;
+    - `webState` en sus cuatro estados;
+    - `isNew` a los 29 y a los 31 días.
+  - Jest: el esquema nuevo.
+- [ ] **Paso 2:** implementar. Correr `pnpm test:db`, `pnpm db:push`, `pnpm db:types` y `pnpm test`.
+- [ ] **Paso 3: Commit** — `feat: store description, allergens, photo and web state for each product`.
+
+### Task 2: La copia crea y actualiza la página en Sanity
+
+**Archivos:**
+- Migración `<UTC>_web_sync_content.sql`.
+- `supabase/tests/150_web_sync.test.sql`.
+- `supabase/functions/_shared/sanity.ts` y su prueba.
+- `supabase/functions/sync-to-web/index.ts`.
+- `scripts/web.mjs` y `scripts/lib/web.mjs`, con la categoría y el slug al enlazar.
+
+**La base:**
+- **`claim_web_sync`** devuelve por alfajor `{ ids, productId, sanityId, slug, attempts, payload, content }`:
+  - `payload` siempre: precio, disponible, se ve, `sortOrder` e `isNew`;
+  - `content` solo si alguna fila es `content` o si hay que crear la página: nombre para la web, descripción, alérgenos, ruta de la foto, si la foto cambió y el `alt`.
+- **Un alfajor sin enlazar:**
+  - si no se ve o no está activo, sus filas se cierran con `not_on_web`;
+  - si le falta foto o descripción, con `incomplete`;
+  - si no, se crea.
+- **`finish_web_sync(p_ids, p_error, p_result jsonb default null)`:** con `p_result` (`sanityId`, `slug`, `imageUrl`, `photoPath`) actualiza el alfajor.
+
+**La función:**
+- Para crear: busca un slug libre (`alfajor-x`, `alfajor-x-2`…), y sube la foto antes de crear el documento.
+- **`sanity.ts`:**
+  - `createMutations(item, imageRef, categoryId)` arma el documento completo con `createIfNotExists`;
+  - `patchMutations(item, imageRef?)` va al documento y al borrador; el contenido, solo si viene;
+  - `uploadImage(fetch, config, bytes, filename)` devuelve el `_id` y la `url` del asset;
+  - `slugFor(name)`.
+- La foto se baja de Storage con la llave secreta de la función (`SUPABASE_SECRET_KEYS`).
+
+- [ ] **Paso 1:** las pruebas que fallan.
+  - pgTAP:
+    - crear (con la foto), `incomplete`, `not_on_web`;
+    - `content` solo cuando cambió;
+    - `finish` con resultado.
+  - node:test:
+    - el documento nuevo (marca, categoría, slug, foto con `alt` y derechos);
+    - el patch de contenido y el de estado;
+    - la subida de la foto;
+    - `slugFor` («Limón Kiss» → `alfajor-limon-kiss`).
+- [ ] **Paso 2:** implementar. Correr `pnpm test:db`, `pnpm db:push`, `pnpm test:scripts`, `pnpm typecheck` y `pnpm functions:deploy`.
+- [ ] **Paso 3: Commit** — `feat: create the alfajor page in Sanity from the app, photo included`.
+
+### Task 3: «Nuevo», ordenar y los más vendidos
+
+**Archivos:**
+- Migración `<UTC>_products_order.sql`.
+- `supabase/tests/073_products_order.test.sql`.
+- `src/features/businesses` (los ajustes `productsBySales` y `reviewUrl`).
+
+**La base:**
+- **`reorder_products(p_ids uuid[])`:** `sort_order` en ese orden; anota `state` de todos.
+- **`business_settings`** suma `products_by_sales boolean` y `review_url text` (https, hasta 300 letras), en `update_settings` y `settings_json`. Prender `productsBySales` ordena al momento.
+- **`private.order_products_by_sales(p_business uuid)`**, con un cron el día 1 de cada mes.
+- **`private.expire_new_badges()`,** con un cron diario: anota `state` de los alfajores que cumplieron 30 días.
+
+- [ ] **Paso 1:** las pruebas que fallan, en pgTAP.
+  - El orden nuevo y su `sortOrder`.
+  - El orden por lo vendido.
+  - La etiqueta que vence.
+  - Los ajustes nuevos y sus límites.
+- [ ] **Paso 2:** implementar. Correr `pnpm test:db`, `pnpm db:push`, `pnpm db:types` y `pnpm test`.
+- [ ] **Paso 3: Commit** — `feat: order the web from the app, by hand or by best sellers, and expire «Nuevo»`.
+
+### Task 4: La pantalla del alfajor
+
+**Archivos:**
+- `src/app/(main)/settings/products/{_layout,index,new,[id],preview,order}.tsx` (la de hoy pasa a `index`).
+- En `src/features/products/components/`:
+  - `product-form.tsx` y `photo-picker.tsx`;
+  - `allergen-chips.tsx` y `web-preview-card.tsx`;
+  - `web-state-chip.tsx`, `web-failing-notice.tsx` y `product-order-list.tsx`.
+- `src/features/products/hooks/` (el borrador, guardar, la foto y su cola).
+- `app.config.ts` (el permiso de la galería).
+- Las pruebas de ruta.
+
+**La app:**
+- **Nuevo y Editar:** foto, nombre, precio, descripción con contador `0/400`, alérgenos, costo, mínimo y «Se ve en la web».
+  - El interruptor se prende solo con foto y descripción en un alfajor sin enlazar; si no, dice «Falta la foto y la descripción».
+  - Debajo del nombre: «En la web: «Alfajor X»».
+- **La foto:**
+  - «Tomar foto» o «De la galería», con el recorte en cuadrado;
+  - si el lado menor tiene menos de 1080 px, avisa «Esta foto es chica: en la web se vería borrosa», con «Tomar otra» o «Usar igual».
+- **Vista previa:** la tarjeta de la web, con «Publicar» y «Seguir editando».
+
+- [ ] **Paso 1:** las pruebas que fallan.
+  - Ruta: Nuevo → la foto → Vista previa → Publicar, y «Volver» desanda el camino.
+  - El interruptor bloqueado.
+  - El aviso de la foto chica.
+  - Editar un alfajor enlazado sin descripción.
+- [ ] **Paso 2:** implementar. Correr `pnpm test`, `pnpm lint` y `pnpm typecheck`.
+- [ ] **Paso 3: Commit** — `feat: create and edit alfajores with photo, crop, description, allergens and a web preview`.
+
+### Task 5: Publicar, Deshacer, estados, Compartir y Ordenar
+
+**La app:**
+- **Al publicar:**
+  - el toast «Coqueta se publicó en la web» con «Deshacer», que lo esconde;
+  - la lista consulta cada 3 segundos, hasta 1 minuto, mientras haya alfajores en `pending`;
+  - al pasar a `sent`, el toast «Coqueta ya está en la web» con «Compartir».
+- **Los estados en la lista:** «Subiendo a la web…», «En la web», «Oculto», «La foto espera la señal» (la cola local) y «Nuevo».
+- **El aviso** «La web no se está actualizando», con «Avisar al equipo» (WhatsApp del equipo).
+- **Ordenar:** ↑↓ y el interruptor «Los más vendidos primero», que apaga las flechas.
+
+- [ ] **Paso 1:** las pruebas que fallan.
+  - El toast y «Deshacer».
+  - El paso de `pending` a `sent` y «Compartir» (con y sin `EXPO_PUBLIC_WEB_URL`).
+  - El aviso.
+  - La cola de la foto sin señal.
+  - Ordenar y el interruptor.
+- [ ] **Paso 2:** implementar. Correr `pnpm test`, `pnpm lint` y `pnpm typecheck`.
+- [ ] **Paso 3: Commit** — `feat: publish with undo, follow the web state, share the page and order the alfajores`.
+
+### Task 6: «Pedir reseña»
+
+**Archivos:**
+- Migración `<UTC>_ask_review.sql`: la plantilla `ask_review` (`nombre`, `enlace`).
+- La prueba pgTAP de las plantillas.
+- `src/features/messages`, por la clave nueva.
+- `src/features/businesses`: la fila y la hoja «Reseñas de Google» en Ajustes.
+- `src/features/orders/components/order-detail.tsx`.
+
+- [ ] **Paso 1:** las pruebas que fallan.
+  - La plantilla y sus campos.
+  - El enlace se guarda solo con https.
+  - El botón sale en un pedido entregado con teléfono y enlace, y no sale en los demás.
+  - Abre WhatsApp con el mensaje lleno.
+- [ ] **Paso 2:** implementar. Correr `pnpm test:db`, `pnpm db:push`, `pnpm db:types` y `pnpm test`.
+- [ ] **Paso 3: Commit** — `feat: ask for a Google review from a delivered order`.
+
+### Task 7: Cierre
+
+- [ ] **Documentos:**
+  - `products.md`, `businesses.md`, `messages.md`, el glosario y el README del plan;
+  - en este plan, «Resultado» y «Lo que falta».
+- [ ] **La prueba de punta a punta en `development`:**
+  - crear un alfajor DEMO con foto desde la base;
+  - ver que se crea su página en Sanity, con la foto;
+  - cambiarle el precio y ver que no se vuelve a subir la foto;
+  - borrar ese documento de prueba al terminar.
+- [ ] **Verificar:**
+  - `pnpm test`, `pnpm lint`, `pnpm typecheck` y `prettier --check`;
+  - `pnpm lint:rules`, `pnpm test:scripts`, `pnpm test:db` y `pnpm db:check`.
+- [ ] **Commit** — `docs: record phase 9, the alfajores from the app to the web`.
