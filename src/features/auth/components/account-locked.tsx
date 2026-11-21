@@ -5,7 +5,7 @@ import { Icon } from "@/components/ui/icon";
 
 import { SupportLink } from "./support-link";
 
-// Después de 10 PIN equivocados: la cuenta queda bloqueada hasta que el equipo la revise.
+// La cuenta bloqueada: solo la bloquea el equipo (ningún PIN equivocado lo hace; esos esperan, fase 8).
 // «Volver», por si el número estaba mal escrito
 export function AccountLocked({ onBack }: { onBack: () => void }) {
   return (
@@ -17,7 +17,7 @@ export function AccountLocked({ onBack }: { onBack: () => void }) {
         Tu cuenta está bloqueada
       </Text>
       <Text className="mt-1.5 text-center text-base text-text-secondary">
-        Hubo 10 intentos con un PIN equivocado. Escribe al equipo para revisarla.
+        El equipo la bloqueó por seguridad. Escríbenos para revisarla.
       </Text>
       <View className="mt-[22px]">
         <SupportLink label="Pedir un PIN nuevo al equipo" variant="secondary" />

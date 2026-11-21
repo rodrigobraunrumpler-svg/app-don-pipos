@@ -107,6 +107,9 @@ test("con la cuenta bloqueada lo dice, y «Volver» regresa al formulario (por s
   await setup();
   await type("000001");
   expect(await screen.findByText("Tu cuenta está bloqueada")).toBeOnTheScreen();
+  // Ningún PIN equivocado bloquea la cuenta (fase 8): el bloqueo lo pone el equipo
+  expect(screen.getByText("El equipo la bloqueó por seguridad. Escríbenos para revisarla.")).toBeOnTheScreen();
+  expect(screen.queryByText(/10 intentos/)).toBeNull();
   await fireEvent.press(screen.getByRole("button", { name: "Volver" }));
   expect(screen.getByText("Ingresa a tu app")).toBeOnTheScreen();
 });

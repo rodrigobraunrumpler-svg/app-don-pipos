@@ -22,3 +22,8 @@ test("una espera de 24 horas dice que termina mañana", async () => {
   await renderWithProviders(<WaitNotice retryAt={new Date("2026-11-20T16:40:00.000Z")} onBack={jest.fn()} />);
   expect(screen.getByText("Espera hasta mañana a las 11:40")).toBeOnTheScreen();
 });
+
+test("a la una dice «a la 01:20», no «a las»", async () => {
+  await renderWithProviders(<WaitNotice retryAt={new Date("2026-11-20T06:20:00.000Z")} onBack={jest.fn()} />);
+  expect(screen.getByText("Espera hasta mañana a la 01:20")).toBeOnTheScreen();
+});
