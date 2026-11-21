@@ -7,7 +7,8 @@ import type { ReactNode } from "react";
 
 import ProductStockScreen from "@/app/(main)/stock/[productId]";
 import Stock from "@/app/(main)/(tabs)/stock";
-import Products from "@/app/(main)/settings/products";
+import ProductsLayout from "@/app/(main)/settings/products/_layout";
+import Products from "@/app/(main)/settings/products/index";
 import { createQueryClient } from "@/lib/query";
 import { ThemeProvider } from "@/theme";
 
@@ -86,7 +87,10 @@ test("contar el stock desde Stock", async () => {
 });
 
 test("Stock → Productos y precios abre la lista, y «Volver» regresa a Stock", async () => {
-  await renderRouter({ stock: Stock, "settings/products": Products }, { initialUrl: "/stock", wrapper: Providers });
+  await renderRouter(
+    { stock: Stock, "settings/products/_layout": ProductsLayout, "settings/products/index": Products },
+    { initialUrl: "/stock", wrapper: Providers },
+  );
   await fireEvent.press(await screen.findByRole("button", { name: /^Productos y precios/ }));
   expect(screen).toHavePathname("/settings/products");
   await act(() => router.back());

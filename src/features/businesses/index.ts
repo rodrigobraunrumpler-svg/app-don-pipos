@@ -29,3 +29,4 @@ export { SetupStockStep } from "./components/setup-stock-step";
 export { SetupExpensesStep } from "./components/setup-expenses-step";
 export { SetupDone } from "./components/setup-done";
 export { BackupStatus } from "./components/backup-status";
+export { ProductsBySalesRow } from "./components/products-by-sales-row";

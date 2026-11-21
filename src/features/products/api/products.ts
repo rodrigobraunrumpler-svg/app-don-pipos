@@ -40,7 +40,8 @@ export async function uploadProductPhoto(input: { path: string; base64: string }
     contentType: "image/jpeg",
     upsert: false,
   });
-  if (error) throw toAppError(error);
+  // Ya estaba (un reintento después de que se subió y no se llegó a anotar): sigue como subida
+  if (error && (error as { statusCode?: string }).statusCode !== "409") throw toAppError(error);
 }
 
 // Después de subirla: la anota en el alfajor, y la copia la lleva a la web

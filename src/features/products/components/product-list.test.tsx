@@ -5,6 +5,7 @@ import { AppError } from "@/lib/errors";
 import { renderWithProviders } from "@/test/render";
 
 import type { Product } from "../schema/product";
+import { ProductDraftProvider } from "./product-draft-provider";
 import { ProductList } from "./product-list";
 
 const NBSP = " ";
@@ -51,105 +52,50 @@ beforeEach(() => {
 });
 afterEach(() => onlineManager.setOnline(true));
 
-test("cada producto con su precio, su mínimo y su costo; «En la web» solo en el enlazado", async () => {
-  await renderWithProviders(<ProductList onBack={jest.fn()} />);
+const handlers = () => ({ onBack: jest.fn(), onOpen: jest.fn(), onNew: jest.fn(), onOrder: jest.fn() });
+const list = (on = handlers()) =>
+  renderWithProviders(
+    <ProductDraftProvider businessId="b1">
+      <ProductList {...on} />
+    </ProductDraftProvider>,
+  );
+
+test("cada alfajor con su precio, su mínimo, su costo y cómo va en la web", async () => {
+  await list();
   expect(await screen.findByText("Coqueta")).toBeOnTheScreen();
   expect(screen.getByText(`Mínimo 6, cuesta S/${NBSP}5.10`)).toBeOnTheScreen();
   expect(screen.getByText("Mínimo 4, cuesta sin definir")).toBeOnTheScreen();
-  expect(screen.getAllByText("En la web")).toHaveLength(1);
-  expect(screen.getByText("Se copian solos a la web")).toBeOnTheScreen();
+  expect(screen.getAllByText("En la web")).toHaveLength(2);
 });
 
-test("sin productos enlazados, la app no promete nada de la web", async () => {
-  mockList.mockResolvedValue([MORENITA]);
-  await renderWithProviders(<ProductList onBack={jest.fn()} />);
-  expect(await screen.findByText("Morenita")).toBeOnTheScreen();
-  expect(screen.queryByText("Se copian solos a la web")).toBeNull();
-  expect(screen.queryByText(/se ven en la web/)).toBeNull();
-});
-
-test("cambiar el precio a «12,50» guarda 1250 con su versión y lo avisa", async () => {
-  mockSave.mockResolvedValue({ ...COQUETA, priceCents: 1250, version: 2 });
-  await renderWithProviders(<ProductList onBack={jest.fn()} />);
+test("tocar un alfajor lo abre; «Agregar producto» y «Ordenar» llevan a sus pantallas", async () => {
+  const on = handlers();
+  await list(on);
   await fireEvent.press(await screen.findByRole("button", { name: /^Coqueta/ }));
-  expect(screen.getByText(`Ganas S/${NBSP}6.90 por alfajor (57,5${NBSP}%)`)).toBeOnTheScreen();
-  await fireEvent.changeText(screen.getByLabelText("Precio en soles"), "12,50");
-  await fireEvent.press(screen.getByRole("button", { name: "Guardar" }));
-  await waitFor(() =>
-    expect(mockSave).toHaveBeenCalledWith({
-      id: COQUETA.id,
-      expectedVersion: 1,
-      name: "Coqueta",
-      priceCents: 1250,
-      costCents: 510,
-      minStock: 6,
-      showOnWeb: true,
-    }),
-  );
-  expect(
-    await screen.findByText(`Coqueta guardado: S/${NBSP}12.50. En la web se ve en unos segundos.`),
-  ).toBeOnTheScreen();
+  expect(on.onOpen).toHaveBeenCalledWith(COQUETA);
+  await fireEvent.press(screen.getByRole("button", { name: "Agregar producto" }));
+  expect(on.onNew).toHaveBeenCalled();
+  await fireEvent.press(screen.getByRole("button", { name: "Ordenar" }));
+  expect(on.onOrder).toHaveBeenCalled();
 });
 
-test("un precio de 0 no se guarda", async () => {
-  await renderWithProviders(<ProductList onBack={jest.fn()} />);
-  await fireEvent.press(await screen.findByRole("button", { name: /^Morenita/ }));
-  await fireEvent.changeText(screen.getByLabelText("Precio en soles"), "0");
-  await fireEvent.press(screen.getByRole("button", { name: "Guardar" }));
-  expect(screen.getByText("Escribe un precio mayor que cero.")).toBeOnTheScreen();
-  expect(mockSave).not.toHaveBeenCalled();
-});
-
-test("agregar un producto con un nombre que ya existe lo dice", async () => {
-  mockSave.mockRejectedValue(new AppError("conflict"));
-  await renderWithProviders(<ProductList onBack={jest.fn()} />);
-  await fireEvent.press(await screen.findByRole("button", { name: "Agregar producto" }));
-  await fireEvent.changeText(screen.getByLabelText("Nombre del producto"), "coqueta");
-  await fireEvent.changeText(screen.getByLabelText("Precio en soles"), "12");
-  await fireEvent.press(screen.getByRole("button", { name: "Guardar" }));
-  expect(await screen.findByText("Ya tienes un producto con ese nombre.")).toBeOnTheScreen();
-  expect(mockSave).toHaveBeenCalledWith({
-    id: null,
-    expectedVersion: null,
-    name: "coqueta",
-    priceCents: 1200,
-    costCents: null,
-    minStock: 0,
-    showOnWeb: true,
-  });
-});
-
-test("sin señal lo dice, y «Guardar» se apaga", async () => {
-  await renderWithProviders(<ProductList onBack={jest.fn()} />);
-  await fireEvent.press(await screen.findByRole("button", { name: /^Coqueta/ }));
+test("sin señal lo dice", async () => {
+  await list();
+  await screen.findByText("Coqueta");
   onlineManager.setOnline(false);
-  expect(await screen.findByText("Sin conexión. Para cambiar precios, espera la señal.")).toBeOnTheScreen();
-  expect(screen.getByRole("button", { name: "Guardar" })).toBeDisabled();
+  expect(await screen.findByText("Sin conexión. Para cambiar un alfajor, espera la señal.")).toBeOnTheScreen();
 });
 
 test("si no se pudo cargar, lo dice y vuelve a intentar", async () => {
   mockList.mockRejectedValueOnce(new AppError("offline"));
-  await renderWithProviders(<ProductList onBack={jest.fn()} />);
+  await list();
   expect(await screen.findByText("No se pudo cargar tus productos")).toBeOnTheScreen();
   await fireEvent.press(screen.getByRole("button", { name: "Reintentar" }));
   expect(await screen.findByText("Coqueta")).toBeOnTheScreen();
 });
 
-test("si el producto ya tenía otro cambio guardado, cierra la hoja, lo dice y vuelve a cargar la lista", async () => {
-  mockSave.mockRejectedValue(new AppError("conflict"));
-  await renderWithProviders(<ProductList onBack={jest.fn()} />);
-  await fireEvent.press(await screen.findByRole("button", { name: /^Coqueta/ }));
-  await fireEvent.changeText(screen.getByLabelText("Precio en soles"), "13");
-  await fireEvent.press(screen.getByRole("button", { name: "Guardar" }));
-  expect(
-    await screen.findByText("Coqueta ya tenía otro cambio guardado: revisa sus datos y vuelve a guardar."),
-  ).toBeOnTheScreen();
-  expect(screen.queryByLabelText("Precio en soles")).toBeNull();
-  await waitFor(() => expect(mockList).toHaveBeenCalledTimes(2));
-});
-
 test("al tirar hacia abajo, vuelve a cargar la lista", async () => {
-  await renderWithProviders(<ProductList onBack={jest.fn()} />);
+  await list();
   await screen.findByText("Coqueta");
   // En Jest, el control de tirar hacia abajo queda como propiedad de la lista
   await act(() => screen.getByTestId("products-scroll").props.refreshControl.props.onRefresh());
@@ -157,7 +103,7 @@ test("al tirar hacia abajo, vuelve a cargar la lista", async () => {
 });
 
 test("la rueda de recarga sale cuando el dueño tira hacia abajo, no con cada recarga de fondo", async () => {
-  const { queryClient } = await renderWithProviders(<ProductList onBack={jest.fn()} />);
+  const { queryClient } = await list();
   await screen.findByText("Coqueta");
   mockList.mockReturnValue(new Promise(() => undefined));
   // TanStack avisa los cambios un instante después: se espera un poco antes de mirar

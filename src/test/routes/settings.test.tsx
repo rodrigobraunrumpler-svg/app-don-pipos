@@ -9,7 +9,8 @@ import type { ReactNode } from "react";
 import Settings from "@/app/(main)/settings/index";
 import Loyalty from "@/app/(main)/settings/loyalty";
 import Messages from "@/app/(main)/settings/messages";
-import Products from "@/app/(main)/settings/products";
+import ProductsLayout from "@/app/(main)/settings/products/_layout";
+import Products from "@/app/(main)/settings/products/index";
 import { createTestQueryClient } from "@/test/render";
 import { ThemeProvider } from "@/theme";
 
@@ -55,7 +56,8 @@ function Providers({ children }: { children: ReactNode }) {
 }
 const ROUTES = {
   "settings/index": Settings,
-  "settings/products": Products,
+  "settings/products/_layout": ProductsLayout,
+  "settings/products/index": Products,
   "settings/messages": Messages,
   "settings/loyalty": Loyalty,
 };

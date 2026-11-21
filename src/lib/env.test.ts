@@ -12,7 +12,19 @@ test("con la URL y la llave publicable, vale", () => {
       supabaseUrl: GOOD.EXPO_PUBLIC_SUPABASE_URL,
       supabaseKey: GOOD.EXPO_PUBLIC_SUPABASE_KEY,
       supportWhatsapp: undefined,
+      webUrl: undefined,
     },
+  });
+});
+
+test("la dirección de la web, si está, es https y sin barra al final", () => {
+  expect(parseEnv({ ...GOOD, EXPO_PUBLIC_WEB_URL: "https://varmar.pe/" })).toMatchObject({
+    ok: true,
+    env: { webUrl: "https://varmar.pe" },
+  });
+  expect(parseEnv({ ...GOOD, EXPO_PUBLIC_WEB_URL: "http://varmar.pe" })).toEqual({
+    ok: false,
+    problems: ["EXPO_PUBLIC_WEB_URL: la dirección https de la web, por ejemplo https://varmar.pe"],
   });
 });
 
