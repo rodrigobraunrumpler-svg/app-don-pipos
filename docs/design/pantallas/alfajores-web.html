@@ -1,0 +1,1202 @@
+<!doctype html>
+<html lang="es-PE">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Los alfajores, de la app a la web</title>
+    <link rel="stylesheet" href="assets/donpipos.css" />
+    <style>
+      @font-face {
+        font-family: "Cormorant Garamond";
+        src: url("assets/fonts/cormorant-garamond.woff2") format("woff2");
+        font-weight: 300 700;
+        font-display: swap;
+      }
+
+      /* ---------- Lo que explica (fuera de los celulares) ---------- */
+      .flujo {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        max-width: 1100px;
+        margin-top: 24px;
+        counter-reset: f;
+      }
+      .flujo li {
+        position: relative;
+        padding: 18px 16px 16px;
+        border: 1px solid var(--linea);
+        border-radius: 18px;
+        background: var(--papel);
+        counter-increment: f;
+      }
+      .flujo li::before {
+        content: counter(f);
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        margin-bottom: 10px;
+        border-radius: 50%;
+        background: var(--bosque);
+        color: var(--crema);
+        font-weight: 800;
+      }
+      .flujo b {
+        display: block;
+        font-size: 16px;
+      }
+      .flujo span {
+        display: block;
+        margin-top: 4px;
+        font-size: 14px;
+        color: var(--tinta-2);
+      }
+      .tira {
+        margin-top: 34px;
+      }
+      .tira > h3 {
+        font-size: 20px;
+        font-weight: 800;
+      }
+      .tira > p {
+        max-width: 80ch;
+        margin-top: 4px;
+        color: var(--tinta-2);
+      }
+      .tira .telefonos {
+        margin-top: 18px;
+      }
+      .ejemplo {
+        display: inline-block;
+        padding: 1px 8px;
+        border-radius: 999px;
+        background: var(--caramelo-suave);
+        color: var(--caramelo-tinta);
+        font-size: 12px;
+        font-weight: 800;
+        vertical-align: middle;
+      }
+      .resumen-cambios {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+        max-width: 1100px;
+        margin-top: 22px;
+      }
+      .resumen-cambios section {
+        padding: 18px 20px;
+        border: 1px solid var(--linea);
+        border-radius: 18px;
+        background: var(--papel);
+      }
+      .resumen-cambios h3 {
+        font-size: 17px;
+        font-weight: 800;
+      }
+      .resumen-cambios ul {
+        display: grid;
+        gap: 8px;
+        margin-top: 10px;
+        padding-left: 18px;
+        list-style: disc;
+        color: var(--tinta-2);
+      }
+
+      /* ---------- Dentro de los celulares ---------- */
+      .app .contenido.sin-pie {
+        padding-bottom: 28px;
+      }
+      .foto-vacia {
+        display: grid;
+        place-items: center;
+        gap: 8px;
+        margin-top: 8px;
+        padding: 14px;
+        border: 2px dashed var(--linea-f);
+        border-radius: var(--r);
+        background: var(--papel);
+        text-align: center;
+      }
+      .foto-vacia .grande {
+        font-size: 28px;
+        color: var(--oliva);
+      }
+      .foto-vacia p {
+        font-size: 13px;
+        color: var(--tinta-3);
+      }
+      .foto-acciones {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        width: 100%;
+      }
+      .foto-acciones .btn {
+        min-height: 44px;
+        padding: 0 10px;
+        font-size: 13.5px;
+      }
+      .foto-lista {
+        position: relative;
+        margin-top: 8px;
+        overflow: hidden;
+        aspect-ratio: 1;
+        border-radius: var(--r);
+      }
+      .foto-lista img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .foto-lista .cambiar {
+        position: absolute;
+        right: 10px;
+        bottom: 10px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: rgb(34 48 31 / 0.78);
+        color: var(--crema);
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .area {
+        width: 100%;
+        min-height: 86px;
+        padding: 12px 14px;
+        border: 1.5px solid var(--linea-f);
+        border-radius: var(--r-s);
+        background: var(--papel);
+        font: inherit;
+        font-weight: 600;
+        line-height: 1.4;
+        color: var(--tinta);
+        resize: none;
+      }
+      .area.vacia {
+        min-height: 64px;
+        color: var(--tinta-3);
+        font-weight: 500;
+      }
+      .bajo-campo {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 6px;
+        font-size: 12.5px;
+        color: var(--tinta-3);
+      }
+      .entrada .vacia {
+        color: var(--tinta-3);
+        font-weight: 500;
+      }
+      .alergenos {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .alergenos .chip {
+        min-height: 36px;
+        padding: 0 12px;
+        font-size: 13px;
+      }
+      .fila-switch.apagada b {
+        color: var(--tinta-3);
+      }
+      .switch.bloqueado {
+        opacity: 0.45;
+      }
+      .falta {
+        color: var(--ambar);
+        font-weight: 700;
+      }
+      .pie-doble {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        width: 100%;
+      }
+      .pie-doble .btn {
+        min-height: 48px;
+        padding: 0 10px;
+        font-size: 14.5px;
+        white-space: nowrap;
+      }
+      .btn[disabled],
+      .btn.apagado {
+        opacity: 0.45;
+      }
+
+      /* El recorte del celular */
+      .recorte {
+        position: relative;
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        background: #111;
+        color: #fff;
+      }
+      .recorte-cab {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 16px;
+        font-weight: 700;
+      }
+      .recorte-cab .i {
+        font-size: 22px;
+      }
+      .recorte-foto {
+        position: relative;
+        flex: 1;
+        overflow: hidden;
+      }
+      .recorte-foto img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.55;
+      }
+      .recorte-marco {
+        position: absolute;
+        left: 22px;
+        right: 22px;
+        top: 50%;
+        aspect-ratio: 1;
+        transform: translateY(-50%);
+        border: 2px solid #fff;
+        background-size: cover;
+        background-position: center;
+        box-shadow: 0 0 0 999px rgb(0 0 0 / 0.35);
+      }
+      .recorte-marco::before,
+      .recorte-marco::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(to right, transparent 33%, rgb(255 255 255 / 0.5) 33%, rgb(255 255 255 / 0.5) calc(33% + 1px), transparent calc(33% + 1px), transparent 66%, rgb(255 255 255 / 0.5) 66%, rgb(255 255 255 / 0.5) calc(66% + 1px), transparent calc(66% + 1px)),
+          linear-gradient(to bottom, transparent 33%, rgb(255 255 255 / 0.5) 33%, rgb(255 255 255 / 0.5) calc(33% + 1px), transparent calc(33% + 1px), transparent 66%, rgb(255 255 255 / 0.5) 66%, rgb(255 255 255 / 0.5) calc(66% + 1px), transparent calc(66% + 1px));
+      }
+      .recorte-marco::after {
+        background: none;
+      }
+      .recorte-pie {
+        display: flex;
+        justify-content: space-around;
+        padding: 16px 16px 30px;
+        font-size: 13px;
+      }
+      .recorte-pie span {
+        display: grid;
+        justify-items: center;
+        gap: 4px;
+      }
+      .recorte-pie .i {
+        font-size: 20px;
+      }
+
+      /* La vista previa de la web dentro del celular */
+      .previa {
+        margin-top: 10px;
+        overflow: hidden;
+        border: 1px solid var(--linea);
+        border-radius: 18px;
+        background: #faf7e9;
+        color: #22301f;
+      }
+      .previa-url {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--linea);
+        background: var(--papel);
+        font-size: 12px;
+        color: var(--tinta-3);
+      }
+      .previa img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 1;
+        object-fit: cover;
+      }
+      .previa-texto {
+        padding: 14px 16px 16px;
+      }
+      .previa-eyebrow {
+        font-size: 11.5px;
+        font-weight: 700;
+        color: #6e7b52;
+      }
+      .previa h4 {
+        margin-top: 4px;
+        font-family: "Cormorant Garamond", Georgia, serif;
+        font-size: 30px;
+        font-weight: 600;
+        line-height: 1;
+      }
+      .previa p {
+        margin-top: 8px;
+        font-size: 14px;
+        line-height: 1.45;
+      }
+      .previa-pie {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 12px;
+      }
+      .previa-precio {
+        font-size: 18px;
+        font-weight: 800;
+      }
+      .boton-wa {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 9px 14px;
+        border-radius: 999px;
+        background: #354b2e;
+        color: #faf7e9;
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .boton-wa .i {
+        font-size: 16px;
+      }
+      .etq-nuevo {
+        display: inline-block;
+        padding: 2px 9px;
+        border-radius: 999px;
+        background: #d5ae88;
+        color: #22301f;
+        font-size: 11.5px;
+        font-weight: 800;
+        vertical-align: middle;
+      }
+
+      /* Estados de cada alfajor en la lista */
+      .web.subiendo {
+        background: var(--caramelo-suave);
+        color: var(--caramelo-tinta);
+      }
+      .web.subiendo .i {
+        animation: gira 1.2s linear infinite;
+      }
+      @keyframes gira {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .web.espera {
+        background: var(--ambar-suave);
+        color: var(--ambar);
+      }
+      .prod-etiquetas {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+      }
+      .prod-etiquetas .etq-nuevo {
+        margin-top: 4px;
+      }
+      .aviso.ambar {
+        background: var(--ambar-suave);
+        color: var(--ambar);
+      }
+      .aviso.ambar .acciones-aviso {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .aviso.ambar .btn {
+        min-height: 36px;
+        padding: 0 12px;
+        font-size: 13px;
+      }
+      .aviso > div {
+        flex: 1;
+      }
+      .orden {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-left: auto;
+      }
+      .orden button {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 30px;
+        border: 1px solid var(--linea-f);
+        border-radius: 10px;
+        background: var(--papel);
+        color: var(--tinta);
+      }
+      .orden button[disabled] {
+        opacity: 0.3;
+      }
+      .prod.ordenando {
+        cursor: default;
+      }
+      .resena {
+        margin-top: 12px;
+        padding: 14px;
+        border-radius: var(--r);
+        background: var(--papel);
+        box-shadow: var(--sombra);
+      }
+      .resena p {
+        font-size: 14px;
+        line-height: 1.45;
+      }
+      .resena .enlace {
+        color: #1d6fb8;
+        font-weight: 700;
+      }
+
+      /* ---------- La web ---------- */
+      .navegadores {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 300px;
+        gap: 26px;
+        align-items: start;
+        margin-top: 22px;
+      }
+      .navegador {
+        overflow: hidden;
+        border: 1px solid #d6cdb2;
+        border-radius: 14px;
+        background: #faf7e9;
+        box-shadow: 0 18px 40px rgb(34 48 31 / 0.14);
+      }
+      .navegador .barra-nav {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        background: #ece7d5;
+      }
+      .navegador .puntos {
+        display: flex;
+        gap: 6px;
+      }
+      .navegador .puntos i {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        background: #c9c0a4;
+      }
+      .navegador .url {
+        flex: 1;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: #fff;
+        font-size: 13px;
+        color: #4c5743;
+      }
+      .web-dp {
+        color: #22301f;
+        font-family: "Manrope", system-ui, sans-serif;
+      }
+      .web-cab {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 28px;
+        border-bottom: 1px solid #e8e2cd;
+      }
+      .web-cab .logo-web {
+        font-family: "Cormorant Garamond", Georgia, serif;
+        font-size: 26px;
+        font-weight: 700;
+      }
+      .web-cab nav {
+        display: flex;
+        gap: 22px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #4c5743;
+      }
+      .web-cab nav .actual {
+        color: #22301f;
+        text-decoration: underline;
+        text-underline-offset: 6px;
+      }
+      .web-migas {
+        padding: 18px 28px 0;
+        font-size: 13px;
+        color: #646d5a;
+      }
+      .web-producto {
+        display: grid;
+        grid-template-columns: 1.15fr 1fr;
+        gap: 36px;
+        align-items: center;
+        padding: 18px 28px 34px;
+      }
+      .web-producto img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 1;
+        border-radius: 22px;
+        object-fit: cover;
+      }
+      .web-eyebrow {
+        font-size: 13px;
+        font-weight: 700;
+        color: #6e7b52;
+      }
+      .web-producto h1 {
+        margin-top: 8px;
+        font-family: "Cormorant Garamond", Georgia, serif;
+        font-size: 58px;
+        font-weight: 600;
+        line-height: 0.95;
+        letter-spacing: -0.01em;
+      }
+      .web-desc {
+        margin-top: 16px;
+        font-size: 17px;
+        line-height: 1.55;
+        color: #4c5743;
+      }
+      .web-precio {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        margin-top: 20px;
+      }
+      .web-precio b {
+        font-size: 28px;
+        font-weight: 800;
+      }
+      .web-precio span {
+        font-size: 14px;
+        font-weight: 700;
+        color: #47621e;
+      }
+      .web-precio span.agotado {
+        color: #a5371c;
+      }
+      .web-boton {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 18px;
+        padding: 14px 22px;
+        border-radius: 999px;
+        background: #354b2e;
+        color: #faf7e9;
+        font-size: 15px;
+        font-weight: 700;
+      }
+      .web-boton.apagado {
+        background: #c9c0a4;
+        color: #22301f;
+      }
+      .web-boton .i {
+        font-size: 19px;
+      }
+      .web-nota {
+        margin-top: 12px;
+        font-size: 13px;
+        color: #646d5a;
+      }
+      .web-alergenos {
+        margin-top: 18px;
+        padding: 12px 14px;
+        border: 1.5px dashed #d6cdb2;
+        border-radius: 14px;
+        font-size: 13.5px;
+        color: #646d5a;
+      }
+      .web-otros {
+        padding: 6px 28px 30px;
+      }
+      .web-otros h2 {
+        font-family: "Cormorant Garamond", Georgia, serif;
+        font-size: 30px;
+        font-weight: 600;
+      }
+      .web-otros ul {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 12px;
+      }
+      .web-otros li {
+        overflow: hidden;
+        border: 1px solid #e8e2cd;
+        border-radius: 16px;
+        background: #fff;
+      }
+      .web-otros .img,
+      .web-otros img {
+        display: grid;
+        place-items: center;
+        width: 100%;
+        aspect-ratio: 1;
+        object-fit: cover;
+        background: #e9eedc;
+        font-family: "Cormorant Garamond", Georgia, serif;
+        font-size: 22px;
+        font-weight: 600;
+        color: #354b2e;
+      }
+      .web-otros p {
+        padding: 10px 12px 12px;
+        font-size: 14px;
+        font-weight: 700;
+      }
+      .web-otros p small {
+        display: block;
+        font-weight: 600;
+        color: #646d5a;
+      }
+      /* La misma página en un celular */
+      .web-movil {
+        overflow: hidden;
+        border: 10px solid #22301f;
+        border-radius: 34px;
+        background: #faf7e9;
+        box-shadow: 0 18px 40px rgb(34 48 31 / 0.14);
+      }
+      .web-movil .url {
+        padding: 10px 14px 8px;
+        font-size: 12px;
+        text-align: center;
+        color: #4c5743;
+      }
+      .web-movil img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 1;
+        object-fit: cover;
+      }
+      .web-movil .dentro {
+        padding: 16px 16px 18px;
+      }
+      .web-movil h1 {
+        margin-top: 6px;
+        font-family: "Cormorant Garamond", Georgia, serif;
+        font-size: 38px;
+        font-weight: 600;
+        line-height: 0.95;
+      }
+      .web-movil .web-desc {
+        margin-top: 10px;
+        font-size: 15px;
+      }
+      .web-movil .web-boton {
+        justify-content: center;
+        width: 100%;
+      }
+      .variante {
+        max-width: 520px;
+        margin-top: 22px;
+        padding: 18px 20px;
+        border: 1px solid #e8e2cd;
+        border-radius: 18px;
+        background: #faf7e9;
+      }
+      .variante h3 {
+        font-size: 15px;
+        font-weight: 800;
+        color: var(--tinta-2);
+      }
+
+      /* WhatsApp */
+      .wa {
+        max-width: 420px;
+        margin-top: 22px;
+        overflow: hidden;
+        border-radius: 22px;
+        background: #efe7dd;
+        box-shadow: 0 18px 40px rgb(34 48 31 / 0.12);
+      }
+      .wa-cab {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 14px;
+        background: #075e54;
+        color: #fff;
+        font-weight: 700;
+      }
+      .wa-cab small {
+        display: block;
+        font-weight: 500;
+        opacity: 0.8;
+      }
+      .wa-cuerpo {
+        padding: 18px 14px 22px;
+      }
+      .wa-burbuja {
+        max-width: 300px;
+        margin-left: auto;
+        padding: 4px 4px 8px;
+        border-radius: 12px 12px 2px 12px;
+        background: #d9fdd3;
+        font-size: 14px;
+        color: #111;
+      }
+      .wa-tarjeta {
+        overflow: hidden;
+        border-radius: 9px;
+        background: #cfe9c8;
+      }
+      .wa-tarjeta img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 1.91;
+        object-fit: cover;
+      }
+      .wa-tarjeta div {
+        padding: 8px 10px;
+      }
+      .wa-tarjeta b {
+        display: block;
+        font-size: 14px;
+      }
+      .wa-tarjeta span {
+        display: block;
+        font-size: 12.5px;
+        color: #3b4a3a;
+      }
+      .wa-tarjeta small {
+        display: block;
+        margin-top: 2px;
+        font-size: 12px;
+        color: #5b6b5a;
+      }
+      .wa-texto {
+        padding: 8px 8px 0;
+        line-height: 1.4;
+      }
+      .wa-texto a {
+        color: #027eb5;
+      }
+      .wa-hora {
+        display: block;
+        padding: 2px 8px 0;
+        font-size: 11px;
+        text-align: right;
+        color: #667;
+      }
+
+      /* Google */
+      .google {
+        max-width: 720px;
+        margin-top: 22px;
+        padding: 22px 24px;
+        border: 1px solid #dadce0;
+        border-radius: 16px;
+        background: #fff;
+        color: #202124;
+        font-family: Arial, sans-serif;
+      }
+      .g-sitio {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+      }
+      .g-sitio .g-favicon {
+        display: grid;
+        place-items: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #354b2e;
+        color: #faf7e9;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .g-sitio small {
+        display: block;
+        font-size: 12px;
+        color: #4d5156;
+      }
+      .g-fila {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 92px;
+        gap: 16px;
+        margin-top: 8px;
+      }
+      .g-titulo {
+        font-size: 20px;
+        line-height: 1.3;
+        color: #1a0dab;
+      }
+      .g-datos {
+        margin-top: 4px;
+        font-size: 14px;
+        color: #4d5156;
+      }
+      .g-datos b {
+        color: #202124;
+      }
+      .g-desc {
+        margin-top: 4px;
+        font-size: 14px;
+        line-height: 1.58;
+        color: #4d5156;
+      }
+      .g-fila img {
+        width: 92px;
+        height: 92px;
+        border-radius: 8px;
+        object-fit: cover;
+      }
+
+      @media (max-width: 900px) {
+        .flujo,
+        .resumen-cambios,
+        .navegadores {
+          grid-template-columns: 1fr;
+        }
+        .web-producto {
+          grid-template-columns: 1fr;
+        }
+        .web-otros ul {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="portada">
+      <div class="portada-in">
+        <div>
+          <p class="marca"><img src="img/logo.png" alt="" /><span>Don Pipos</span></p>
+          <h1>Los alfajores, de la app a la web</h1>
+          <p class="bajada">
+            El dueño crea un alfajor en la app, con su foto y su descripción. Revisa cómo se verá, lo publica, y en
+            unos segundos sale en la web con su propia página, listo para compartir por WhatsApp y para que Google lo
+            encuentre. Esta página muestra cada paso.
+          </p>
+          <p class="nota-demo">
+            Los nombres, precios y descripciones son los reales de los cinco alfajores, y las fotos son las del
+            cliente. Lo que todavía no existe (los alérgenos, el enlace para reseñas) sale marcado como «ejemplo».
+          </p>
+        </div>
+      </div>
+    </header>
+
+    <nav class="indice" aria-label="Partes de la página">
+      <ul>
+        <li><a href="#como">Cómo funciona</a></li>
+        <li><a href="#app">En la app</a></li>
+        <li><a href="#avisos">Avisos</a></li>
+        <li><a href="#web">En la web</a></li>
+        <li><a href="#compartir">En WhatsApp</a></li>
+        <li><a href="#google">En Google</a></li>
+        <li><a href="#cambios">Qué cambia</a></li>
+      </ul>
+    </nav>
+
+    <!-- La maqueta de la app los necesita, aunque aquí no se muestran -->
+    <div hidden data-leyenda="pedido"></div>
+    <div hidden data-leyenda="stock"></div>
+
+    <main>
+      <section class="seccion" id="como">
+        <h2>Cómo funciona</h2>
+        <p>Cuatro pasos, y todo desde el celular. El panel de la web queda para lo extra: más fotos, ingredientes.</p>
+        <ol class="flujo">
+          <li><b>Crea el alfajor</b><span>Con su foto, nombre, precio y descripción, en Productos y precios.</span></li>
+          <li><b>Revisa cómo se verá</b><span>La vista previa muestra la tarjeta tal como saldrá en la web.</span></li>
+          <li><b>Lo publica</b><span>«Se ve en la web» prendido y «Guardar». Si se equivocó, «Deshacer».</span></li>
+          <li><b>Sale en la web</b><span>Con su página, la etiqueta «Nuevo» por 30 días y listo para WhatsApp y Google.</span></li>
+        </ol>
+      </section>
+
+      <section class="seccion" id="app">
+        <h2>Paso a paso en la app</h2>
+        <p>Ajustes (o Stock) › Productos y precios. El ejemplo usa los datos reales de la Coqueta.</p>
+        <div class="tira">
+          <h3>1. Crear el alfajor</h3>
+          <p>
+            Toca «Agregar producto». Mientras falten la foto o la descripción, «Se ve en la web» no se puede
+            prender: así nunca sale una página vacía. La foto se recorta con el recortador del celular, en el formato
+            de la web.
+          </p>
+          <div class="telefonos" id="tira-crear"></div>
+        </div>
+        <div class="tira">
+          <h3>2. Revisar y publicar</h3>
+          <p>
+            Con todo listo, la vista previa muestra la tarjeta como saldrá en la web. Al publicar, el alfajor dice
+            «Subiendo a la web…», con «Deshacer» por si se equivocó.
+          </p>
+          <div class="telefonos" id="tira-publicar"></div>
+        </div>
+        <div class="tira">
+          <h3>3. Ya en la web: compartir, ordenar y pedir reseñas</h3>
+          <p>
+            En unos segundos dice «En la web», y «Compartir» abre WhatsApp. Con ↑↓ elige qué alfajor sale primero
+            en la web, o deja que la app los ordene sola por los más vendidos del mes. Y en un pedido entregado,
+            «Pedir reseña» abre WhatsApp con el enlace para opinar en Google.
+          </p>
+          <div class="telefonos" id="tira-orden"></div>
+        </div>
+      </section>
+
+      <section class="seccion" id="avisos">
+        <h2>Avisos que cuidan la web</h2>
+        <p>Tres casos en que la app avisa, en vez de dejar que la web salga mal.</p>
+        <div class="telefonos" id="fila-avisos"></div>
+      </section>
+
+      <section class="seccion" id="web">
+        <h2>En la web: una página por alfajor</h2>
+        <p>
+          <code>varmar.pe/don-pipos/alfajor-coqueta</code>, con los colores y las letras de la web aprobada. La foto,
+          el nombre, la descripción, el precio y si hay stock llegan solos desde la app.
+        </p>
+        <div class="navegadores">
+          <div class="navegador" id="web-escritorio"></div>
+          <div class="web-movil" id="web-movil"></div>
+        </div>
+        <div class="variante" id="web-agotado"></div>
+      </section>
+
+      <section class="seccion" id="compartir">
+        <h2>Al compartir por WhatsApp</h2>
+        <p>«Compartir en WhatsApp» manda el enlace de la página, y WhatsApp muestra la foto, el nombre y la descripción.</p>
+        <div class="wa" id="wa"></div>
+      </section>
+
+      <section class="seccion" id="google">
+        <h2>En Google</h2>
+        <p>
+          La página lleva los datos que Google lee: nombre, foto, precio y si hay stock. Google decide si los
+          muestra; cuando el alfajor se agota en la app, la página dice «Agotado» y Google también se entera.
+        </p>
+        <div class="google" id="google-res"></div>
+      </section>
+
+      <section class="seccion" id="cambios">
+        <h2>Qué cambia</h2>
+        <div class="resumen-cambios">
+          <section>
+            <h3>En la app</h3>
+            <ul>
+              <li>La hoja del alfajor suma foto (con recorte), descripción con contador y alérgenos opcionales.</li>
+              <li>Vista previa de la web, y «Se ve en la web» solo con foto y descripción.</li>
+              <li>Cada alfajor dice «Subiendo a la web…» o «En la web»; si la web no se actualiza, lo avisa.</li>
+              <li>«Deshacer» al publicar, y «Compartir en WhatsApp».</li>
+              <li>La foto chica avisa, y sin señal la foto espera y se sube sola.</li>
+              <li>Ordenar con ↑↓, o por los más vendidos del mes.</li>
+              <li>«Pedir reseña» en el pedido entregado.</li>
+            </ul>
+          </section>
+          <section>
+            <h3>En la web</h3>
+            <ul>
+              <li>Una página por alfajor, con foto grande, «Pedir por WhatsApp» y la etiqueta «Nuevo» por 30 días.</li>
+              <li>«Agotado» cuando el stock llega a cero, desde la app.</li>
+              <li>Vista previa con la foto al compartir por WhatsApp.</li>
+              <li>Los datos para Google: precio, stock y foto; y la ciudad en los títulos.</li>
+              <li>«La colección» de Don Pipos sigue igual, y cada alfajor enlaza a su página.</li>
+              <li>En el panel siguen las fotos extra, ingredientes y alérgenos detallados.</li>
+            </ul>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script src="assets/iconos.js"></script>
+    <script src="assets/donpipos.js"></script>
+    <script src="assets/donpipos-2.js"></script>
+    <script>
+      // Las pantallas de esta propuesta, armadas con las piezas de la maqueta de la app (window.DonPipos). Ningún
+      // celular tiene data-pantalla: la maqueta no los vuelve a pintar
+      (function () {
+        "use strict";
+        const D = window.DonPipos;
+        const { ic, barra } = D.u;
+        const NUEVO = '<span class="etq-nuevo">Nuevo</span>';
+        const EJEMPLO = '<span class="ejemplo">ejemplo</span>';
+
+        // Los cinco alfajores reales (CLAUDE.md §2.2). Solo tres tienen su foto identificada por el cliente
+        const A = {
+          coqueta: { nombre: "Coqueta", precio: "S/ 12.00", foto: "img/coqueta.jpg", desc: "Relleno de frutos rojos y bañado en chocolate" },
+          morenita: { nombre: "Morenita", precio: "S/ 12.00", desc: "Relleno de chocolate y chocochips" },
+          limon: { nombre: "Limon Kiss", precio: "S/ 12.00", foto: "img/limon-kiss.jpg", desc: "Bañado en chocolate blanco con toques ácidos y crocante de galleta tradicional de casa; relleno de reducción de limón y ganache de limón y vainilla" },
+          manteadita: { nombre: "Manteadita", precio: "S/ 12.00", foto: "img/manteadita.jpg", desc: "Galleta con cereales andinos y relleno de cacao al 75 %" },
+          pipo: { nombre: "Pipo Crush", precio: "S/ 13.00", desc: "Relleno salado con queso crema, frutos secos, miel, mermelada de casa" },
+        };
+
+        const telefono = (h3, desc, app, alFinal) =>
+          `<article class="telefono estatico"${alFinal ? " data-al-final" : ""}><h3>${h3}</h3><p class="desc">${desc}</p><div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app">${app}</div><div class="gestos"></div></div></div></div></article>`;
+        const pantalla = (contenido, pie = "", extra = "") =>
+          `${barra(false)}<div class="contenido${pie ? "" : " sin-pie"}">${contenido}</div>${pie}${extra}`;
+        const cabecera = (h, sub) =>
+          `<div class="cab-form"><button class="btn-icono" aria-label="Volver">${ic("arrow-left")}</button><div><h1>${h}</h1>${sub ? `<p>${sub}</p>` : ""}</div></div>`;
+        const ficha = (a) =>
+          a.foto
+            ? `<span class="ficha"><img src="${a.foto}" alt=""></span>`
+            : `<span class="ficha ficha-${a === A.morenita ? "cacao" : "oliva"}" aria-hidden="true">${a.nombre.slice(0, 2).toUpperCase()}</span>`;
+        const estadoWeb = {
+          en: `<span class="web web-on">${ic("link")}En la web</span>`,
+          oculto: `<span class="web web-off">${ic("eye-off")}Oculto</span>`,
+          subiendo: `<span class="web subiendo">${ic("loader-circle")}Subiendo a la web…</span>`,
+          espera: `<span class="web espera">${ic("wifi-off")}La foto espera la señal</span>`,
+        };
+        const filaAlfajor = (a, estado, extra = "", fin = "") =>
+          `<li><div class="prod prod-btn${fin ? " ordenando" : ""}">${ficha(a)}<span class="prod-info"><b>${a.nombre}</b><span>${a.precio}</span><span class="prod-etiquetas">${estadoWeb[estado]}${extra}</span></span>${fin}</div></li>`;
+        const toast = (texto, accion) =>
+          `<div class="toast" role="status">${ic("info")}<span>${texto}</span>${accion ? `<button class="toast-accion">${accion}</button>` : ""}</div>`;
+        const switchWeb = (prendido, bloqueado) =>
+          `<button class="switch${bloqueado ? " bloqueado" : ""}" role="switch" aria-checked="${prendido}" aria-label="Se ve en la web"${bloqueado ? " disabled" : ""}><i></i></button>`;
+        const alergenos = () =>
+          `<section class="campo"><h3>Alérgenos <small style="font-weight:600;color:var(--tinta-3)">(opcional)</small></h3><div class="alergenos">${[
+            ["wheat", "Gluten"],
+            ["milk", "Leche"],
+            ["egg-fried", "Huevo"],
+            ["cookie", "Frutos secos"],
+            ["plus", "Otro"],
+          ]
+            .map(([i, t]) => `<button class="chip" aria-pressed="false">${ic(i)}${t}</button>`)
+            .join("")}</div><div class="bajo-campo"><span>Los marca el dueño; salen en la web.</span></div></section>`;
+
+        /* ---------- 1. Crear el alfajor ---------- */
+        const lista = pantalla(
+          cabecera("Productos y precios", "Se copian solos a la web") +
+            `<ul class="prods">${filaAlfajor(A.morenita, "en")}${filaAlfajor(A.limon, "en")}${filaAlfajor(A.manteadita, "en")}${filaAlfajor(A.pipo, "en")}</ul>` +
+            `<button class="fila-boton" style="margin-top:14px">${ic("plus")}Agregar producto</button><button class="fila-boton" style="margin-top:8px">${ic("list-ordered")}Ordenar</button>`,
+        );
+        const vacia = pantalla(
+          cabecera("Nuevo alfajor", "Se publica en la web de Don Pipos") +
+            `<div class="foto-vacia">${ic("image-plus", "grande")}<p>Una foto clara del alfajor, sin personas.</p><div class="foto-acciones"><button class="btn btn-secundario">${ic("camera")}Tomar foto</button><button class="btn btn-secundario">${ic("image")}De la galería</button></div></div>` +
+            `<section class="campo"><h3>Nombre</h3><label class="entrada"><span class="vacia">Por ejemplo: Coqueta</span></label></section>` +
+            `<section class="campo"><h3>Precio</h3><label class="entrada">S/<span class="vacia">0.00</span></label></section>` +
+            `<section class="campo"><h3>Descripción</h3><div class="area vacia">Qué relleno lleva, de qué es el baño…</div><div class="bajo-campo"><span>La lee el cliente en la web</span><span>0/400</span></div></section>` +
+            `<div class="fila-switch apagada"><span><b>Se ve en la web</b><small class="falta">Falta la foto y la descripción</small></span>${switchWeb(false, true)}</div>`,
+          `<div class="pie-accion"><div class="pie-doble"><button class="btn btn-secundario" disabled>${ic("eye")}Vista previa</button><button class="btn btn-primario">Guardar</button></div></div>`,
+        );
+        const recorte = `${barra(false)}<div class="recorte"><div class="recorte-cab">${ic("x")}<span>Recortar</span>${ic("check")}</div><div class="recorte-foto"><img src="img/coqueta.jpg" alt=""><div class="recorte-marco" style="background-image:url(img/coqueta.jpg)"></div></div><div class="recorte-pie"><span>${ic("rotate-ccw")}Girar</span><span>${ic("maximize-2")}Ajustar</span></div></div>`;
+        const llena = pantalla(
+          cabecera("Nuevo alfajor", "Se publica en la web de Don Pipos") +
+            `<div class="foto-lista"><img src="${A.coqueta.foto}" alt="Alfajor Coqueta"><span class="cambiar">${ic("camera")}Cambiar foto</span></div>` +
+            `<section class="campo"><h3>Nombre</h3><label class="entrada">Coqueta</label><div class="bajo-campo"><span>En la web: «Alfajor Coqueta»</span></div></section>` +
+            `<section class="campo"><h3>Precio</h3><label class="entrada">S/ 12.00</label></section>` +
+            `<section class="campo"><h3>Descripción</h3><div class="area">${A.coqueta.desc}</div><div class="bajo-campo"><span>La lee el cliente en la web</span><span>45/400</span></div></section>` +
+            alergenos() +
+            `<div class="fila-switch"><span><b>Se ve en la web</b><small>Con la etiqueta «Nuevo» por 30 días</small></span>${switchWeb(true)}</div>`,
+          `<div class="pie-accion"><div class="pie-doble"><button class="btn btn-secundario">${ic("eye")}Vista previa</button><button class="btn btn-primario">Guardar</button></div></div>`,
+        );
+        document.getElementById("tira-crear").innerHTML =
+          telefono("Productos y precios", "Toca «Agregar producto».", lista) +
+          telefono("Nuevo alfajor", "Sin foto ni descripción, «Se ve en la web» no se prende.", vacia) +
+          telefono("Recortar la foto", "El recortador del celular, en cuadrado como la web.", recorte);
+
+        /* ---------- 2. Revisar y publicar ---------- */
+        const tarjeta = (a) =>
+          `<div class="previa"><div class="previa-url">${ic("lock")}varmar.pe/don-pipos/alfajor-coqueta</div><img src="${a.foto}" alt=""><div class="previa-texto"><span class="previa-eyebrow">Don Pipos · Alfajor artesanal</span> ${NUEVO}<h4>Alfajor ${a.nombre}</h4><p>${a.desc}</p><div class="previa-pie"><span class="previa-precio">${a.precio}</span><span class="boton-wa">${ic("whatsapp")}Pedir</span></div></div></div>`;
+        const previa = pantalla(
+          cabecera("Así se verá en la web", "Revisa la foto y el texto") + tarjeta(A.coqueta),
+          `<div class="pie-accion columna"><button class="btn btn-primario ancho">Publicar</button><button class="btn btn-texto">Seguir editando</button></div>`,
+        );
+        const subiendo = pantalla(
+          cabecera("Productos y precios", "Se copian solos a la web") +
+            `<ul class="prods">${filaAlfajor(A.morenita, "en")}${filaAlfajor(A.limon, "en")}${filaAlfajor(A.manteadita, "en")}${filaAlfajor(A.pipo, "en")}${filaAlfajor(A.coqueta, "subiendo", NUEVO)}</ul>`,
+          "",
+          toast("Coqueta se publicó en la web.", "Deshacer"),
+        );
+        const enLaWeb = pantalla(
+          cabecera("Productos y precios", "Se copian solos a la web") +
+            `<ul class="prods">${filaAlfajor(A.morenita, "en")}${filaAlfajor(A.limon, "en")}${filaAlfajor(A.manteadita, "en")}${filaAlfajor(A.pipo, "en")}${filaAlfajor(A.coqueta, "en", NUEVO)}</ul>`,
+          "",
+          toast("Coqueta ya está en la web.", "Compartir"),
+        );
+        document.getElementById("tira-publicar").innerHTML =
+          telefono("Todo listo", "Foto, nombre, precio y descripción; los alérgenos son opcionales.", llena, true) +
+          telefono("Vista previa", "La tarjeta tal como saldrá en la web.", previa) +
+          telefono("Publicado", "«Subiendo a la web…», con «Deshacer» por si se equivocó.", subiendo);
+
+        /* ---------- 3. Ordenar y pedir reseñas ---------- */
+        const flechas = (arriba, abajo) =>
+          `<span class="orden"><button aria-label="Subir"${arriba ? "" : " disabled"}>${ic("chevron-up")}</button><button aria-label="Bajar"${abajo ? "" : " disabled"}>${ic("chevron-down")}</button></span>`;
+        const ordenar = pantalla(
+          cabecera("Ordenar alfajores", "Así salen en la web") +
+            `<div class="fila-switch"><span><b>Los más vendidos primero</b><small>Se ordena sola cada mes, con lo que vendiste</small></span>${switchWeb(false)}</div>` +
+            `<ul class="prods" style="margin-top:14px">${filaAlfajor(A.coqueta, "en", NUEVO, flechas(false, true))}${filaAlfajor(A.morenita, "en", "", flechas(true, true))}${filaAlfajor(A.limon, "en", "", flechas(true, true))}${filaAlfajor(A.manteadita, "en", "", flechas(true, true))}${filaAlfajor(A.pipo, "en", "", flechas(true, false))}</ul>`,
+          `<div class="pie-accion"><button class="btn btn-primario ancho">Listo</button></div>`,
+        );
+        const pedido = pantalla(
+          cabecera("Pedido #0042", "Entregado hoy, 10:40") +
+            `<div class="fila-switch" style="display:block"><b>Patricia V.</b><small style="display:block;color:var(--tinta-3)">2 Coquetas · S/ 24.00 · Pagado</small></div>` +
+            `<button class="btn btn-whatsapp ancho" style="margin-top:14px">${ic("star")}Pedir reseña</button>` +
+            `<div class="resena"><p style="font-size:12.5px;font-weight:800;color:var(--tinta-3);margin-bottom:6px">El mensaje que se abre en WhatsApp ${EJEMPLO}</p><p>Hola Patricia, gracias por tu pedido de Don Pipos. ¿Nos dejas tu opinión en Google? Nos ayuda mucho: <span class="enlace">g.page/r/…</span></p></div>` +
+            `<div class="info">${ic("info")}<p>El texto se cambia en Mensajes de WhatsApp. El enlace llega cuando exista el Perfil de Google.</p></div>`,
+        );
+        document.getElementById("tira-orden").innerHTML =
+          telefono("Ya está en la web", "En unos segundos dice «En la web»; «Compartir» abre WhatsApp.", enLaWeb) +
+          telefono("Ordenar", "↑↓ para elegir el orden de la web, o por los más vendidos.", ordenar) +
+          telefono("Pedir reseña", "En un pedido entregado; el dueño lo manda uno por uno.", pedido);
+        // Los celulares que muestran el final de su pantalla, como si el dueño hubiera bajado
+        document.querySelectorAll("[data-al-final] .contenido").forEach((c) => (c.scrollTop = c.scrollHeight));
+
+        /* ---------- Avisos ---------- */
+        const fotoChica = pantalla(
+          cabecera("Nuevo alfajor", "Se publica en la web de Don Pipos") +
+            `<div class="foto-lista" style="filter:blur(1.2px)"><img src="${A.coqueta.foto}" alt=""></div>` +
+            `<div class="aviso ambar">${ic("triangle-alert")}<div>Esta foto es chica: en la web se vería borrosa. Tómala de más cerca o con más luz.<div class="acciones-aviso"><button class="btn btn-secundario">Tomar otra</button><button class="btn btn-texto">Usar igual</button></div></div></div>`,
+        );
+        const sinSenal = pantalla(
+          cabecera("Productos y precios", "Se copian solos a la web") +
+            `<ul class="prods">${filaAlfajor(A.morenita, "en")}${filaAlfajor(A.limon, "en")}${filaAlfajor(A.coqueta, "espera", NUEVO)}</ul>` +
+            `<div class="info">${ic("wifi-off")}<p>Sin conexión. El alfajor ya quedó guardado; la foto se sube sola cuando vuelva la señal.</p></div>`,
+        );
+        const webMal = pantalla(
+          cabecera("Productos y precios", "Se copian solos a la web") +
+            `<div class="aviso ambar">${ic("circle-alert")}<div>La web no se está actualizando. Tus cambios están guardados en la app.<div class="acciones-aviso"><button class="btn btn-secundario">${ic("whatsapp")}Avisar al equipo</button></div></div></div>` +
+            `<ul class="prods">${filaAlfajor(A.morenita, "en")}${filaAlfajor(A.limon, "en")}${filaAlfajor(A.manteadita, "en")}</ul>`,
+        );
+        document.getElementById("fila-avisos").innerHTML =
+          telefono("Foto chica", "Antes de publicar, para que no salga borrosa.", fotoChica) +
+          telefono("Sin señal", "La foto espera y se sube sola; nada se pierde.", sinSenal) +
+          telefono("La web no se actualiza", "Si los cambios no llegan, lo dice y avisa al equipo.", webMal);
+
+        /* ---------- La web ---------- */
+        const otros = [A.morenita, A.limon, A.manteadita, A.pipo]
+          .map(
+            (a) =>
+              `<li>${a.foto ? `<img src="${a.foto}" alt="">` : `<span class="img">${a.nombre}</span>`}<p>Alfajor ${a.nombre}<small>${a.precio}</small></p></li>`,
+          )
+          .join("");
+        document.getElementById("web-escritorio").innerHTML =
+          `<div class="barra-nav"><span class="puntos"><i></i><i></i><i></i></span><span class="url">varmar.pe/don-pipos/alfajor-coqueta</span></div>` +
+          `<div class="web-dp"><div class="web-cab"><span class="logo-web">VarMar</span><nav><span>Carta</span><span class="actual">Don Pipos</span><span>Historia</span><span>Ubicación</span></nav></div>` +
+          `<p class="web-migas">Don Pipos › Alfajor Coqueta</p>` +
+          `<div class="web-producto"><img src="${A.coqueta.foto}" alt="Alfajor Coqueta de Don Pipos"><div><span class="web-eyebrow">Don Pipos · Alfajor artesanal</span> ${NUEVO}<h1>Alfajor Coqueta</h1><p class="web-desc">${A.coqueta.desc}.</p><div class="web-precio"><b>S/ 12.00</b><span>Disponible hoy</span></div><span class="web-boton">${ic("whatsapp")}Pedir por WhatsApp</span><p class="web-nota">Lunes a domingo, de 09:00 a 17:00 · En el local y por delivery</p><div class="web-alergenos">Aquí salen los alérgenos que marque el dueño ${EJEMPLO}</div></div></div>` +
+          `<div class="web-otros"><h2>Otros alfajores</h2><ul>${otros}</ul></div></div>`;
+        document.getElementById("web-movil").innerHTML =
+          `<div class="url">${ic("lock")} varmar.pe/don-pipos/alfajor-coqueta</div><div class="web-dp"><img src="${A.coqueta.foto}" alt=""><div class="dentro"><span class="web-eyebrow">Don Pipos · Alfajor artesanal</span> ${NUEVO}<h1>Alfajor Coqueta</h1><p class="web-desc">${A.coqueta.desc}.</p><div class="web-precio"><b>S/ 12.00</b><span>Disponible hoy</span></div><span class="web-boton">${ic("whatsapp")}Pedir por WhatsApp</span></div></div>`;
+        document.getElementById("web-agotado").innerHTML =
+          `<h3>Cuando se agota en la app</h3><div class="web-dp"><div class="web-precio"><b>S/ 12.00</b><span class="agotado">Agotado por hoy</span></div><span class="web-boton apagado">${ic("clock")}Vuelve pronto</span><p class="web-nota">Vuelve a estar disponible cuando el dueño registra la producción en la app.</p></div>`;
+
+        /* ---------- WhatsApp ---------- */
+        document.getElementById("wa").innerHTML =
+          `<div class="wa-cab"><span>${ic("whatsapp")}</span><span>Clientes Don Pipos<small>Grupo</small></span></div>` +
+          `<div class="wa-cuerpo"><div class="wa-burbuja"><div class="wa-tarjeta"><img src="${A.coqueta.foto}" alt=""><div><b>Alfajor Coqueta · Don Pipos</b><span>${A.coqueta.desc}</span><small>varmar.pe</small></div></div><p class="wa-texto">Nuevo en Don Pipos: Alfajor Coqueta <a>https://varmar.pe/don-pipos/alfajor-coqueta</a></p><span class="wa-hora">11:42</span></div></div>`;
+
+        /* ---------- Google ---------- */
+        document.getElementById("google-res").innerHTML =
+          `<div class="g-sitio"><span class="g-favicon">V</span><span>VarMar<small>https://varmar.pe › don-pipos › alfajor-coqueta</small></span></div>` +
+          `<div class="g-fila"><div><div class="g-titulo">Alfajor Coqueta · Don Pipos · Alfajores artesanales en Huamanga</div><div class="g-datos"><b>S/ 12.00</b> · En stock</div><div class="g-desc">${A.coqueta.desc}. Alfajores artesanales de Don Pipos, en el local y por delivery en Huamanga.</div></div><img src="${A.coqueta.foto}" alt=""></div>`;
+      })();
+    </script>
+  </body>
+</html>
