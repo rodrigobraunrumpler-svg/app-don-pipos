@@ -48,7 +48,7 @@ select is((select o.last_error from private.web_sync_outbox o where o.product_id
 select private.finish_web_sync(
   (select array_agg(o.id) from private.web_sync_outbox o where o.product_id = '00000000-0000-4000-8000-0000000151c2' and o.sent_at is null),
   null,
-  jsonb_build_object('productId', '00000000-0000-4000-8000-0000000151c2', 'sanityId', 'product-don-pipos-alfajor-tropi', 'slug', 'alfajor-tropi',
+  jsonb_build_object('productId', '00000000-0000-4000-8000-0000000151c2', 'sanityId', 'product-don-pipos-alfajor-tropi', 'slug', 'alfajor-tropi', 'isNew', 'true',
     'imageUrl', 'https://cdn.sanity.io/images/demo/tropi.jpg', 'photoPath', '00000000-0000-4000-8000-0000000151b1/00000000-0000-4000-8000-0000000151c2/00000000-0000-4000-8000-0000000151f1.jpg'));
 select is((select p.sanity_id from public.products p where p.id = '00000000-0000-4000-8000-0000000151c2'), 'product-don-pipos-alfajor-tropi', 'guarda su documento');
 select is((select p.web_slug from public.products p where p.id = '00000000-0000-4000-8000-0000000151c2'), 'alfajor-tropi', 'y su dirección');

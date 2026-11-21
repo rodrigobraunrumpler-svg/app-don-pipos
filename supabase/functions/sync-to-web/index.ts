@@ -69,7 +69,9 @@ async function syncOne(item: WebSyncItem, linked: Linked): Promise<Outcome> {
       ? patchMutations(existingId, webFields(item, assetId))
       : createMutations(item, slug, categoryId, assetId);
     const error = await sendMutations(fetch, config, mutations);
-    return { error, result: error ? null : { ...result, sanityId: existingId ?? documentId(slug), slug } };
+    // «Nuevo» solo si la app creó la página; enlazada a una que ya existía, queda como una del panel
+    const created = existingId ? {} : { isNew: "true" };
+    return { error, result: error ? null : { ...result, ...created, sanityId: existingId ?? documentId(slug), slug } };
   } catch (error) {
     return { error: error instanceof Error ? error.message : String(error), result: null };
   }

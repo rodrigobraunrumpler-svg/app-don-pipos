@@ -105,7 +105,8 @@ export function createMutations(
 
 // La dirección para un alfajor nuevo: libre, se usa; ocupada por uno con el mismo nombre, es el mismo alfajor (se
 // enlaza, no se duplica: también después de un corte a medias), salvo que esa página ya sea de otro alfajor de la app
-// (`linked`: uno renombrado cuyo nombre nuevo todavía no llegó); ocupada por otro, se prueba con -2, -3…
+// (`linked`: uno renombrado cuyo nombre nuevo todavía no llegó). Si ese alfajor solo existe como borrador de Studio, se
+// crea la página publicada con esa dirección. Ocupada por otro, se prueba con -2, -3…
 export async function findSlug(
   fetchFn: typeof fetch,
   config: SanityConfig,
@@ -126,7 +127,7 @@ export async function findSlug(
     if (docs.length === 0) return { slug, existingId: null };
     const same = docs.find((doc) => doc.name === name);
     const id = same?._id.replace(/^drafts\./, "");
-    if (id && !(await linked(id))) return { slug, existingId: id };
+    if (id && !(await linked(id))) return { slug, existingId: docs.some((doc) => doc._id === id) ? id : null };
   }
   throw new Error(`No hay una dirección libre para «${name}»`);
 }

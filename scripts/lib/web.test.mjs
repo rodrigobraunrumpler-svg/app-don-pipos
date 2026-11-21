@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { matchProducts, parseWebArgs } from "./web.mjs";
+import { connectProblem, matchProducts, missingNote, parseWebArgs } from "./web.mjs";
 
 const BUSINESS = "00000000-0000-4000-8000-0000000000b1";
 
@@ -70,4 +70,21 @@ test("cada alfajor de la app se enlaza con su documento de la web por el nombre,
     missing: ["Tropi"],
     unused: ["Alfajor Pipo Crush"],
   });
+});
+
+test("connect se detiene si ningún alfajor del negocio coincide con los de la web: casi seguro es otro negocio", () => {
+  assert.match(
+    connectProblem({ links: [], unused: ["Alfajor Coqueta", "Alfajor Morenita"] }) ?? "",
+    /Ningún alfajor del negocio coincide con los de la web \(Alfajor Coqueta, Alfajor Morenita\)/,
+  );
+  assert.equal(connectProblem({ links: [], unused: [] }), null, "con la web sin alfajores, los crea la app");
+  assert.equal(connectProblem({ links: [{ name: "Coqueta" }], unused: ["Alfajor Tropi"] }), null);
+});
+
+test("los que no están en la web se crean cuando tengan foto y descripción", () => {
+  assert.equal(
+    missingNote(["Tropi", "Kiwi"]),
+    "Sin página en la web todavía: Tropi, Kiwi. Se crea sola cuando tenga foto, descripción y «Se ve en la web».",
+  );
+  assert.equal(missingNote([]), null);
 });

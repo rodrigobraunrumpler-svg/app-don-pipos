@@ -55,3 +55,17 @@ export function matchProducts(products, docs) {
   }
   return { links, missing, unused: [...byKey.values()].map((doc) => doc.name) };
 }
+
+// Ningún alfajor del negocio coincide con los de la web, y la web sí tiene alfajores: casi seguro es otro negocio
+export function connectProblem({ links, unused }) {
+  return links.length === 0 && unused.length > 0
+    ? `Ningún alfajor del negocio coincide con los de la web (${unused.join(", ")}): revisa el --business`
+    : null;
+}
+
+// Los alfajores de la app que todavía no tienen página: la copia la crea cuando estén completos
+export function missingNote(missing) {
+  return missing.length
+    ? `Sin página en la web todavía: ${missing.join(", ")}. Se crea sola cuando tenga foto, descripción y «Se ve en la web».`
+    : null;
+}

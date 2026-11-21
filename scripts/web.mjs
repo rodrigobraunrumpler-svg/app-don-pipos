@@ -13,7 +13,7 @@ import { join } from "node:path";
 
 import { connect } from "./lib/db.mjs";
 import { loadEnv, ROOT } from "./lib/guard.mjs";
-import { matchProducts, parseWebArgs } from "./lib/web.mjs";
+import { connectProblem, matchProducts, missingNote, parseWebArgs } from "./lib/web.mjs";
 
 const DOCS =
   '*[_type == "product" && brand == "don-pipos"]{_id, name, "slug": slug.current, "imageUrl": image.asset->url}';
@@ -71,6 +71,8 @@ async function connectWeb(client, { dataset, business }) {
     products,
     (await sanityQuery(projectId, dataset, token, DOCS)) ?? [],
   );
+  const problem = connectProblem({ links, unused });
+  if (problem) throw new Error(problem);
   // La categoría de los alfajores nuevos que la app crea en la web
   const category = await sanityQuery(projectId, dataset, token, CATEGORY);
   if (!category) throw new Error(`No hay una categoría de Don Pipos en Sanity ${dataset}`);
@@ -117,7 +119,8 @@ async function connectWeb(client, { dataset, business }) {
   }
   console.log(`Copia encendida: «${found.rows[0].name}» → Sanity ${dataset}.`);
   for (const link of links) console.log(`  ${link.name} → ${link.sanityId}${link.imageUrl ? " (con foto)" : ""}`);
-  if (missing.length) console.log(`Sin documento en la web (no se copian): ${missing.join(", ")}`);
+  const note = missingNote(missing);
+  if (note) console.log(note);
   if (unused.length) console.log(`En la web, sin alfajor en la app: ${unused.join(", ")}`);
 }
 

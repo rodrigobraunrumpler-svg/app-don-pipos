@@ -172,8 +172,24 @@ test("la dirección: libre se usa; con el mismo nombre es el mismo alfajor (no s
     slug: "alfajor-tropi-2",
     existingId: null,
   });
+  // Con el mismo nombre solo como borrador de Studio: se crea la página publicada con esa dirección (un parche a un
+  // documento que no existe fallaría en cada corrida)
   const draft = fakeFetch(new Response(JSON.stringify({ result: [{ _id: "drafts.abc", name: "Alfajor Tropi" }] })));
   assert.deepEqual(await findSlug(draft.fn, CONFIG, "alfajor-tropi", "Alfajor Tropi"), {
+    slug: "alfajor-tropi",
+    existingId: null,
+  });
+  const both = fakeFetch(
+    new Response(
+      JSON.stringify({
+        result: [
+          { _id: "drafts.abc", name: "Alfajor Tropi" },
+          { _id: "abc", name: "Alfajor Tropi" },
+        ],
+      }),
+    ),
+  );
+  assert.deepEqual(await findSlug(both.fn, CONFIG, "alfajor-tropi", "Alfajor Tropi"), {
     slug: "alfajor-tropi",
     existingId: "abc",
   });

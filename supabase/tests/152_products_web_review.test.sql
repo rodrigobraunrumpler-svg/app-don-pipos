@@ -36,7 +36,7 @@ select tests.login_as('00000000-0000-4000-8000-0000000152a1');
 select public.save_product('00000000-0000-4000-8000-0000000152c2', 1, 'Tropi', 1300, null, 0, false, 'Relleno de frutas tropicales', null);
 select tests.logout();
 select private.finish_web_sync((select ids from run1), null,
-  '{"productId": "00000000-0000-4000-8000-0000000152c2", "sanityId": "product-don-pipos-test-152-tropi", "slug": "alfajor-tropi"}');
+  '{"productId": "00000000-0000-4000-8000-0000000152c2", "sanityId": "product-don-pipos-test-152-tropi", "slug": "alfajor-tropi", "isNew": "true"}');
 select is((select p.sanity_id from public.products p where p.id = '00000000-0000-4000-8000-0000000152c2'),
   'product-don-pipos-test-152-tropi', 'la página creada queda enlazada');
 select is(pg_temp.pending('00000000-0000-4000-8000-0000000152c2', 'state'), 1::bigint, 'y su estado de ahora vuelve a la web');
