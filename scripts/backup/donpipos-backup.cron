@@ -1,0 +1,3 @@
+# La copia de seguridad de Don Pipos (fase 8): todos los días a las 08:00 UTC, que son las 03:00 de Lima. El reloj del
+# VPS tiene que estar en UTC (timedatectl). Va en /etc/cron.d/donpipos-backup, y el script en /opt/donpipos/
+0 8 * * * root /opt/donpipos/donpipos-backup.sh >> /var/log/donpipos-backup.log 2>&1
