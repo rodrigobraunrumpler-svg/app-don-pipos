@@ -1,4 +1,4 @@
-import { saveProduct, setProductPhoto, uploadProductPhoto } from "./products";
+import { reorderProducts, saveProduct, setProductPhoto, uploadProductPhoto } from "./products";
 
 const mockRpc = jest.fn();
 const mockUpload = jest.fn();
@@ -84,4 +84,10 @@ test("la foto se sube a la carpeta del alfajor y después se anota", async () =>
   mockRpc.mockResolvedValue({ data: { ...SAVED, hasPhoto: true, version: 2 }, error: null });
   await expect(setProductPhoto("p1", "b1/p1/f1.jpg")).resolves.toMatchObject({ hasPhoto: true, version: 2 });
   expect(mockRpc).toHaveBeenLastCalledWith("set_product_photo", { p_product_id: "p1", p_path: "b1/p1/f1.jpg" });
+});
+
+test("ordenar manda los alfajores en el orden nuevo y vuelve la lista como queda", async () => {
+  mockRpc.mockResolvedValue({ data: [SAVED], error: null });
+  await expect(reorderProducts(["p2", "p1"])).resolves.toEqual([SAVED]);
+  expect(mockRpc).toHaveBeenLastCalledWith("reorder_products", { p_ids: ["p2", "p1"] });
 });

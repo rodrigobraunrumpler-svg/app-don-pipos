@@ -51,3 +51,12 @@ export async function setProductPhoto(productId: string, path: string): Promise<
   if (!parsed.success) throw new AppError("unexpected", { cause: parsed.error });
   return parsed.data;
 }
+
+// Los ↑↓ de Ordenar: los alfajores en el orden nuevo. Vuelve la lista como queda (y la web toma ese orden)
+export async function reorderProducts(ids: string[]): Promise<Product[]> {
+  const { data, error } = await supabase().rpc("reorder_products", { p_ids: ids });
+  if (error) throw toAppError(error);
+  const parsed = productListSchema.safeParse(data);
+  if (!parsed.success) throw new AppError("unexpected", { cause: parsed.error });
+  return parsed.data;
+}

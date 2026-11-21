@@ -13,6 +13,8 @@ export const TEST_BUSINESS: Business = {
     productionIntervalDays: 7,
     lapsedAfterDays: 30,
     reminders: { scheduled: true, stock: true, balances: true },
+    productsBySales: false,
+    reviewUrl: null,
     version: 1,
   },
 };

@@ -14,6 +14,9 @@ export const businessSettingsSchema = z.object({
   productionIntervalDays: z.number().int(),
   lapsedAfterDays: z.number().int(),
   reminders: reminderSettingsSchema,
+  // Fase 9: los alfajores de la web por lo más vendido del mes, y el enlace para pedir reseñas en Google
+  productsBySales: z.boolean().default(false),
+  reviewUrl: z.string().nullable().default(null),
   version: z.number().int(),
 });
 export type BusinessSettings = z.infer<typeof businessSettingsSchema>;

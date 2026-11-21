@@ -12,12 +12,12 @@ select tests.login_as('00000000-0000-4000-8000-00000000000a');
 select is(public.get_business(), '{
   "id": "00000000-0000-4000-8000-0000000000a1", "name": "Don Pipos (DEMO)", "modules": ["orders", "stock"], "setupDone": false,
   "settings": {"activePaymentMethods": ["cash", "yape", "plin", "transfer"], "deliveryFeeCents": 0, "deliveryZone": null,
-    "productionIntervalDays": 7, "lapsedAfterDays": 30, "reminders": {"scheduled": true, "stock": true, "balances": true}, "version": 1}
+    "productionIntervalDays": 7, "lapsedAfterDays": 30, "reminders": {"scheduled": true, "stock": true, "balances": true}, "productsBySales": false, "reviewUrl": null, "version": 1}
 }'::jsonb, 'get_business devuelve el negocio con sus ajustes');
 
 select is(
   public.update_settings(1, '{"deliveryFeeCents": 500, "activePaymentMethods": ["cash", "yape"], "deliveryZone": "Centro de Huamanga", "productionIntervalDays": 3, "lapsedAfterDays": 45, "reminders": {"scheduled": false, "stock": true, "balances": true}}'),
-  '{"activePaymentMethods": ["cash", "yape"], "deliveryFeeCents": 500, "deliveryZone": "Centro de Huamanga", "productionIntervalDays": 3, "lapsedAfterDays": 45, "reminders": {"scheduled": false, "stock": true, "balances": true}, "version": 2}'::jsonb,
+  '{"activePaymentMethods": ["cash", "yape"], "deliveryFeeCents": 500, "deliveryZone": "Centro de Huamanga", "productionIntervalDays": 3, "lapsedAfterDays": 45, "reminders": {"scheduled": false, "stock": true, "balances": true}, "productsBySales": false, "reviewUrl": null, "version": 2}'::jsonb,
   'update_settings cambia varios ajustes y sube la versión');
 select is(public.get_business() -> 'settings' ->> 'deliveryFeeCents', '500', 'y get_business ya los muestra');
 -- La app no lee el registro: se sale, se mira como postgres y se vuelve a entrar

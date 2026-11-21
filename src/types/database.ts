@@ -19,7 +19,9 @@ export type Database = {
           delivery_zone: string | null;
           lapsed_after_days: number;
           production_interval_days: number;
+          products_by_sales: boolean;
           reminders: NonNullable<Json>;
+          review_url: string | null;
           updated_at: string;
           version: number;
         };
@@ -32,7 +34,9 @@ export type Database = {
           delivery_zone?: string | null;
           lapsed_after_days?: number;
           production_interval_days?: number;
+          products_by_sales?: boolean;
           reminders?: NonNullable<Json>;
+          review_url?: string | null;
           updated_at?: string;
           version?: number;
         };
@@ -44,7 +48,9 @@ export type Database = {
           delivery_zone?: string | null;
           lapsed_after_days?: number;
           production_interval_days?: number;
+          products_by_sales?: boolean;
           reminders?: NonNullable<Json>;
+          review_url?: string | null;
           updated_at?: string;
           version?: number;
         };
@@ -1050,6 +1056,7 @@ export type Database = {
         Args: { p_product_id: string; p_quantity: number; p_reason: string; p_request_id: string };
         Returns: Json;
       };
+      reorder_products: { Args: { p_ids: string[] }; Returns: Json };
       report_ranking: { Args: { p_from: string; p_to: string }; Returns: Json };
       report_summary: { Args: { p_from: string; p_previous_from?: string; p_to: string }; Returns: Json };
       reset_template: { Args: { p_key: string }; Returns: Json };
