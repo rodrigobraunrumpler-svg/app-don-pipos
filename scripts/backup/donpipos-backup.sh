@@ -6,25 +6,32 @@
 # anota la copia fallida con su error, avisa «fail» al monitor y sale con 1: el monitor le escribe al equipo.
 #
 # Lee /etc/donpipos-backup.env (o BACKUP_ENV_FILE), que solo puede leer root:
-#   DATABASE_URL    la conexión a la base (la de «Session pooler» del panel de Supabase)
+#   DATABASE_URL    la conexión a la base (la de «Session pooler» del panel de Supabase), sin la contraseña
+#   PGPASSWORD      la contraseña de la base: viaja por el entorno, nunca en la línea de comandos (se vería en `ps`)
 #   RCLONE_REMOTE   adónde subir, por ejemplo r2:donpipos-backups
 #   HEARTBEAT_URL   el latido del monitor (healthchecks.io: …/<uuid>; con «/fail» avisa que falló)
 #   KEEP_DAYS       cuántos días se guardan en R2 (30)
 #   BACKUP_DIR      dónde queda la copia en el VPS (/var/backups/donpipos; se guardan 3 días)
 # Las pruebas cambian los programas con PG_DUMP, PG_RESTORE, PSQL, RCLONE y CURL.
 set -euo pipefail
+# Las copias tienen los datos de los clientes y los hash de los PIN: solo root las lee (la web corre en el mismo VPS)
+umask 077
 
 ENV_FILE="${BACKUP_ENV_FILE:-/etc/donpipos-backup.env}"
 if [ -r "$ENV_FILE" ]; then
   # shellcheck disable=SC1090
   . "$ENV_FILE"
 fi
-for name in DATABASE_URL RCLONE_REMOTE HEARTBEAT_URL; do
+for name in DATABASE_URL PGPASSWORD RCLONE_REMOTE HEARTBEAT_URL; do
   if [ -z "${!name:-}" ]; then
     echo "Falta $name en $ENV_FILE" >&2
     exit 1
   fi
 done
+if [[ "$DATABASE_URL" =~ ://[^/@]*:[^/@]*@ ]]; then
+  echo "DATABASE_URL lleva la contraseña: sácala de ahí y ponla en PGPASSWORD, en $ENV_FILE" >&2
+  exit 1
+fi
 
 PG_DUMP="${PG_DUMP:-pg_dump}"
 PG_RESTORE="${PG_RESTORE:-pg_restore}"
@@ -42,7 +49,7 @@ step="preparar"
 # Anota la copia en la base. Los valores van como variables de psql (:'…'), nunca dentro del SQL: un error con comillas
 # no lo rompe. psql solo reemplaza variables en lo que lee por su entrada, no con -c
 record() {
-  "$PSQL" "$DATABASE_URL" --no-psqlrc --quiet --set ON_ERROR_STOP=1 \
+  PGPASSWORD="$PGPASSWORD" "$PSQL" "$DATABASE_URL" --no-psqlrc --quiet --set ON_ERROR_STOP=1 \
     -v started="$started_at" -v finished="$(now)" -v ok="$1" -v size="$2" -v error="$3" <<'SQL'
 select private.record_backup(:'started'::timestamptz, :'finished'::timestamptz, :'ok'::boolean,
   nullif(:'size', '')::bigint, nullif(:'error', ''));
@@ -56,6 +63,9 @@ fail() {
   exit 1
 }
 
+# La contraseña de la base solo para sus programas (pg_dump y psql), por el entorno de ese programa y nada más
+db() { PGPASSWORD="$PGPASSWORD" "$@"; }
+
 # Corre un paso; si falla, la copia falla con lo último que dijo el programa
 run() {
   local output
@@ -65,9 +75,8 @@ run() {
 }
 
 mkdir -p "$BACKUP_DIR"
-# ponytail: la conexión va como argumento y se ve en `ps` dentro del VPS; con más usuarios ahí, pasarla a ~/.pgpass
 step="pg_dump"
-run "$PG_DUMP" --format=custom --no-owner --no-privileges --file="$file" "$DATABASE_URL"
+run db "$PG_DUMP" --format=custom --no-owner --no-privileges --file="$file" "$DATABASE_URL"
 step="pg_restore"
 run "$PG_RESTORE" --list "$file"
 size="$(stat -c %s "$file")"

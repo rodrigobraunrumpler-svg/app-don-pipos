@@ -31,10 +31,9 @@ test("atrasada, lo dice y que el equipo ya está avisado", async () => {
   expect(screen.getByText("El equipo ya está avisado.")).toBeOnTheScreen();
 });
 
-test("sin ninguna copia todavía no dice nada", async () => {
+test("sin ninguna copia todavía lo dice, sin decir que el equipo ya está avisado", async () => {
   mockStatus.mockResolvedValue({ lastBackupAt: null, late: true });
   await renderWithProviders(<BackupStatus />);
-  await jest.advanceTimersByTimeAsync(50);
-  expect(mockStatus).toHaveBeenCalled();
-  expect(screen.queryByText(/copia de seguridad/)).toBeNull();
+  expect(await screen.findByText("Todavía no hay copias de seguridad de tus datos.")).toBeOnTheScreen();
+  expect(screen.queryByText(/atrasada|avisado/)).toBeNull();
 });

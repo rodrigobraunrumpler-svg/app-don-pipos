@@ -11,8 +11,15 @@ export type SanityConfig = { projectId: string; dataset: string; token: string }
 
 const API_VERSION = "v2025-02-19";
 
+// El documento y, si alguien lo tiene abierto en Studio, su borrador: si no, publicar ese borrador devolvería el precio
+// viejo. El del borrador va por consulta, que sin borrador no hace nada; el del documento falla si el id está mal
 export function sanityMutation(item: WebSyncItem) {
-  return { mutations: [{ patch: { id: item.sanityId, set: item.payload } }] };
+  return {
+    mutations: [
+      { patch: { id: item.sanityId, set: item.payload } },
+      { patch: { query: "*[_id == $draft]", params: { draft: `drafts.${item.sanityId}` }, set: item.payload } },
+    ],
+  };
 }
 
 // Manda un alfajor a Sanity, con 10 segundos de límite. null si salió bien; si no, el error recortado, que queda en el

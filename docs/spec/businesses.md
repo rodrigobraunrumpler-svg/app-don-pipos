@@ -131,7 +131,7 @@ La anota el script de copia del VPS. No lleva `business_id` porque la copia es d
   - «Delivery»: el costo. La zona de reparto no se muestra ni se pide hasta que algo la use (la web, en su fase 2).
   - «Producción»: cada cuántos días produce. Inicio y Stock sugieren para ese periodo.
   - «Clientes que no vuelven»: a partir de cuántos días sin pedir un cliente sale en «No vuelven» (decidido en la fase 7b; la maqueta no tiene la fila).
-- **Ajustes, arriba:** «Tus datos están respaldados. Última copia de seguridad: hoy, 03:00» (con los días de Lima). Si está atrasada, en ámbar: «La copia de seguridad está atrasada. El equipo ya está avisado». Sin ninguna copia todavía (en desarrollo nunca hay), cargando o con error, no sale nada.
+- **Ajustes, arriba:** «Tus datos están respaldados. Última copia de seguridad: hoy, 03:00» (con los días de Lima). Si está atrasada, en ámbar: «La copia de seguridad está atrasada. El equipo ya está avisado». Sin ninguna copia todavía, sin alarma: «Todavía no hay copias de seguridad de tus datos.» (este proyecto también es el de producción, y el plan gratis no hace copias). Cargando o con error, no sale nada.
 - **Vistas:** «Guardando…». Sin internet, las hojas dicen «Sin conexión. Los cambios esperan a que vuelva la señal» y no dejan guardar hasta que vuelva (los guardados de la app salen al momento y avisan si no hay señal). Un cambio que llegó antes responde «Otro cambio llegó antes: revisa los ajustes y vuelve a guardar», sin perder lo escrito, y la hoja muestra «Lo guardado ahora: …». El delivery llega hasta S/ 10,000 (la hoja lo dice antes de guardar).
 
 ## 7. Con otros módulos

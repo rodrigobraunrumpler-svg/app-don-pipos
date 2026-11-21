@@ -11,10 +11,13 @@ const ITEM: WebSyncItem = {
 };
 const CONFIG = { projectId: "abc123", dataset: "development", token: "token-de-prueba" };
 
-test("la mutación cambia solo el precio, si está disponible y si se ve, en el documento de la web", () => {
+test("la mutación cambia solo el precio, si está disponible y si se ve, en el documento y en su borrador de Studio", () => {
+  const set = { priceMinor: 1300, isAvailable: true, isVisible: true };
   assert.deepEqual(sanityMutation(ITEM), {
     mutations: [
-      { patch: { id: "producto-coqueta-demo", set: { priceMinor: 1300, isAvailable: true, isVisible: true } } },
+      { patch: { id: "producto-coqueta-demo", set } },
+      // Por consulta: si no hay borrador no hace nada; si lo hay, publicarlo no devuelve el precio viejo
+      { patch: { query: "*[_id == $draft]", params: { draft: "drafts.producto-coqueta-demo" }, set } },
     ],
   });
 });

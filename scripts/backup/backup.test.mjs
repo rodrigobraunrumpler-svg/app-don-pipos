@@ -2,7 +2,7 @@
 // psql, rclone y curl: cada uno anota cómo lo llamaron, y uno puede fallar a pedido (FAIL_CMD)
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { after, test } from "node:test";
@@ -15,7 +15,7 @@ after(() => rmSync(ROOT, { recursive: true, force: true }));
 // Un programa falso: anota su nombre y sus argumentos (uno por línea), y lo que le llega por la entrada si es psql
 const FAKE = `#!/usr/bin/env bash
 name="$(basename "$0")"
-{ echo "== $name"; printf '%s\\n' "$@"; } >> "$CALLS_LOG"
+{ echo "== $name"; printf '%s\\n' "$@"; [ -n "\${PGPASSWORD:-}" ] && echo "(PGPASSWORD en el entorno)"; } >> "$CALLS_LOG"
 if [ "$name" = psql ]; then { echo "-- stdin"; cat; } >> "$CALLS_LOG"; fi
 if [ "$name" = "$FAIL_CMD" ] && { [ -z "$FAIL_ARG" ] || printf '%s\\n' "$@" | grep -qx -- "$FAIL_ARG"; }; then
   echo "$FAIL_MESSAGE" >&2; exit 1
@@ -40,7 +40,7 @@ function run({ env = {}, envFile } = {}) {
   writeFileSync(
     file,
     envFile ??
-      "DATABASE_URL=postgresql://postgres:falsa@db.invalid:5432/postgres\nRCLONE_REMOTE=r2:donpipos-prueba\nHEARTBEAT_URL=https://hc-ping.invalid/latido\n",
+      "DATABASE_URL=postgresql://postgres@db.invalid:5432/postgres\nPGPASSWORD=clave-falsa\nRCLONE_REMOTE=r2:donpipos-prueba\nHEARTBEAT_URL=https://hc-ping.invalid/latido\n",
   );
   const log = join(dir, "calls.log");
   writeFileSync(log, "");
@@ -66,7 +66,7 @@ function run({ env = {}, envFile } = {}) {
     .split("== ")
     .filter(Boolean)
     .map((block) => block.trimEnd().split("\n"));
-  return { ...result, calls };
+  return { ...result, calls, dir };
 }
 
 const names = (calls) =>
@@ -111,9 +111,37 @@ test("un error con comillas llega entero a psql como variable, sin tocar el SQL"
 
 test("sin DATABASE_URL lo dice, sale con 1 y no corre nada", () => {
   const { status, calls, stderr } = run({
-    envFile: "RCLONE_REMOTE=r2:donpipos-prueba\nHEARTBEAT_URL=https://hc-ping.invalid/latido\n",
+    envFile: "PGPASSWORD=clave-falsa\nRCLONE_REMOTE=r2:donpipos-prueba\nHEARTBEAT_URL=https://hc-ping.invalid/latido\n",
   });
   assert.equal(status, 1);
   assert.match(stderr, /Falta DATABASE_URL/);
+  assert.deepEqual(calls, []);
+});
+
+test("la copia queda solo para root, y la contraseña de la base viaja por el entorno, nunca en la línea de comandos", () => {
+  const { status, calls, dir, stderr } = run();
+  assert.equal(status, 0, stderr);
+  const backups = join(dir, "backups");
+  const [dump] = readdirSync(backups);
+  assert.equal(statSync(backups).mode & 0o777, 0o700);
+  assert.equal(statSync(join(backups, dump)).mode & 0o777, 0o600);
+  for (const call of calls) {
+    const forTheDatabase = ["pg_dump", "psql"].includes(call[0]);
+    assert.equal(
+      call.includes("(PGPASSWORD en el entorno)"),
+      forTheDatabase,
+      `${call[0]}: la contraseña, solo si es de la base`,
+    );
+    assert.ok(!call.some((line) => line.includes("clave-falsa")), `${call[0]} no la ve en sus argumentos`);
+  }
+});
+
+test("una DATABASE_URL con la contraseña adentro no corre: la contraseña va en PGPASSWORD", () => {
+  const { status, calls, stderr } = run({
+    envFile:
+      "DATABASE_URL=postgresql://postgres:clave-falsa@db.invalid:5432/postgres\nRCLONE_REMOTE=r2:x\nHEARTBEAT_URL=https://hc-ping.invalid/latido\n",
+  });
+  assert.equal(status, 1);
+  assert.match(stderr, /PGPASSWORD/);
   assert.deepEqual(calls, []);
 });

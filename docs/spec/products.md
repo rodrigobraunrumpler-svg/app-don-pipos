@@ -61,11 +61,15 @@ Solo para productos enlazados a la web (`sanity_id` con valor): lo que no está 
 - **El envío a la web (fase 8):**
   - Un trigger del outbox llama al momento a la Edge Function `sync-to-web`, por pg_net, una vez por transacción. Además, pg_cron la llama cada minuto mientras quede algo pendiente; con 10 intentos fallidos o más, solo a la hora en punto.
   - La base la llama con un secreto propio (encabezado `x-web-sync-secret`), sin JWT. Lo guardan Vault (`web_sync_url`, `web_sync_secret`) y los secretos de la función (`WEB_SYNC_SECRET`). Sin ellos no se llama a nada.
-  - La función toma lo pendiente con `private.claim_web_sync`: uno por producto, con el estado más nuevo. Con `for update skip locked`, dos llamadas a la vez no mandan lo mismo. Las filas de un producto que ya no está enlazado se cierran con `not_linked`.
+  - **Solo se copia el negocio enlazado a la web** (`web_sync_business_id` en Vault). El proyecto de Supabase es uno solo, y los datos DEMO conviven con los reales hasta limpiarlos: lo de otro negocio se cierra con `not_live_business` y no se puede enlazar. Sin ese valor no se toca nada.
+  - La función toma lo pendiente con `private.claim_web_sync`, una corrida a la vez (un candado de la transacción; la otra vuelve sin nada). Saca uno por producto, con su estado de ahora (precio, stock y si se ve), no el de la fila más nueva. Las filas de un producto que ya no está enlazado se cierran con `not_linked`.
+  - El cambio va al documento y, si alguien lo tiene abierto en Studio, también a su borrador: así publicarlo no devuelve el precio viejo.
+  - Si llamar a la función falla (pg_net o Vault), el cambio del dueño se guarda igual; el cron lo vuelve a intentar.
   - Manda un pedido a Sanity por producto, con su token (`SANITY_WRITE_TOKEN`, un secreto de Supabase que nunca está en la app). Si un `sanity_id` está mal, los demás igual se copian. El proyecto y el dataset salen de `SANITY_PROJECT_ID` y `SANITY_DATASET`: en desarrollo, `development` (los datos DEMO nunca van a `production`).
   - Después, `private.finish_web_sync` marca `sent_at`, o suma un intento y guarda el error. Con 10 intentos fallidos lo escribe en los registros de la función; el aviso al equipo por Sentry llega con la APK.
   - Sin los secretos de Sanity, la función responde `not_configured` y no toca el outbox.
-  - **Enlazar un producto:** el equipo corre `private.link_product(id, sanity_id, image_url)`, que anota su estado completo.
+  - **Enlazar un producto:** el equipo corre `private.link_product(id, sanity_id, image_url)`, solo para el negocio de la web, y anota su estado completo.
+  - El historial de pg_cron se limpia cada día (`private.purge_cron_history`, lo de más de 7 días): el reintento deja una fila por minuto.
   - La web se refresca con el webhook firmado que ya existe.
 
 ## 4. Permisos

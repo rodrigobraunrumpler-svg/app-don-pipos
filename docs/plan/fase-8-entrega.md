@@ -25,12 +25,12 @@
 
 1. **Esperas del PIN (la decisión I3 de la fase 2):** cada 5 errores seguidos hay una espera: 15 minutos, después 1 hora y después 24 horas (de ahí en adelante, 24 horas cada 5). Ningún error bloquea la cuenta: con el número del dueño, que es público, cualquiera podría dejarlo sin entrar. El bloqueo que pone el equipo a mano (`hard_locked_at`) sigue funcionando.
 2. **La copia se anota con la conexión de la base que ya usa `pg_dump`,** no con la llave secreta: el script necesita esa conexión igual, y así el VPS guarda un secreto menos. `record_backup` se queda en `private`.
-3. **Sin ninguna copia todavía, Ajustes no muestra nada.** Decir «atrasada, el equipo ya está avisado» sería falso en desarrollo, donde nunca hay copias.
+3. **Sin ninguna copia todavía, Ajustes lo dice sin alarma:** «Todavía no hay copias de seguridad de tus datos.» (cambió con la revisión final: este proyecto también es el de producción). Decir «el equipo ya está avisado» sería falso hasta que exista el monitor.
 4. **La función `sync-to-web` no usa JWT:** las llaves anon y service_role se retiran a fines de 2026. La llama la base con un secreto propio (`x-web-sync-secret`), guardado en Vault (`web_sync_url`, `web_sync_secret`) y en los secretos de la función. Sin esos secretos, el trigger y el cron no hacen nada: la migración se puede subir a desarrollo sin encender nada.
 5. **Un pedido a Sanity por producto:** si un `sanity_id` está mal, los demás productos igual se copian. Se manda solo el estado más nuevo de cada producto; las filas anteriores del mismo producto quedan como enviadas.
 6. **Un producto que ya no está enlazado** (`sanity_id` vacío) cierra sus filas pendientes sin mandar nada.
 7. **Con 10 intentos fallidos,** la función lo escribe en sus registros. El aviso por Sentry llega con la parte 2.
-8. **El dataset de Sanity sale de los secretos de la función.** En desarrollo es `development`: los datos DEMO nunca van a `production` (regla de la web).
+8. **Solo se copia el negocio enlazado a la web** (`web_sync_business_id` en Vault; cambió con la revisión final). El proyecto de Supabase es uno solo, y los datos DEMO conviven con los reales hasta limpiarlos: lo de otro negocio se cierra sin mandarse y no se puede enlazar. El dataset sale de los secretos de la función: `production` cuando estén los datos reales.
 9. **El ícono de los avisos** es «DP» en Manrope ExtraBold dentro de un anillo, blanco sobre transparente, porque el logo completo no se lee en 24 dp. Si el cliente tiene un símbolo propio, se cambia.
 
 ## Restricciones globales
@@ -243,11 +243,13 @@
    - sus 5 alfajores y sus ajustes;
    - la vista «servidor en pausa», cuando se pueda ver cómo responde un proyecto pausado.
 2. **Sanity:**
-   - el token de escritura;
-   - `pnpm web connect` (los secretos de la función y de Vault) y `pnpm web link` para enlazar cada alfajor con su documento;
-   - primero en el dataset `development`.
+   - primero, limpiar los datos DEMO y cargar los reales (el dueño, sus alfajores y su stock);
+   - el token de escritura en `.env.local`;
+   - `pnpm web connect`: los secretos de la función, y en Vault la URL, el secreto y el negocio de la web;
+   - `pnpm web link`: cada alfajor con su documento;
+   - revisar que el outbox se vacía y que `net._http_response` responde 200: un secreto que no coincide falla cada minuto sin sumar intentos.
 3. **El VPS:**
-   - `postgresql-client-17`, `rclone` con R2, `/etc/donpipos-backup.env` (con `chmod 600`) y el cron;
+   - `postgresql-client-17`, `rclone` con R2, `/etc/donpipos-backup.env` (con `chmod 600`, la contraseña en `PGPASSWORD` y no en `DATABASE_URL`) y el cron;
    - un monitor de latidos (healthchecks.io gratis, cada 24 horas con 2 de gracia);
    - restaurar una copia de verdad una vez.
 4. **Expo y Sentry:**
@@ -290,3 +292,47 @@ cd /home/javier/var-mar/app && pnpm start --tunnel
 - **Con 10 intentos fallidos, el cron llama solo a la hora en punto** (`private.web_sync_due`): un `sanity_id` mal escrito o un token vencido no insisten cada minuto. Un cambio nuevo del mismo alfajor igual llama al momento.
 - **La llave de la consulta de la copia es `["backup"]`,** fuera de la del negocio: guardar un ajuste no la cancela ni la vuelve a pedir.
 - **`pg_net` se volvió a crear en el esquema `extensions`** (migración `pg_net_schema`): el revisor de Supabase no la quería en `public`, y no se puede mover. Sus funciones siguen en `net`.
+
+## Después de la revisión final (2026-11-21)
+
+Un revisor aparte leyó toda la parte 1, sabiendo que este proyecto de Supabase es también el de producción. Lo que está encendido hoy es seguro: las esperas del PIN funcionan y la copia a la web está apagada. Encontró un problema grave y seis importantes, que se corrigieron en la rama `fase-8-review`, cada uno con una prueba que primero falló. Pasan:
+- 779 pruebas de Jest;
+- 58 de los scripts y las funciones;
+- 817 de la base, en 40 archivos;
+- los 50 casos de velocidad, los consejos de Supabase, lint, tipos y formato.
+
+**Arreglado**
+- **Los datos DEMO podían llegar a la web real.** Los cinco alfajores DEMO tienen los mismos nombres que los reales y, en la web, los mismos ids en los dos datasets. Seguir los pasos de la parte 2 habría copiado el stock DEMO (por ejemplo, «Agotado» en Limon Kiss).
+  - Ahora solo se copia el negocio que dice Vault (`web_sync_business_id`).
+  - Lo de otro negocio se cierra sin mandarse y no se puede enlazar.
+  - Sin ese valor, no se toca nada.
+- **Dos corridas a la vez podían mandar un alfajor en desorden** (por ejemplo, «Agotado» después de «Deshacer»).
+  - Ahora corre una sola a la vez (un candado de la transacción), y cada alfajor sale con su precio y su stock de ahora, no con los de la fila más nueva.
+  - Tiene una prueba de dos conexiones.
+- **Un borrador abierto en Studio podía devolver el precio viejo.** Ahora el cambio va también al borrador, si existe.
+- **Si llamar a la función fallaba, fallaba también la venta o el cambio de precio del dueño.** Ahora el cambio se guarda igual, y el cron lo vuelve a intentar.
+- **El historial del cron crecía sin límite** (una fila por minuto, en un plan de 500 MB). Ahora se limpia cada día lo de más de 7 días.
+- **Sin ninguna copia, Ajustes no decía nada.** Ahora dice «Todavía no hay copias de seguridad de tus datos.»
+- **El programa del VPS dejaba las copias a la vista de otros usuarios del VPS** (la web corre ahí), **y la contraseña en la línea de comandos.**
+  - Ahora las copias son solo de root (`umask 077`).
+  - La contraseña va en `PGPASSWORD`, y solo `pg_dump` y `psql` la reciben.
+  - Una `DATABASE_URL` con la contraseña adentro no corre.
+
+**Decidido sin arreglar**
+- **`pg_net` queda abierta a todos los roles:** es de `supabase_admin`, y nuestro rol no puede cerrarla (se probó). Su esquema, `net`, no sale por la API, y la regla 8 de `900_structure` deja cerrada a la app toda función de `public` y `private`.
+
+**Quedó para después** (detalles menores, en orden de lo que más se notaría)
+1. En el script del VPS, un fallo en `mkdir`, `stat` o `find` sale sin anotar la copia fallida ni avisar «fail»: el monitor avisa recién cuando pasa su plazo.
+2. Borrar en R2 alcanza todo lo viejo del remoto, no solo estas copias. Con `KEEP_DAYS=0` borraría hasta la de hoy.
+3. La revisión de la copia lee solo el índice (`pg_restore --list`), no cada bloque.
+4. La pantalla «Tu cuenta está bloqueada» todavía dice «Hubo 10 intentos con un PIN equivocado», y ahora el bloqueo solo lo pone el equipo.
+5. El recorte del error a 500 bytes puede partir una letra y entonces la falla no se anota (sí llega «fail»).
+6. Pruebas que faltan:
+   - `sync-to-web/index.ts` no pasa por tipos ni por lint;
+   - «hoy», «ayer» y «mañana» no se prueban en una hora en que el día de Lima y el UTC no coinciden;
+   - dos archivos de pgTAP no cierran con `finish()`;
+   - la prueba de la espera del PIN prende los relojes falsos dentro de la prueba.
+7. Detalles:
+   - `finish_web_sync` podría reabrir filas ya enviadas;
+   - la respuesta buena de Sanity no se lee;
+   - a la 1 de la mañana diría «hasta las 01:20» en vez de «hasta la 01:20».
