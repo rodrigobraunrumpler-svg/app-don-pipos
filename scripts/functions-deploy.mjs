@@ -1,4 +1,4 @@
-// Sube las funciones del acceso al proyecto de desarrollo, con su secreto: pnpm functions:deploy
+// Sube las funciones (el acceso y la copia a la web) al proyecto de desarrollo, con su secreto: pnpm functions:deploy
 import { spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { appendFileSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
@@ -7,7 +7,7 @@ import { join } from "node:path";
 
 import { loadEnv, ROOT } from "./lib/guard.mjs";
 
-const FUNCTIONS = ["sign-in-with-pin", "change-pin"];
+const FUNCTIONS = ["sign-in-with-pin", "change-pin", "sync-to-web"];
 
 function sb(args) {
   const run = spawnSync(process.execPath, [join(ROOT, "scripts", "supabase.mjs"), ...args], {

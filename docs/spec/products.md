@@ -59,9 +59,13 @@ Solo para productos enlazados a la web (`sanity_id` con valor): lo que no está 
 - **`set_product_active(id, active)`.** Desactivar un producto enlazado anota `isVisible: false` en el outbox; activarlo, su `show_on_web`. El botón en la app llega más adelante: la maqueta no lo tiene.
 - **La disponibilidad («Agotado»)** cambia cuando el stock cruza el cero. La base deja una fila en el outbox con `isAvailable` dentro de los movimientos de stock (`stock.md`).
 - **El envío a la web (fase 8):**
-  - Un trigger llama al momento a la Edge Function `sync-to-web`, por pg_net. Además, pg_cron la llama cada minuto para reintentar lo pendiente.
-  - La función manda los cambios a Sanity con su token, que es un secreto de Supabase y nunca está en la app. Después marca `sent_at`.
-  - Si falla, suma un intento y guarda el error. Con 10 intentos fallidos avisa al equipo (Sentry).
+  - Un trigger del outbox llama al momento a la Edge Function `sync-to-web`, por pg_net, una vez por transacción. Además, pg_cron la llama cada minuto mientras quede algo pendiente; con 10 intentos fallidos o más, solo a la hora en punto.
+  - La base la llama con un secreto propio (encabezado `x-web-sync-secret`), sin JWT. Lo guardan Vault (`web_sync_url`, `web_sync_secret`) y los secretos de la función (`WEB_SYNC_SECRET`). Sin ellos no se llama a nada.
+  - La función toma lo pendiente con `private.claim_web_sync`: uno por producto, con el estado más nuevo. Con `for update skip locked`, dos llamadas a la vez no mandan lo mismo. Las filas de un producto que ya no está enlazado se cierran con `not_linked`.
+  - Manda un pedido a Sanity por producto, con su token (`SANITY_WRITE_TOKEN`, un secreto de Supabase que nunca está en la app). Si un `sanity_id` está mal, los demás igual se copian. El proyecto y el dataset salen de `SANITY_PROJECT_ID` y `SANITY_DATASET`: en desarrollo, `development` (los datos DEMO nunca van a `production`).
+  - Después, `private.finish_web_sync` marca `sent_at`, o suma un intento y guarda el error. Con 10 intentos fallidos lo escribe en los registros de la función; el aviso al equipo por Sentry llega con la APK.
+  - Sin los secretos de Sanity, la función responde `not_configured` y no toca el outbox.
+  - **Enlazar un producto:** el equipo corre `private.link_product(id, sanity_id, image_url)`, que anota su estado completo.
   - La web se refresca con el webhook firmado que ya existe.
 
 ## 4. Permisos
@@ -103,7 +107,9 @@ Solo para productos enlazados a la web (`sanity_id` con valor): lo que no está 
 - Un precio de cero o menos se rechaza, y también un nombre repetido.
 - Cambiar el precio o si se ve deja una fila en el outbox.
 - Un producto desactivado no aparece en la lista ni en los pedidos nuevos, pero sí en los viejos.
-- Con Sanity simulado, `sync-to-web` marca lo enviado o suma un intento si falla (fase 8).
+- La copia a la web (fase 8): sale uno por producto con su estado más nuevo; lo enviado se cierra y un error suma un intento; un producto desenlazado no se manda; enlazar anota el estado completo; la base llama solo con sus secretos, una vez por transacción, y con 10 intentos solo a la hora en punto.
+
+**La función (node:test):** la mutación, la URL con el dataset y el token, un 2xx, un error con su código y uno de red (`_shared/sanity.test.ts`).
 
 **Cuentas (Jest):** `margin.ts`.
 
