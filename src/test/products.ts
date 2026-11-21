@@ -10,6 +10,12 @@ const base = {
   isActive: true,
   imageUrl: null,
   linkedToWeb: false,
+  description: null,
+  allergens: [],
+  hasPhoto: false,
+  webSlug: null,
+  isNew: false,
+  webState: "none" as const,
   version: 1,
 };
 

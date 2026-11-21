@@ -766,53 +766,71 @@ export type Database = {
       };
       products: {
         Row: {
+          allergens: string[];
           business_id: string;
           cost_cents: number | null;
           created_at: string;
+          description: string | null;
           id: string;
           image_url: string | null;
           is_active: boolean;
           min_stock: number;
           name: string;
+          photo_path: string | null;
           price_cents: number;
           sanity_id: string | null;
           show_on_web: boolean;
           sort_order: number;
           updated_at: string;
           version: number;
+          web_photo_path: string | null;
+          web_published_at: string | null;
+          web_slug: string | null;
         };
         ComputedFields: never;
         Insert: {
+          allergens?: string[];
           business_id: string;
           cost_cents?: number | null;
           created_at?: string;
+          description?: string | null;
           id?: string;
           image_url?: string | null;
           is_active?: boolean;
           min_stock?: number;
           name: string;
+          photo_path?: string | null;
           price_cents: number;
           sanity_id?: string | null;
           show_on_web?: boolean;
           sort_order?: number;
           updated_at?: string;
           version?: number;
+          web_photo_path?: string | null;
+          web_published_at?: string | null;
+          web_slug?: string | null;
         };
         Update: {
+          allergens?: string[];
           business_id?: string;
           cost_cents?: number | null;
           created_at?: string;
+          description?: string | null;
           id?: string;
           image_url?: string | null;
           is_active?: boolean;
           min_stock?: number;
           name?: string;
+          photo_path?: string | null;
           price_cents?: number;
           sanity_id?: string | null;
           show_on_web?: boolean;
           sort_order?: number;
           updated_at?: string;
           version?: number;
+          web_photo_path?: string | null;
+          web_published_at?: string | null;
+          web_slug?: string | null;
         };
         Relationships: [
           {
@@ -1046,7 +1064,9 @@ export type Database = {
       };
       save_product: {
         Args: {
+          p_allergens?: string[];
           p_cost_cents: number;
+          p_description?: string;
           p_expected_version: number;
           p_id: string;
           p_min_stock: number;
@@ -1059,6 +1079,7 @@ export type Database = {
       search_customers: { Args: { p_cursor?: string; p_filter: string; p_limit?: number; p_q: string }; Returns: Json };
       set_category_active: { Args: { p_active: boolean; p_expected_version: number; p_id: string }; Returns: Json };
       set_product_active: { Args: { p_active: boolean; p_id: string }; Returns: Json };
+      set_product_photo: { Args: { p_path: string; p_product_id: string }; Returns: Json };
       stock_overview: { Args: Record<PropertyKey, never>; Returns: Json };
       upcoming_orders: { Args: { p_limit?: number }; Returns: Json };
       update_customer: {

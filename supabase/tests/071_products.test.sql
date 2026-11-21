@@ -14,7 +14,7 @@ select is(public.list_products(), '[]'::jsonb, 'sin productos, la lista está va
 
 select set_config('t.coqueta', public.save_product(null, null, ' Coqueta ', 1200, null, 0, true) ->> 'id', true);
 select is(
-  (public.list_products() -> 0) - 'id',
+  (public.list_products() -> 0) - array['id', 'description', 'allergens', 'hasPhoto', 'webSlug', 'isNew', 'webState'],
   '{"name": "Coqueta", "priceCents": 1200, "costCents": null, "minStock": 0, "showOnWeb": true, "isActive": true, "sortOrder": 1, "imageUrl": null, "linkedToWeb": false, "version": 1}'::jsonb,
   'crear un producto: sin espacios a los lados, versión 1 y el primero de la lista');
 select set_config('t.morenita', public.save_product(null, null, 'Morenita', 1200, 510, 6, true) ->> 'id', true);
@@ -42,7 +42,7 @@ select throws_ok($$select public.save_product('00000000-0000-4000-8000-000000000
 select tests.logout();
 update public.products set sanity_id = 'alfajor-coqueta' where id = current_setting('t.coqueta')::uuid;
 select tests.login_as('00000000-0000-4000-8000-0000000009a1');
-select is(public.save_product(current_setting('t.coqueta')::uuid, 1, 'Coqueta', 1300, null, 0, true) - 'id',
+select is(public.save_product(current_setting('t.coqueta')::uuid, 1, 'Coqueta', 1300, null, 0, true) - array['id', 'description', 'allergens', 'hasPhoto', 'webSlug', 'isNew', 'webState'],
   '{"name": "Coqueta", "priceCents": 1300, "costCents": null, "minStock": 0, "showOnWeb": true, "isActive": true, "sortOrder": 1, "imageUrl": null, "linkedToWeb": true, "version": 2}'::jsonb,
   'cambiar el precio sube la versión');
 select throws_ok(format('select public.save_product(%L, 1, %L, 1400, null, 0, true)', current_setting('t.coqueta'), 'Coqueta'), 'P0001', 'conflict', 'con una versión vieja, conflicto');
@@ -51,9 +51,10 @@ select is((public.save_product(current_setting('t.morenita')::uuid, 1, 'Morenita
 select tests.logout();
 select results_eq(
   $$select payload from private.web_sync_outbox where product_id = current_setting('t.coqueta')::uuid order by id$$,
-  $$values ('{"priceMinor": 1300, "isAvailable": false, "isVisible": true}'::jsonb)$$,
-  'una sola fila para la web: el precio nuevo, sin stock; el mínimo no cuenta');
-select is((select count(*)::integer from private.web_sync_outbox where product_id = current_setting('t.morenita')::uuid), 0, 'lo que no está enlazado no va al outbox');
+  $$values ('{"priceMinor": 1200, "isAvailable": false, "isVisible": true}'::jsonb),
+           ('{"priceMinor": 1300, "isAvailable": false, "isVisible": true}'::jsonb)$$,
+  'para la web: el alfajor recién creado (se ve, para que la copia pueda crearlo) y el precio nuevo, sin stock; el mínimo no cuenta');
+select is((select count(*)::integer from private.web_sync_outbox where product_id = current_setting('t.morenita')::uuid), 1, 'sin enlazar pero visible, el alfajor nuevo va al outbox (para crearlo); su precio no, hasta que esté en la web');
 select is(
   (select count(*)::integer from private.audit_log where row_id = current_setting('t.coqueta')::uuid and new_data ? 'price_cents'),
   1, 'el cambio de precio queda en el registro');
@@ -69,7 +70,7 @@ select throws_ok($$select public.set_product_active('00000000-0000-4000-8000-000
 select throws_ok(format('select public.set_product_active(%L, null)', current_setting('t.coqueta')), 'P0001', 'invalid', 'sin decir si se activa, no');
 select tests.logout();
 select results_eq(
-  $$select payload from private.web_sync_outbox where product_id = current_setting('t.coqueta')::uuid order by id offset 1$$,
+  $$select payload from private.web_sync_outbox where product_id = current_setting('t.coqueta')::uuid order by id offset 2$$,
   $$values ('{"priceMinor": 1300, "isAvailable": true, "isVisible": false}'::jsonb),
            ('{"priceMinor": 1300, "isAvailable": true, "isVisible": true}'::jsonb),
            ('{"priceMinor": 1300, "isAvailable": true, "isVisible": false}'::jsonb)$$,

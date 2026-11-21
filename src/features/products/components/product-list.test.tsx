@@ -26,6 +26,12 @@ const product = (overrides: Partial<Product>): Product => ({
   sortOrder: 1,
   imageUrl: null,
   linkedToWeb: true,
+  description: null,
+  allergens: [],
+  hasPhoto: false,
+  webSlug: null,
+  isNew: false,
+  webState: "sent",
   version: 1,
   ...overrides,
 });
