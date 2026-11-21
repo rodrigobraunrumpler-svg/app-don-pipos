@@ -38,7 +38,7 @@ insert into private.web_sync_outbox (business_id, product_id, payload) values
   ('00000000-0000-4000-8000-0000000015d1', '00000000-0000-4000-8000-0000000015a1', '{"priceMinor": 1250, "isAvailable": true, "isVisible": true}');
 update public.products set price_cents = 1300 where id = '00000000-0000-4000-8000-0000000015a1';
 select is(jsonb_array_length(private.claim_web_sync()), 2, 'sale uno por alfajor');
-select is(pg_temp.item('coqueta-demo') -> 'payload', '{"priceMinor": 1300, "isAvailable": false, "isVisible": true}'::jsonb, 'Coqueta, con su precio y su stock de ahora (no los de la fila más nueva)');
+select is(pg_temp.item('coqueta-demo') -> 'payload', '{"priceMinor": 1300, "isAvailable": false, "isVisible": true, "sortOrder": 10, "isNew": false}'::jsonb, 'Coqueta, con su precio, su stock y su orden de ahora (no los de la fila más nueva)');
 select is(jsonb_array_length(pg_temp.item('coqueta-demo') -> 'ids'), 2, 'y con sus dos filas');
 
 -- 2. Enviado: sus filas quedan cerradas
@@ -53,8 +53,8 @@ select is((pg_temp.item('morenita-demo') ->> 'attempts')::integer, 1, 'sigue pen
 
 -- 4. Un alfajor que ya no está enlazado cierra sus filas sin mandar nada
 update public.products set sanity_id = null where id = '00000000-0000-4000-8000-0000000015a2';
-select is(private.claim_web_sync(), '[]'::jsonb, 'un alfajor desenlazado no se manda');
-select is((select o.last_error from private.web_sync_outbox o where o.product_id = '00000000-0000-4000-8000-0000000015a2'), 'not_linked', 'y sus filas quedan cerradas');
+select is(private.claim_web_sync(), '[]'::jsonb, 'un alfajor desenlazado, sin foto ni descripción, no se crea');
+select is((select o.last_error from private.web_sync_outbox o where o.product_id = '00000000-0000-4000-8000-0000000015a2'), 'incomplete', 'y sus filas quedan cerradas hasta el próximo cambio');
 
 -- 4b. Lo de otro negocio (los datos DEMO) se cierra sin mandarse
 insert into private.web_sync_outbox (business_id, product_id, payload) values

@@ -1,10 +1,23 @@
-// La copia a la web (docs/spec/products.md §3, fase 8). La llama la base (pg_net, con el secreto de Vault) al haber un
-// cambio y cada minuto si quedó algo: toma lo más nuevo de cada alfajor, lo manda a Sanity y anota lo que pasó. Sin los
-// secretos de Sanity responde not_configured y no toca el outbox
+// La copia a la web (docs/spec/products.md §3, fases 8 y 9). La llama la base (pg_net, con el secreto de Vault) al haber
+// un cambio y cada minuto si quedó algo. Por cada alfajor: sube su foto si cambió; si todavía no está en la web, busca su
+// dirección y lo crea (o lo enlaza, si ya había uno con su nombre); si está, le manda los cambios. Después anota en la
+// base lo que pasó. Sin los secretos de Sanity responde not_configured y no toca el outbox
+import { createClient } from "npm:@supabase/supabase-js@2";
 import postgres from "npm:postgres@3";
 
 import { json } from "../_shared/respond.ts";
-import { sameSecret, sendToSanity, type WebSyncItem } from "../_shared/sanity.ts";
+import {
+  createMutations,
+  documentId,
+  findSlug,
+  patchMutations,
+  sameSecret,
+  sendMutations,
+  slugFor,
+  uploadImage,
+  webFields,
+  type WebSyncItem,
+} from "../_shared/sanity.ts";
 
 const sql = postgres(Deno.env.get("SUPABASE_DB_URL")!, { max: 1, prepare: false });
 const secret = Deno.env.get("WEB_SYNC_SECRET") ?? "";
@@ -13,6 +26,53 @@ const config = {
   dataset: Deno.env.get("SANITY_DATASET") ?? "",
   token: Deno.env.get("SANITY_WRITE_TOKEN") ?? "",
 };
+const categoryId = Deno.env.get("SANITY_DON_PIPOS_CATEGORY") ?? "";
+
+// Las fotos son privadas: se bajan con la llave secreta de la función (las nuevas de Supabase; si no, la de antes)
+function storageKey(): string {
+  const keys = Object.values(JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") ?? "{}") as Record<string, string>);
+  return keys[0] ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+}
+const photos = createClient(Deno.env.get("SUPABASE_URL")!, storageKey(), {
+  auth: { persistSession: false },
+}).storage.from("product-photos");
+
+async function photo(path: string): Promise<Uint8Array> {
+  const { data, error } = await photos.download(path);
+  if (error || !data) throw new Error(`No se pudo bajar la foto: ${error?.message ?? "vacía"}`);
+  return new Uint8Array(await data.arrayBuffer());
+}
+
+type Outcome = { error: string | null; result: Record<string, string> | null };
+
+async function syncOne(item: WebSyncItem): Promise<Outcome> {
+  try {
+    const result: Record<string, string> = { productId: item.productId };
+    let assetId: string | undefined;
+    if (item.content?.photoChanged && item.content.photoPath) {
+      const name = `${slugFor(item.content.name)}.jpg`;
+      const asset = await uploadImage(fetch, config, await photo(item.content.photoPath), name);
+      assetId = asset.id;
+      result.imageUrl = asset.url;
+      result.photoPath = item.content.photoPath;
+    }
+    if (item.sanityId) {
+      const error = await sendMutations(fetch, config, patchMutations(item.sanityId, webFields(item, assetId)));
+      return { error, result: error ? null : result };
+    }
+    if (!item.content) return { error: "Sin contenido para crearlo en la web", result: null };
+    if (!categoryId) return { error: "Falta SANITY_DON_PIPOS_CATEGORY (pnpm web connect)", result: null };
+    const base = item.slug ?? slugFor(item.content.name);
+    const { slug, existingId } = await findSlug(fetch, config, base, item.content.name);
+    const mutations = existingId
+      ? patchMutations(existingId, webFields(item, assetId))
+      : createMutations(item, slug, categoryId, assetId);
+    const error = await sendMutations(fetch, config, mutations);
+    return { error, result: error ? null : { ...result, sanityId: existingId ?? documentId(slug), slug } };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : String(error), result: null };
+  }
+}
 
 Deno.serve(async (request) => {
   if (request.method !== "POST") return json(405, { error: "method_not_allowed" });
@@ -22,23 +82,23 @@ Deno.serve(async (request) => {
   if (!config.projectId || !config.dataset || !config.token) return json(503, { error: "not_configured" });
 
   // En una transacción: las filas tomadas quedan bloqueadas hasta anotar lo que pasó con cada una
-  const result = await sql.begin(async (tx) => {
+  const summary = await sql.begin(async (tx) => {
     const [row] = await tx`select private.claim_web_sync(20) as items`;
     let sent = 0;
     let failed = 0;
     for (const item of (row?.items ?? []) as WebSyncItem[]) {
-      const error = await sendToSanity(fetch, config, item);
-      await tx`select private.finish_web_sync(${item.ids}::bigint[], ${error})`;
+      const { error, result } = await syncOne(item);
+      await tx`select private.finish_web_sync(${item.ids}::bigint[], ${error}, ${result ? JSON.stringify(result) : null}::jsonb)`;
       if (!error) {
         sent += 1;
         continue;
       }
       failed += 1;
-      // ponytail: con 10 intentos solo queda en los registros de la función; el aviso por Sentry llega con la parte 2
+      // ponytail: con 10 intentos solo queda en los registros de la función; el aviso por Sentry llega con la APK
       if (item.attempts + 1 >= 10)
-        console.error(`sync-to-web: ${item.sanityId} lleva ${item.attempts + 1} intentos: ${error}`);
+        console.error(`sync-to-web: ${item.productId} lleva ${item.attempts + 1} intentos: ${error}`);
     }
     return { sent, failed };
   });
-  return json(200, result);
+  return json(200, summary);
 });

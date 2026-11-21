@@ -15,18 +15,20 @@ import { connect } from "./lib/db.mjs";
 import { loadEnv, ROOT } from "./lib/guard.mjs";
 import { matchProducts, parseWebArgs } from "./lib/web.mjs";
 
-const DOCS = '*[_type == "product" && brand == "don-pipos"]{_id, name, "imageUrl": image.asset->url}';
+const DOCS =
+  '*[_type == "product" && brand == "don-pipos"]{_id, name, "slug": slug.current, "imageUrl": image.asset->url}';
+const CATEGORY = '*[_type == "category" && brand == "don-pipos"] | order(sortOrder asc)[0]._id';
 
 function required(name) {
   if (!process.env[name]) throw new Error(`Falta ${name} en .env.local`);
   return process.env[name];
 }
 
-async function sanityDocs(projectId, dataset, token) {
-  const url = `https://${projectId}.api.sanity.io/v2025-02-19/data/query/${dataset}?perspective=published&query=${encodeURIComponent(DOCS)}`;
+async function sanityQuery(projectId, dataset, token, query) {
+  const url = `https://${projectId}.api.sanity.io/v2025-02-19/data/query/${dataset}?perspective=published&query=${encodeURIComponent(query)}`;
   const response = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-  if (!response.ok) throw new Error(`Sanity respondió ${response.status} al leer los alfajores de ${dataset}`);
-  return (await response.json()).result ?? [];
+  if (!response.ok) throw new Error(`Sanity respondió ${response.status} al leer ${dataset}`);
+  return (await response.json()).result;
 }
 
 // Los secretos de la función viajan en un archivo temporal que solo tiene esas líneas, y que se borra pase lo que pase
@@ -65,8 +67,13 @@ async function connectWeb(client, { dataset, business }) {
       [business],
     )
   ).rows;
-  const { links, missing, unused } = matchProducts(products, await sanityDocs(projectId, dataset, token));
-  if (links.length === 0) throw new Error("Ningún alfajor del negocio tiene su documento en la web");
+  const { links, missing, unused } = matchProducts(
+    products,
+    (await sanityQuery(projectId, dataset, token, DOCS)) ?? [],
+  );
+  // La categoría de los alfajores nuevos que la app crea en la web
+  const category = await sanityQuery(projectId, dataset, token, CATEGORY);
+  if (!category) throw new Error(`No hay una categoría de Don Pipos en Sanity ${dataset}`);
 
   const secret = randomBytes(32).toString("base64url");
   setFunctionSecrets({
@@ -74,6 +81,7 @@ async function connectWeb(client, { dataset, business }) {
     SANITY_PROJECT_ID: projectId,
     SANITY_DATASET: dataset,
     SANITY_WRITE_TOKEN: token,
+    SANITY_DON_PIPOS_CATEGORY: category,
   });
   // En una transacción: Vault primero, así el aviso de los enlaces ya encuentra la URL y el secreto
   const vault = {
@@ -88,8 +96,20 @@ async function connectWeb(client, { dataset, business }) {
       await client.query("select vault.create_secret($1, $2)", [value, name]);
     }
     for (const link of links) {
-      await client.query("select private.link_product($1, $2, $3)", [link.productId, link.sanityId, link.imageUrl]);
+      await client.query("select private.link_product($1, $2, $3, $4)", [
+        link.productId,
+        link.sanityId,
+        link.imageUrl,
+        link.slug,
+      ]);
     }
+    // Los que la app creó y ya están completos (foto y descripción) pero todavía no están en la web: la copia los crea
+    await client.query(
+      `select private.queue_web_sync(p.id, 'content') from public.products p
+       where p.business_id = $1 and p.sanity_id is null and p.show_on_web and p.is_active
+         and p.description is not null and p.photo_path is not null`,
+      [business],
+    );
     await client.query("commit");
   } catch (error) {
     await client.query("rollback").catch(() => {});

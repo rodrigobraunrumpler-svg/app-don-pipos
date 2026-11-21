@@ -45,7 +45,13 @@ export function matchProducts(products, docs) {
       continue;
     }
     byKey.delete(key(product.name));
-    links.push({ productId: product.id, name: product.name, sanityId: doc._id, imageUrl: doc.imageUrl ?? null });
+    links.push({
+      productId: product.id,
+      name: product.name,
+      sanityId: doc._id,
+      imageUrl: doc.imageUrl ?? null,
+      slug: doc.slug ?? null,
+    });
   }
   return { links, missing, unused: [...byKey.values()].map((doc) => doc.name) };
 }
