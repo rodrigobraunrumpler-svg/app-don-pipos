@@ -30,6 +30,7 @@
     "test:auth": "node --test supabase/tests/auth.e2e.test.mjs",
     "functions:deploy": "node scripts/functions-deploy.mjs",
     "owner": "node scripts/owner.mjs",
+    "web": "node scripts/web.mjs",
     "demo:data": "node scripts/demo-data.mjs",
     "auth:config": "node scripts/supabase.mjs config push --yes"
   },
