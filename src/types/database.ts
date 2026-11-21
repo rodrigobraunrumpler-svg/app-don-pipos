@@ -937,6 +937,7 @@ export type Database = {
       advance_order: { Args: { p_from_status: string; p_order_id: string }; Returns: Json };
       anonymize_customer: { Args: { p_id: string }; Returns: Json };
       attach_receipt: { Args: { p_expense_id: string; p_receipt_path: string }; Returns: Json };
+      backup_status: { Args: Record<PropertyKey, never>; Returns: Json };
       cancel_order: {
         Args: {
           p_order_id: string;

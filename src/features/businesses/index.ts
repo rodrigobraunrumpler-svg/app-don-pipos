@@ -28,3 +28,4 @@ export { SetupProductsStep } from "./components/setup-products-step";
 export { SetupStockStep } from "./components/setup-stock-step";
 export { SetupExpensesStep } from "./components/setup-expenses-step";
 export { SetupDone } from "./components/setup-done";
+export { BackupStatus } from "./components/backup-status";

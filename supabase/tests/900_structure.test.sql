@@ -267,7 +267,9 @@ create function pg_temp.unlisted_functions_for_app() returns setof text language
       'private.update_template(text, integer, text)',
       'private.reset_template(text)',
       'private.template_json(message_templates)',
-      'private.default_templates()'
+      'private.default_templates()',
+      'public.backup_status()',
+      'private.backup_status()'
     )
 $$;
 

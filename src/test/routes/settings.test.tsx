@@ -20,6 +20,9 @@ jest.mock("@/features/expenses/api/expenses", () => ({ listExpenseCategories: as
 jest.mock("@/features/businesses/api/business", () => ({
   getBusiness: async () => jest.requireActual("@/test/business").TEST_BUSINESS,
 }));
+jest.mock("@/features/businesses/api/backup", () => ({
+  getBackupStatus: async () => ({ lastBackupAt: new Date(Date.now() - 3 * 3600_000), late: false }),
+}));
 jest.mock("@/features/loyalty/api/loyalty", () => ({
   getLoyaltySettings: async () => ({
     isActive: false,
@@ -91,4 +94,10 @@ test.each([
   expect(screen).toHavePathname(path);
   await act(() => router.back());
   expect(screen).toHavePathname("/settings");
+});
+
+test("arriba de Ajustes, cuándo fue la última copia de seguridad", async () => {
+  await renderRouter(ROUTES, { initialUrl: "/settings", wrapper: Providers });
+  expect(await screen.findByText("Tus datos están respaldados.")).toBeOnTheScreen();
+  expect(screen.getByText(/^Última copia de seguridad: /)).toBeOnTheScreen();
 });
