@@ -103,12 +103,14 @@ export function createMutations(
 }
 
 // La dirección para un alfajor nuevo: libre, se usa; ocupada por uno con el mismo nombre, es el mismo alfajor (se
-// enlaza, no se duplica: también después de un corte a medias); ocupada por otro, se prueba con -2, -3…
+// enlaza, no se duplica: también después de un corte a medias), salvo que esa página ya sea de otro alfajor de la app
+// (`linked`: uno renombrado cuyo nombre nuevo todavía no llegó); ocupada por otro, se prueba con -2, -3…
 export async function findSlug(
   fetchFn: typeof fetch,
   config: SanityConfig,
   base: string,
   name: string,
+  linked: (id: string) => Promise<boolean> = async () => false,
 ): Promise<{ slug: string; existingId: string | null }> {
   const query = '*[_type == "product" && (slug.current == $slug || _id in [$id, "drafts." + $id])]{_id, name}';
   for (let n = 1; n <= 20; n += 1) {
@@ -122,7 +124,8 @@ export async function findSlug(
     const docs = ((await response.json()) as { result?: { _id: string; name?: string }[] }).result ?? [];
     if (docs.length === 0) return { slug, existingId: null };
     const same = docs.find((doc) => doc.name === name);
-    if (same) return { slug, existingId: same._id.replace(/^drafts\./, "") };
+    const id = same?._id.replace(/^drafts\./, "");
+    if (id && !(await linked(id))) return { slug, existingId: id };
   }
   throw new Error(`No hay una dirección libre para «${name}»`);
 }

@@ -172,6 +172,23 @@ test("la dirección: libre se usa; con el mismo nombre es el mismo alfajor (no s
   });
 });
 
+test("una página con el mismo nombre que ya es de otro alfajor no se toca: se sigue con la dirección siguiente", async () => {
+  const taken = fakeFetch(
+    new Response(JSON.stringify({ result: [{ _id: "product-don-pipos-alfajor-tropi", name: "Alfajor Tropi" }] })),
+    new Response(JSON.stringify({ result: [] })),
+  );
+  const linked = async (id: string) => id === "product-don-pipos-alfajor-tropi";
+  assert.deepEqual(await findSlug(taken.fn, CONFIG, "alfajor-tropi", "Alfajor Tropi", linked), {
+    slug: "alfajor-tropi-2",
+    existingId: null,
+  });
+  const mine = fakeFetch(new Response(JSON.stringify({ result: [{ _id: "abc", name: "Alfajor Tropi" }] })));
+  assert.deepEqual(await findSlug(mine.fn, CONFIG, "alfajor-tropi", "Alfajor Tropi", async () => false), {
+    slug: "alfajor-tropi",
+    existingId: "abc",
+  });
+});
+
 test("mandar las mutaciones: un 2xx sale bien; un error vuelve con su código y recortado; uno de red, con su mensaje", async () => {
   const ok = fakeFetch(new Response('{"transactionId":"t1"}'));
   assert.equal(await sendMutations(ok.fn, CONFIG, [{ patch: { id: "x", set: {} } }]), null);

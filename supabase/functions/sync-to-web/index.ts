@@ -44,8 +44,9 @@ async function photo(path: string): Promise<Uint8Array> {
 }
 
 type Outcome = { error: string | null; result: Record<string, string> | null };
+type Linked = (id: string) => Promise<boolean>;
 
-async function syncOne(item: WebSyncItem): Promise<Outcome> {
+async function syncOne(item: WebSyncItem, linked: Linked): Promise<Outcome> {
   try {
     const result: Record<string, string> = { productId: item.productId };
     let assetId: string | undefined;
@@ -63,7 +64,7 @@ async function syncOne(item: WebSyncItem): Promise<Outcome> {
     if (!item.content) return { error: "Sin contenido para crearlo en la web", result: null };
     if (!categoryId) return { error: "Falta SANITY_DON_PIPOS_CATEGORY (pnpm web connect)", result: null };
     const base = item.slug ?? slugFor(item.content.name);
-    const { slug, existingId } = await findSlug(fetch, config, base, item.content.name);
+    const { slug, existingId } = await findSlug(fetch, config, base, item.content.name, linked);
     const mutations = existingId
       ? patchMutations(existingId, webFields(item, assetId))
       : createMutations(item, slug, categoryId, assetId);
@@ -84,10 +85,13 @@ Deno.serve(async (request) => {
   // En una transacción: las filas tomadas quedan bloqueadas hasta anotar lo que pasó con cada una
   const summary = await sql.begin(async (tx) => {
     const [row] = await tx`select private.claim_web_sync(20) as items`;
+    // Una página que ya es de otro alfajor no se enlaza (ni se le pisa el contenido)
+    const linked: Linked = async (id) =>
+      (await tx`select exists (select 1 from public.products p where p.sanity_id = ${id}) as taken`)[0]?.taken === true;
     let sent = 0;
     let failed = 0;
     for (const item of (row?.items ?? []) as WebSyncItem[]) {
-      const { error, result } = await syncOne(item);
+      const { error, result } = await syncOne(item, linked);
       // tx.json: un texto ya convertido se volvería a convertir, y la base recibiría un texto en vez del objeto
       await tx`select private.finish_web_sync(${item.ids}::bigint[], ${error}, ${result ? tx.json(result) : null}::jsonb)`;
       if (!error) {
