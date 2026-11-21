@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="es-PE">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>La app sin «Más»</title>
+    <link rel="stylesheet" href="assets/donpipos.css" />
+    <style>
+      /* ---------- Lo que explica (fuera de los celulares) ---------- */
+      .barras {
+        display: grid;
+        gap: 18px;
+        max-width: 760px;
+        margin-top: 22px;
+      }
+      .barra-demo {
+        padding: 14px 16px 16px;
+        border: 1px solid var(--linea);
+        border-radius: 18px;
+        background: var(--papel);
+      }
+      .barra-demo > p {
+        margin-bottom: 10px;
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--tinta-2);
+      }
+      .barra-demo ol {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        align-items: end;
+        text-align: center;
+      }
+      .barra-demo li {
+        display: grid;
+        justify-items: center;
+        gap: 4px;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--tinta-2);
+      }
+      .barra-demo li .i {
+        font-size: 24px;
+        color: var(--tinta);
+      }
+      .barra-demo li.redondo span.boton {
+        display: grid;
+        place-items: center;
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        background: var(--bosque);
+      }
+      .barra-demo li.redondo .i {
+        color: var(--crema);
+      }
+      .barra-demo li.sale {
+        color: var(--tinta-3);
+        text-decoration: line-through;
+      }
+      .barra-demo li.sale .i {
+        color: var(--tinta-3);
+      }
+      .barra-demo li.entra .i {
+        color: var(--bosque);
+      }
+      .etq {
+        display: inline-block;
+        font-style: normal;
+        padding: 0 8px;
+        border-radius: 999px;
+        background: var(--caramelo);
+        font-size: 11px;
+        font-weight: 800;
+        line-height: 18px;
+        color: var(--tinta);
+        text-decoration: none;
+      }
+      .donde {
+        display: grid;
+        gap: 10px;
+        margin-top: 22px;
+      }
+      .donde li {
+        display: grid;
+        grid-template-columns: minmax(170px, 230px) 1fr;
+        gap: 14px;
+        align-items: start;
+        padding: 14px 16px;
+        border: 1px solid var(--linea);
+        border-radius: 16px;
+        background: var(--papel);
+      }
+      @media (max-width: 640px) {
+        .donde li {
+          grid-template-columns: 1fr;
+          gap: 8px;
+        }
+      }
+      .donde .que {
+        font-weight: 800;
+        color: var(--tinta);
+      }
+      .donde .que small {
+        display: block;
+        font-weight: 500;
+        font-size: 13px;
+        color: var(--tinta-2);
+      }
+      .pasos {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+        color: var(--tinta-3);
+      }
+      .pasos + .pasos {
+        margin-top: 6px;
+      }
+      .pasos .rotulo {
+        min-width: 92px;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--tinta-2);
+      }
+      .paso {
+        padding: 3px 10px;
+        border-radius: 999px;
+        background: var(--oliva-suave);
+        font-weight: 700;
+        color: var(--bosque);
+      }
+      .tira {
+        margin-top: 34px;
+      }
+      .tira > h3 {
+        font-size: 20px;
+        font-weight: 800;
+      }
+      .tira > p {
+        margin-top: 4px;
+        color: var(--tinta-2);
+      }
+      .tira .telefonos {
+        margin-top: 18px;
+      }
+      .guia-paso {
+        padding: 14px 16px;
+        border-radius: 16px;
+        background: var(--bosque);
+        color: var(--crema);
+        font-size: 16px;
+        line-height: 1.45;
+      }
+      .guia-paso b {
+        display: block;
+        font-size: 17px;
+      }
+      .telefono > .guia-paso {
+        min-height: 128px;
+      }
+      .reiniciar {
+        display: block;
+        margin: 18px auto 0;
+        padding: 10px 18px;
+        border: 1px solid var(--linea-f);
+        border-radius: 999px;
+        background: var(--papel);
+        font: inherit;
+        font-weight: 700;
+        color: var(--tinta);
+        cursor: pointer;
+      }
+
+      /* ---------- Dentro de los celulares ---------- */
+      .pila {
+        position: relative;
+        flex: 1;
+        overflow: hidden;
+      }
+      .vista {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        background: var(--fondo);
+        transition: transform 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+        will-change: transform;
+      }
+      .vista.oculta {
+        display: none;
+      }
+      .vista.encima {
+        transform: translateX(100%);
+        box-shadow: -12px 0 24px rgb(0 0 0 / 8%);
+      }
+      .vista.encima.abierta {
+        transform: translateX(0);
+      }
+      .vista.base.tapada {
+        transform: translateX(-24%);
+      }
+      .capa {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+      }
+      .capa.oculta {
+        display: none;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .vista {
+          transition: none;
+        }
+      }
+      .estatico .app {
+        pointer-events: none;
+      }
+      button.aj-fila {
+        width: 100%;
+        text-align: left;
+      }
+      .aj-fila.peligro > span,
+      .aj-fila.peligro > .i:first-child {
+        color: var(--coral);
+      }
+      .grupo.sin-titulo {
+        margin-top: 26px;
+      }
+      .cab-botones {
+        display: flex;
+        gap: 8px;
+      }
+      .kpi[data-abre] {
+        cursor: pointer;
+      }
+      .kpi-ver {
+        margin-top: 6px;
+        font-size: 12px;
+        font-weight: 800;
+        color: var(--bosque);
+      }
+      .seg-pedidos {
+        margin-top: 10px;
+      }
+      /* Lo nuevo: borde punteado y su etiqueta */
+      .atajo {
+        position: relative;
+        outline: 2px dashed var(--caramelo);
+        outline-offset: 4px;
+        border-radius: var(--r, 16px);
+      }
+      .atajo::after {
+        content: "Nuevo";
+        position: absolute;
+        top: -11px;
+        right: 12px;
+        z-index: 2;
+        padding: 1px 9px;
+        border-radius: 999px;
+        background: var(--caramelo);
+        color: var(--tinta);
+        font-size: 11px;
+        font-weight: 800;
+        line-height: 18px;
+      }
+      .menu-nuevo .etq {
+        margin-left: 6px;
+      }
+      /* Dónde tocar: borde que late y su etiqueta */
+      [data-toca] {
+        position: relative;
+        outline: 3px solid var(--caramelo);
+        outline-offset: 2px;
+        border-radius: 12px;
+        animation: latido 1.6s ease-in-out infinite;
+      }
+      [data-toca]::after {
+        content: attr(data-toca);
+        position: absolute;
+        z-index: 6;
+        padding: 3px 10px;
+        border-radius: 999px;
+        background: var(--bosque);
+        color: var(--crema);
+        font-size: 12px;
+        font-weight: 800;
+        line-height: 18px;
+        white-space: nowrap;
+        pointer-events: none;
+      }
+      .tab[data-toca]::after,
+      .tab-nuevo[data-toca]::after {
+        bottom: calc(100% + 8px);
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      .aj-fila[data-toca],
+      .menu-nuevo button[data-toca] {
+        outline-offset: -3px;
+      }
+      .aj-fila[data-toca]::after,
+      .menu-nuevo button[data-toca]::after {
+        top: 50%;
+        right: 40px;
+        transform: translateY(-50%);
+      }
+      .btn-icono[data-toca]::after {
+        top: calc(100% + 6px);
+        right: 0;
+      }
+      .cab-form .btn-icono[data-toca]::after {
+        right: auto;
+        left: 0;
+      }
+      .kpi[data-toca]::after,
+      .segmentos button[data-toca]::after {
+        top: -12px;
+        right: 8px;
+      }
+      @keyframes latido {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgb(213 174 136 / 70%);
+        }
+        50% {
+          box-shadow: 0 0 0 9px rgb(213 174 136 / 0%);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        [data-toca] {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="portada">
+      <div class="portada-in">
+        <div>
+          <p class="marca"><img src="img/logo.png" alt="" /><span>Don Pipos</span></p>
+          <h1>La app sin «Más»</h1>
+          <p class="bajada">
+            Lo que estaba en Más se reparte en las pantallas que ya usas: Inicio, Pedidos, Stock y el botón +. En la
+            barra de abajo, Más deja su lugar a Reportes. Esta página muestra dónde quedó cada cosa, cómo llegas, y al
+            final un celular para que lo pruebes.
+          </p>
+          <p class="nota-demo">Los montos y los clientes son de ejemplo. La versión anterior (opción 3) sigue en mas-propuesta.html.</p>
+        </div>
+      </div>
+    </header>
+
+    <nav class="indice" aria-label="Partes de la página">
+      <ul>
+        <li><a href="#barra">La barra de abajo</a></li>
+        <li><a href="#donde">Dónde quedó cada cosa</a></li>
+        <li><a href="#pasos">Paso a paso</a></li>
+        <li><a href="#prueba">Pruébalo tú</a></li>
+        <li class="indice-tema"><button type="button" data-tema aria-pressed="false" data-icono="moon">Modo oscuro</button></li>
+      </ul>
+    </nav>
+
+    <!-- La maqueta de la app los necesita, aunque aquí no se muestran -->
+    <div hidden data-leyenda="pedido"></div>
+    <div hidden data-leyenda="stock"></div>
+
+    <main>
+      <section class="seccion" id="barra">
+        <h2>La barra de abajo, antes y después</h2>
+        <p>Es lo único que cambia de lugar en la barra: sale Más y entra Reportes. Los otros cuatro botones quedan igual.</p>
+        <div class="barras" id="barras"></div>
+      </section>
+
+      <section class="seccion" id="donde">
+        <h2>Dónde quedó cada cosa</h2>
+        <p>A la izquierda, lo que hoy está en Más. A la derecha, por dónde entras con este cambio, empezando por un botón de la barra de abajo.</p>
+        <ul class="donde" id="donde-lista"></ul>
+      </section>
+
+      <section class="seccion" id="pasos">
+        <h2>Paso a paso</h2>
+        <p>Los caminos nuevos, uno por uno. El borde que late marca dónde tocar en cada celular.</p>
+        <div class="tira">
+          <h3>Entrar a Ajustes</h3>
+          <p>Ajustes ya no está en Más: se abre con el ⚙ de Inicio.</p>
+          <div class="telefonos" id="tira-ajustes"></div>
+        </div>
+        <div class="tira">
+          <h3>Entrar a Clientes</h3>
+          <p>Clientes pasa a vivir dentro de Pedidos.</p>
+          <div class="telefonos" id="tira-clientes"></div>
+        </div>
+        <div class="tira">
+          <h3>Ver tus gastos o tus ingresos</h3>
+          <p>Están dentro de Reportes, que ahora es un botón de abajo.</p>
+          <div class="telefonos" id="tira-gastos"></div>
+        </div>
+        <div class="tira">
+          <h3>Anotar un ingreso</h3>
+          <p>El + suma «Un ingreso» a lo que ya anota.</p>
+          <div class="telefonos" id="tira-ingreso"></div>
+        </div>
+      </section>
+
+      <section class="seccion" id="prueba">
+        <h2>Pruébalo tú</h2>
+        <p>Este celular funciona como la app y empieza en Inicio. Toca los botones de abajo, el ⚙, el +, las tarjetas de Reportes… El recuadro verde te dice qué hay en cada pantalla.</p>
+        <div class="telefonos" id="fila-prueba"></div>
+      </section>
+    </main>
+
+    <script src="assets/iconos.js"></script>
+    <script src="assets/donpipos.js"></script>
+    <script src="assets/donpipos-2.js"></script>
+    <script>
+      // Todo lo de esta página se arma con las pantallas de la maqueta de la app (window.DonPipos), cambiadas para
+      // mostrar la propuesta. Ningún celular tiene data-pantalla: la maqueta no los vuelve a pintar
+      (function () {
+        "use strict";
+        const D = window.DonPipos;
+        const { ic } = D.u;
+        const NUEVO = '<span class="etq">Nuevo</span>';
+        const p = (x) => `<span class="paso">${x}</span>`;
+        const camino = (...pasos) => pasos.map(p).join(" › ");
+
+        /* ---------- La barra de abajo, antes y después ---------- */
+        const item = (icono, texto, clase) =>
+          `<li class="${clase || ""}">${clase === "redondo" ? `<span class="boton">${ic(icono)}</span>` : ic(icono)}<span>${texto}</span></li>`;
+        document.getElementById("barras").innerHTML =
+          `<div class="barra-demo"><p>Hoy</p><ol>${item("house", "Inicio")}${item("clipboard-list", "Pedidos")}${item("plus", "Anotar", "redondo")}${item("package", "Stock")}${item("layout-grid", "Más", "sale")}</ol></div>` +
+          `<div class="barra-demo"><p>Con este cambio</p><ol>${item("house", "Inicio")}${item("clipboard-list", "Pedidos")}${item("plus", "Anotar", "redondo")}${item("package", "Stock")}${item("chart-column", `Reportes ${NUEVO}`, "entra")}</ol></div>`;
+
+        /* ---------- Dónde quedó cada cosa ---------- */
+        const filasDonde = [
+          ["Gastos", "La lista del mes", [["Para verlos", camino("Reportes", "tarjeta Gastos")], ["Para anotar", camino("+", "Un gasto")]]],
+          ["Ingresos", "La lista del mes", [["Para verlos", camino("Reportes", "tarjeta Ingresos")], ["Para anotar", `${camino("+", "Un ingreso")} ${NUEVO}`]]],
+          ["Reportes", "Ganancia, ingresos y gastos", [["Ahora", `${camino("Reportes")} <span>es un botón de abajo</span>`]]],
+          ["Clientes", "Con la fidelidad y «No vuelven»", [["Ahora", camino("Pedidos", "Clientes")]]],
+          ["Por cobrar", "Quién te debe", [["Ahora", camino("Inicio", "por cobrar")], ["O también", camino("Pedidos", "filtro Por cobrar")]]],
+          ["Cuadre de caja", "Contar la plata al cerrar", [["Ahora", camino("Inicio", "Cuadrar caja")]]],
+          ["Exportar a Excel", "El archivo para el contador", [["Ahora", camino("Reportes", "Exportar a Excel")]]],
+          ["Productos y precios", "Tus alfajores y lo que cuestan", [["Ahora", camino("Stock", "Productos y precios")], ["O también", camino("Inicio", "⚙ Ajustes", "Productos y precios")]]],
+          ["Los demás ajustes", "Medios de pago, delivery, producción, tipos de gasto, mensajes, fidelidad, «No vuelven»", [["Ahora", camino("Inicio", "⚙ Ajustes")]]],
+          ["Tu cuenta", "Tu número, huella, PIN, recordatorios, cerrar sesión", [["Ahora", camino("Inicio", "⚙ Ajustes", "Tu cuenta y este celular")]]],
+        ];
+        document.getElementById("donde-lista").innerHTML = filasDonde
+          .map(
+            ([que, sub, caminos]) =>
+              `<li><span class="que">${que}<small>${sub}</small></span><div>${caminos
+                .map(([rotulo, html]) => `<div class="pasos"><span class="rotulo">${rotulo}:</span>${html}</div>`)
+                .join("")}</div></li>`,
+          )
+          .join("");
+
+        /* ---------- Las pantallas de la propuesta ---------- */
+        const barra = D.u.barra(false);
+        const tabsNuevas = (activa) =>
+          `<nav class="tabs" aria-label="Secciones de la app">${[
+            ["house", "Inicio"],
+            ["clipboard-list", "Pedidos"],
+            null,
+            ["package", "Stock"],
+            ["chart-column", "Reportes"],
+          ]
+            .map((t) =>
+              t
+                ? `<button class="tab${t[1] === activa ? " activa" : ""}">${ic(t[0])}<span>${t[1]}</span></button>`
+                : `<button class="tab-nuevo" data-menu aria-label="Anotar algo nuevo">${ic("plus")}</button>`,
+            )
+            .join("")}</nav>`;
+        const fila = (icono, texto, valor, opciones = {}) => {
+          const { sinFlecha, peligro, interruptor } = opciones;
+          const dentro =
+            ic(icono) +
+            `<span>${texto}</span>` +
+            (valor ? `<small>${valor}</small>` : "") +
+            (interruptor ? `<button class="switch" role="switch" aria-checked="true" aria-label="${texto}"><i></i></button>` : "") +
+            (sinFlecha || interruptor ? "" : ic("chevron-right", "aj-flecha"));
+          return `<li><${interruptor || sinFlecha ? "div" : "button"} class="aj-fila${peligro ? " peligro" : ""}">${dentro}</${interruptor || sinFlecha ? "div" : "button"}></li>`;
+        };
+        const grupo = (titulo, filas, clase) =>
+          `<section class="grupo${titulo ? "" : " sin-titulo"}${clase ? " " + clase : ""}">${titulo ? `<h2>${titulo}</h2>` : ""}<ul>${filas.join("")}</ul></section>`;
+        const atajo = (filas) => grupo("", filas, "atajo").replace(' sin-titulo', "");
+        const cabecera = (h, sub, cierra) =>
+          `<div class="cab-form"><button class="btn-icono" aria-label="Volver" data-cierra="${cierra}">${ic("arrow-left")}</button><div><h1>${h}</h1>${sub ? `<p>${sub}</p>` : ""}</div></div>`;
+        const segmento = (activo) =>
+          `<div class="segmentos seg-pedidos" role="radiogroup" aria-label="Pedidos o clientes"><button role="radio" aria-checked="${activo === "pedidos"}" data-va="pedidos">Pedidos</button><button role="radio" aria-checked="${activo === "clientes"}" data-va="clientes">Clientes</button></div>`;
+        // Toma una pantalla de la maqueta y la cambia
+        const desde = (html, cambiar) => {
+          const d = document.createElement("div");
+          d.innerHTML = html;
+          cambiar(d);
+          return d.innerHTML;
+        };
+        const conBarra = (d, activa) => {
+          const t = d.querySelector("nav.tabs");
+          if (t) t.outerHTML = tabsNuevas(activa);
+        };
+
+        const PANTALLA = {};
+        PANTALLA.inicio = desde(D.PANTALLAS.inicio("datos"), (d) => {
+          conBarra(d, "Inicio");
+          const campana = d.querySelector(".cabecera .btn-icono");
+          const botones = document.createElement("span");
+          botones.className = "cab-botones";
+          botones.innerHTML = `<button class="btn-icono" data-abre="ajustes" aria-label="Ajustes">${ic("settings")}</button>`;
+          campana.replaceWith(botones);
+          botones.append(campana);
+        });
+        PANTALLA.pedidos = desde(D.PANTALLAS.pedidos("datos"), (d) => {
+          conBarra(d, "Pedidos");
+          d.querySelector(".titulo").insertAdjacentHTML("afterend", segmento("pedidos"));
+        });
+        PANTALLA.clientes = desde(D.PANTALLAS.clientes("datos"), (d) => {
+          conBarra(d, "Pedidos");
+          const fijo = d.querySelector(".titulo-fijo span");
+          if (fijo) fijo.textContent = "Pedidos";
+          const t = d.querySelector(".titulo");
+          t.innerHTML = "<h1>Pedidos</h1><p>Miércoles 18 de noviembre</p>";
+          t.insertAdjacentHTML("afterend", segmento("clientes"));
+          d.querySelector(".chips.filtros")?.insertAdjacentHTML(
+            "afterend",
+            atajo([fila("star", "Fidelidad", "Apagada"), fila("user-x", "«No vuelven» desde", "30 días")]),
+          );
+        });
+        PANTALLA.stock = desde(D.PANTALLAS.stock("datos"), (d) => {
+          conBarra(d, "Stock");
+          d.querySelector(".titulo.con-accion, .titulo")?.insertAdjacentHTML("afterend", atajo([fila("cookie", "Productos y precios", "5 alfajores")]));
+        });
+        PANTALLA.reportes = desde(D.PANTALLAS.reportes("datos"), (d) => {
+          conBarra(d, "Reportes");
+          d.querySelector(".segmentos")?.insertAdjacentHTML("afterend", atajo([fila("download", "Exportar a Excel", "Este mes")]));
+          d.querySelectorAll(".kpi").forEach((k) => {
+            const nombre = k.querySelector("p")?.textContent;
+            if (nombre !== "Ingresos" && nombre !== "Gastos") return;
+            k.dataset.abre = nombre === "Ingresos" ? "ingresos" : "gastos";
+            k.setAttribute("role", "button");
+            k.insertAdjacentHTML("beforeend", '<span class="kpi-ver">Ver la lista ›</span>');
+          });
+        });
+        PANTALLA.gastos = desde(D.PANTALLAS.gastos("datos"), (d) => {
+          d.querySelector("nav.tabs")?.remove();
+          d.querySelector(".titulo-fijo")?.remove();
+          const t = d.querySelector(".titulo");
+          t.outerHTML = cabecera("Gastos", "Noviembre", "gastos");
+          d.querySelector(".cab-form").insertAdjacentHTML("afterend", atajo([fila("tags", "Tipos de gasto", "5 tipos")]));
+        });
+        PANTALLA.ingresos =
+          barra +
+          `<div class="contenido">${cabecera("Ingresos", "Noviembre", "ingresos")}` +
+          grupo("Por medio de pago", [
+            fila("smartphone", "Yape", "S/&nbsp;1,620.00", { sinFlecha: true }),
+            fila("smartphone", "Plin", "S/&nbsp;742.00", { sinFlecha: true }),
+            fila("banknote", "Efectivo", "S/&nbsp;924.00", { sinFlecha: true }),
+            fila("arrow-right-left", "Transferencia", "S/&nbsp;200.00", { sinFlecha: true }),
+          ]) +
+          grupo("Los últimos", [
+            fila("coins", "Pedido #0044, Yape", "S/&nbsp;24.00"),
+            fila("coins", "Pedido #0043, Efectivo", "S/&nbsp;48.00"),
+            fila("coins", "Venta de mostrador, Plin", "S/&nbsp;12.00"),
+          ]) +
+          `</div>`;
+        PANTALLA.ajustes =
+          barra +
+          `<div class="contenido">${cabecera("Ajustes", "Tu negocio y tu cuenta", "ajustes")}` +
+          grupo("Tu negocio", [
+            fila("cookie", "Productos y precios", "5 alfajores"),
+            fila("wallet", "Medios de pago", "4"),
+            fila("motorbike", "Delivery", "S/&nbsp;5.00"),
+            fila("chef-hat", "Producción", "Cada 7 días"),
+            fila("tags", "Tipos de gasto", "5 tipos"),
+          ]) +
+          grupo("Tus clientes", [
+            fila("star", "Fidelidad", "Apagada"),
+            fila("message-square-text", "Mensajes de WhatsApp", "6"),
+            fila("user-x", "Clientes que no vuelven", "30 días"),
+          ]) +
+          grupo("Tu cuenta y este celular", [
+            fila("smartphone", "Tu número", "900 000 101", { sinFlecha: true }),
+            fila("fingerprint", "Entrar con huella", "", { interruptor: true }),
+            fila("timer", "Pedir huella o PIN", "A los 5 min"),
+            fila("bell", "Recordatorios", "3 activos"),
+            fila("key-round", "Cambiar PIN", ""),
+          ]) +
+          grupo("", [fila("log-out", "Cerrar sesión en este celular", "", { peligro: true, sinFlecha: true })]) +
+          `</div>`;
+        const MENU =
+          `<button class="velo" data-cierra-menu aria-label="Cerrar"></button><div class="hoja" role="dialog" aria-label="Anotar algo nuevo"><span class="asa"></span><h2>¿Qué quieres anotar?</h2><div class="menu-nuevo">${[
+            ["clipboard-list", "Un pedido", "Lo que lleva, la entrega y el pago"],
+            ["store", "Una venta de mostrador", "Sin cliente: eliges y cobras en un toque"],
+            ["package-check", "La producción", "Lo que hiciste hoy"],
+            ["receipt", "Un gasto", "El monto, el tipo y la foto de la boleta"],
+            ["coins", 'Un ingreso <em class="etq">Nuevo</em>', "Plata que entra sin un pedido"],
+          ]
+            .map(([i, t, s]) => `<button data-cierra-menu>${ic(i)}<span><b>${t}</b><small>${s}</small></span>${ic("chevron-right")}</button>`)
+            .join("")}</div></div>`;
+
+        /* ---------- Paso a paso (celulares quietos) ---------- */
+        // Una pantalla quieta, con el toque marcado en el elemento que diga el selector
+        const quieta = (html, selector, etiqueta, extra) =>
+          desde(html, (d) => {
+            if (selector) d.querySelector(selector)?.setAttribute("data-toca", etiqueta);
+            if (extra) extra(d);
+          });
+        const tel = (h3, desc, app) =>
+          `<article class="telefono estatico"><h3>${h3}</h3><p class="desc">${desc}</p><div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app">${app}</div><div class="gestos"></div></div></div></div></article>`;
+        document.getElementById("tira-ajustes").innerHTML =
+          tel("1. En Inicio, toca ⚙", "El ⚙ está arriba a la derecha, al lado de la campana.", quieta(PANTALLA.inicio, '[data-abre="ajustes"]', "Toca aquí")) +
+          tel("2. Se abre Ajustes", "Los ajustes del negocio y, al final, tu cuenta. La flecha de arriba vuelve a Inicio.", quieta(PANTALLA.ajustes, "[data-cierra]", "Para volver"));
+        document.getElementById("tira-clientes").innerHTML =
+          tel("1. En Pedidos, toca «Clientes»", "Arriba, debajo del título, hay dos opciones: Pedidos y Clientes.", quieta(PANTALLA.pedidos, '[data-va="clientes"]', "Toca aquí")) +
+          tel("2. Aparecen tus clientes", "Con la fidelidad y «No vuelven» arriba de la lista. «Pedidos» vuelve a la lista de pedidos.", quieta(PANTALLA.clientes, '[data-va="pedidos"]', "Para volver"));
+        document.getElementById("tira-gastos").innerHTML =
+          tel("1. En Reportes, toca la tarjeta «Gastos»", "O la tarjeta «Ingresos», para ver los ingresos.", quieta(PANTALLA.reportes, '[data-abre="gastos"]', "Toca aquí")) +
+          tel("2. Se abre la lista de gastos", "Los gastos del mes, con Tipos de gasto arriba. La flecha vuelve a Reportes.", quieta(PANTALLA.gastos, "[data-cierra]", "Para volver"));
+        document.getElementById("tira-ingreso").innerHTML =
+          tel("1. Toca el + de abajo", "En cualquier pantalla con la barra de abajo.", quieta(PANTALLA.inicio, "[data-menu]", "Toca aquí")) +
+          tel(
+            "2. Elige «Un ingreso»",
+            "Es la opción nueva, debajo de «Un gasto».",
+            quieta(PANTALLA.inicio + MENU, ".menu-nuevo button:last-child", "Toca aquí"),
+          );
+
+        /* ---------- Pruébalo tú ---------- */
+        const vista = (nombre, html, encima) =>
+          `<div class="vista ${encima ? "encima" : "base"}${!encima && nombre !== "inicio" ? " oculta" : ""}" data-vista="${nombre}">${html}</div>`;
+        document.getElementById("fila-prueba").innerHTML =
+          `<article class="telefono" id="prueba-tel"><h3>La app, con todo en su lugar</h3><p class="guia-paso" id="guia"></p><div class="encaje"><div class="marco"><div class="pantalla"><div class="camara"></div><div class="app"><div class="pila">` +
+          ["inicio", "pedidos", "clientes", "stock", "reportes"].map((v) => vista(v, PANTALLA[v], false)).join("") +
+          ["ajustes", "gastos", "ingresos"].map((v) => vista(v, PANTALLA[v], true)).join("") +
+          `<div class="capa oculta" data-capa="menu">${MENU}</div>` +
+          `</div></div><div class="gestos"></div></div></div></div><button type="button" class="reiniciar" id="reiniciar">Empezar de nuevo</button></article>`;
+
+        const prueba = document.getElementById("prueba-tel");
+        const V = Object.fromEntries([...prueba.querySelectorAll("[data-vista]")].map((v) => [v.dataset.vista, v]));
+        const capa = prueba.querySelector('[data-capa="menu"]');
+        const guia = document.getElementById("guia");
+        const GUIA = {
+          inicio: ["Estás en Inicio.", "Nuevo: el ⚙ de arriba a la derecha abre Ajustes. Abajo, la barra: Inicio, Pedidos, +, Stock y Reportes.", () => V.inicio.querySelector('[data-abre="ajustes"]'), "Ajustes"],
+          pedidos: ["Estás en Pedidos.", "Arriba están «Pedidos» y «Clientes». Toca «Clientes».", () => V.pedidos.querySelector('[data-va="clientes"]'), "Toca aquí"],
+          clientes: ["Estás en Clientes, dentro de Pedidos.", "Arriba de la lista: la fidelidad y «No vuelven». «Pedidos» vuelve a la lista de pedidos.", null],
+          stock: ["Estás en Stock.", "Nuevo: arriba, Productos y precios. Ahí cambias un precio sin ir a Ajustes.", null],
+          reportes: ["Estás en Reportes, que ahora es un botón de abajo.", "Toca la tarjeta «Gastos» o «Ingresos» para ver su lista. «Exportar a Excel» está debajo de Semana / Mes.", () => V.reportes.querySelector('[data-abre="gastos"]'), "Toca aquí"],
+          gastos: ["Estás en Gastos.", "Los gastos del mes, con Tipos de gasto arriba. La flecha vuelve a Reportes.", () => V.gastos.querySelector("[data-cierra]"), "Para volver"],
+          ingresos: ["Estás en Ingresos.", "Lo que entró este mes, por medio de pago. La flecha vuelve a Reportes.", () => V.ingresos.querySelector("[data-cierra]"), "Para volver"],
+          ajustes: ["Estás en Ajustes.", "Arriba, lo de tu negocio; al final, tu cuenta (huella, PIN, avisos y cerrar sesión). La flecha vuelve a Inicio.", () => V.ajustes.querySelector("[data-cierra]"), "Para volver"],
+          menu: ["Elige qué anotar.", "«Un ingreso» es la opción nueva. Toca fuera de la hoja para cerrarla.", () => capa.querySelector(".menu-nuevo button:last-child"), "Toca aquí"],
+        };
+        let base = "inicio";
+        let encima = null;
+        let menu = false;
+        function pintar() {
+          ["inicio", "pedidos", "clientes", "stock", "reportes"].forEach((v) => {
+            V[v].classList.toggle("oculta", v !== base);
+            V[v].classList.toggle("tapada", v === base && encima !== null);
+          });
+          ["ajustes", "gastos", "ingresos"].forEach((v) => V[v].classList.toggle("abierta", v === encima));
+          capa.classList.toggle("oculta", !menu);
+          prueba.querySelectorAll("[data-toca]").forEach((el) => el.removeAttribute("data-toca"));
+          const [donde, que, objetivo, etiqueta] = GUIA[menu ? "menu" : encima || base];
+          if (objetivo) objetivo()?.setAttribute("data-toca", etiqueta);
+          guia.innerHTML = `<b>${donde}</b>${que}`;
+        }
+        const BOTON = { Inicio: "inicio", Pedidos: "pedidos", Stock: "stock", Reportes: "reportes" };
+        // Solo valen los toques de la navegación; nada llega a la maqueta de la app
+        prueba.addEventListener(
+          "click",
+          (e) => {
+            e.stopPropagation();
+            if (e.target.closest("#reiniciar")) {
+              base = "inicio";
+              encima = null;
+              menu = false;
+              return pintar();
+            }
+            e.preventDefault();
+            if (menu) {
+              if (e.target.closest("[data-cierra-menu]")) menu = false;
+              return pintar();
+            }
+            if (e.target.closest("[data-menu]")) {
+              menu = true;
+              return pintar();
+            }
+            const tab = e.target.closest(".tabs .tab");
+            if (tab && BOTON[tab.textContent.trim()]) {
+              base = BOTON[tab.textContent.trim()];
+              encima = null;
+              return pintar();
+            }
+            const va = e.target.closest("[data-va]");
+            if (va) {
+              base = va.dataset.va;
+              return pintar();
+            }
+            const abre = e.target.closest("[data-abre]");
+            if (abre) {
+              encima = abre.dataset.abre;
+              return pintar();
+            }
+            if (e.target.closest("[data-cierra]")) {
+              encima = null;
+              pintar();
+            }
+          },
+          true,
+        );
+        pintar();
+        // Los celulares se armaron después de que la maqueta los midiera: que los vuelva a encajar
+        window.dispatchEvent(new Event("resize"));
+      })();
+    </script>
+  </body>
+</html>
