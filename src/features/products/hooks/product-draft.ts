@@ -18,8 +18,10 @@ export type ProductDraft = {
   description: string;
   allergens: string[];
   showOnWeb: boolean;
-  // Si ya se veía en la web al abrirlo: prenderlo ahora es «se publicó»
+  // Si ya tenía «Se ve en la web» al abrirlo (sigue viéndose aunque su foto todavía esté subiendo)
   wasOnWeb: boolean;
+  // Si ya estaba en la web, o completo y esperando la copia: guardarlo no es «se publicó»
+  wasPublished: boolean;
   // La foto nueva, todavía en el celular; la que ya está en la web; y si ya tiene una guardada
   photo: PickedPhoto | null;
   photoUrl: string | null;
@@ -64,6 +66,7 @@ export const emptyDraft = (): ProductDraft => ({
   allergens: [],
   showOnWeb: false,
   wasOnWeb: false,
+  wasPublished: false,
   photo: null,
   photoUrl: null,
   hasPhoto: false,
@@ -82,6 +85,10 @@ export const draftFrom = (product: Product): ProductDraft => ({
   allergens: product.allergens ?? [],
   showOnWeb: product.showOnWeb,
   wasOnWeb: product.showOnWeb && product.isActive,
+  wasPublished:
+    product.showOnWeb &&
+    product.isActive &&
+    (product.linkedToWeb || (product.hasPhoto && product.description !== null)),
   photo: null,
   photoUrl: product.imageUrl,
   hasPhoto: product.hasPhoto || product.imageUrl !== null,
@@ -121,3 +128,8 @@ export function inputFrom(draft: ProductDraft, showOnWeb: boolean): { input: Pro
     },
   };
 }
+
+// Si guardar esto lo saca a la web por primera vez (o de nuevo): la lista avisa «se publicó», con «Deshacer». También
+// uno de la puesta en marcha, que ya tenía «Se ve» y recién recibe su foto y su descripción
+export const publishes = (draft: ProductDraft, input: ProductInput): boolean =>
+  input.showOnWeb && !draft.wasPublished && draftMissing(draft) === null;

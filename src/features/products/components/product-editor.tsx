@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { ScrollView, Text, TextInput, View } from "react-native";
 
@@ -12,8 +13,9 @@ import { SwitchRow } from "@/components/ui/switch-row";
 import { useOnline } from "@/lib/use-online";
 import { useTheme } from "@/theme";
 
-import { draftMissing, inputFrom, useProductDraft } from "../hooks/product-draft";
+import { draftMissing, inputFrom, publishes, useProductDraft } from "../hooks/product-draft";
 import { saveProblem, useSaveProduct } from "../hooks/use-save-product";
+import { productsQuery } from "../queries/products";
 import { margin, marginLabel } from "../rules/margin";
 import { parsePrice } from "../rules/price";
 import { DESCRIPTION_MAX, webName } from "../rules/web";
@@ -35,6 +37,7 @@ export function ProductEditor({ title, onBack, onPreview, onSaved }: Props) {
   const { colors } = useTheme();
   const { draft, change } = useProductDraft();
   const { save, saving } = useSaveProduct();
+  const { data: products } = useQuery(productsQuery);
   const [problem, setProblem] = useState<string | null>(null);
   const missing = draftMissing(draft);
   // Prenderlo pide que no le falte nada; uno que ya se veía se puede dejar prendido mientras llega su foto
@@ -52,9 +55,9 @@ export function ProductEditor({ title, onBack, onPreview, onSaved }: Props) {
     setProblem(null);
     try {
       const product = await save(result.input, draft.photo);
-      onSaved(product, result.input.showOnWeb && !draft.wasOnWeb);
+      onSaved(product, publishes(draft, result.input));
     } catch (error) {
-      setProblem(saveProblem(error, draft.id === null, draft.name.trim()));
+      setProblem(saveProblem(error, draft.id, draft.name.trim(), products));
     }
   }
 

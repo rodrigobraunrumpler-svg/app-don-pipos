@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 
@@ -5,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { FormHeader } from "@/components/ui/form-header";
 import { useOnline } from "@/lib/use-online";
 
-import { inputFrom, useProductDraft } from "../hooks/product-draft";
+import { inputFrom, publishes, useProductDraft } from "../hooks/product-draft";
 import { saveProblem, useSaveProduct } from "../hooks/use-save-product";
+import { productsQuery } from "../queries/products";
 import { parsePrice } from "../rules/price";
 import type { Product } from "../schema/product";
 import { WebPreviewCard } from "./web-preview-card";
@@ -19,6 +21,7 @@ export function ProductPreview({ onBack, onSaved }: Props) {
   const online = useOnline();
   const { draft } = useProductDraft();
   const { save, saving } = useSaveProduct();
+  const { data: products } = useQuery(productsQuery);
   const [problem, setProblem] = useState<string | null>(null);
 
   async function publish() {
@@ -29,9 +32,9 @@ export function ProductPreview({ onBack, onSaved }: Props) {
     }
     setProblem(null);
     try {
-      onSaved(await save(result.input, draft.photo), !draft.wasOnWeb);
+      onSaved(await save(result.input, draft.photo), publishes(draft, result.input));
     } catch (error) {
-      setProblem(saveProblem(error, draft.id === null, draft.name.trim()));
+      setProblem(saveProblem(error, draft.id, draft.name.trim(), products));
     }
   }
 

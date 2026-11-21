@@ -6,3 +6,7 @@ test("la foto espera la señal y, si falla, se guarda un día", () => {
   expect(productPhotoMutation.networkMode).toBe("online");
   expect(productPhotoMutation.gcTime).toBe(24 * 60 * 60_000);
 });
+
+test("las fotos suben de a una: dos cambios seguidos llegan en orden", () => {
+  expect(productPhotoMutation.scope).toEqual({ id: "product-photo" });
+});

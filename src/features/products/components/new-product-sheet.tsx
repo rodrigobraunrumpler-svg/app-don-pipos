@@ -16,7 +16,7 @@ import { parsePrice } from "../rules/price";
 
 type Props = { onClose: () => void; onSaved: (message: string) => void };
 
-// Agregar un producto: nombre y precio. La foto y la descripción se ponen en el panel de la web
+// Agregar un producto: nombre y precio. La foto y la descripción se agregan después, en Productos y precios
 export function NewProductSheet({ onClose, onSaved }: Props) {
   const online = useOnline();
   const { colors } = useTheme();
@@ -71,7 +71,7 @@ export function NewProductSheet({ onClose, onSaved }: Props) {
       <Text className="mb-2 mt-3.5 font-extrabold text-sm text-text-secondary">Precio</Text>
       <MoneyInput label="Precio en soles" value={priceText} onChangeText={setPriceText} />
       <Text className="mt-2 text-[13px] text-text-secondary">
-        La foto y la descripción se ponen en el panel de la web.
+        La foto y la descripción se agregan después, en Productos y precios.
       </Text>
       {problem ? <Text className="mt-2 font-bold text-sm text-danger">{problem}</Text> : null}
       <View className="mt-4">

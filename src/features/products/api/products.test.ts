@@ -91,3 +91,23 @@ test("ordenar manda los alfajores en el orden nuevo y vuelve la lista como queda
   await expect(reorderProducts(["p2", "p1"])).resolves.toEqual([SAVED]);
   expect(mockRpc).toHaveBeenLastCalledWith("reorder_products", { p_ids: ["p2", "p1"] });
 });
+
+test("una descripción vacía se manda vacía (se borra); sin descripción ni alérgenos no se mandan (quedan como están)", async () => {
+  mockRpc.mockResolvedValue({ data: SAVED, error: null });
+  const base = {
+    id: "p1",
+    expectedVersion: 1,
+    name: "Coqueta",
+    priceCents: 1200,
+    costCents: null,
+    minStock: 6,
+    showOnWeb: true,
+  };
+  await saveProduct({ ...base, description: null, allergens: [] });
+  expect(mockRpc).toHaveBeenLastCalledWith(
+    "save_product",
+    expect.objectContaining({ p_description: "", p_allergens: [] }),
+  );
+  await saveProduct(base);
+  expect(mockRpc.mock.lastCall?.[1]).toMatchObject({ p_description: undefined, p_allergens: undefined });
+});

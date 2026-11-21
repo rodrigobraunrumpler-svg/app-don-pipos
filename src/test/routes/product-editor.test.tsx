@@ -32,16 +32,16 @@ jest.mock("@/features/products/api/products", () => ({
   uploadProductPhoto: (input: unknown) => mockUpload(input),
   setProductPhoto: (id: string, path: string) => mockSetPhoto(id, path),
 }));
-jest.mock("@/features/businesses/api/business", () => ({
-  getBusiness: async () => jest.requireActual("@/test/business").TEST_BUSINESS,
-}));
+const mockGetBusiness = jest.fn();
+jest.mock("@/features/businesses/api/business", () => ({ getBusiness: () => mockGetBusiness() }));
 const mockPick = jest.fn();
 jest.mock("expo-image-picker", () => ({
   requestCameraPermissionsAsync: async () => ({ granted: true }),
   launchCameraAsync: () => mockPick(),
   launchImageLibraryAsync: () => mockPick(),
 }));
-jest.mock("@/lib/images", () => ({ shrinkPhoto: async () => "QUJD" }));
+const mockShrink = jest.fn();
+jest.mock("@/lib/images", () => ({ shrinkPhoto: () => mockShrink() }));
 
 const photo = (side: number) => ({
   canceled: false,
@@ -60,6 +60,8 @@ const saved = (over: object) => ({
 beforeEach(() => {
   mockState.list = [COQUETA];
   mockPick.mockReset().mockResolvedValue(photo(1200));
+  mockShrink.mockReset().mockResolvedValue("QUJD");
+  mockGetBusiness.mockReset().mockResolvedValue(jest.requireActual("@/test/business").TEST_BUSINESS);
   mockSave.mockReset().mockImplementation(async (input: { showOnWeb: boolean; id: string | null }) => {
     const product = saved({ showOnWeb: input.showOnWeb, version: input.id ? 3 : 1 });
     mockState.list = [COQUETA, product];

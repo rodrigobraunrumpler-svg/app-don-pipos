@@ -22,6 +22,8 @@ export const productPhotoMutation = mutationOptions({
   meta: { invalidates: [productKeys.all] },
   // Sin señal espera a que vuelva (sin gastar sus reintentos); con mala señal se reintenta sola
   networkMode: "online",
+  // De a una: dos fotos seguidas del mismo alfajor llegan en orden
+  scope: { id: "product-photo" },
   retry: 3,
   // Una que falla queda un día en la caché (no 5 minutos): la lista la avisa con «Reintentar las fotos»
   gcTime: 24 * 60 * 60_000,

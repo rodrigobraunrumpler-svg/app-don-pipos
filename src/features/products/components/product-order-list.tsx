@@ -18,7 +18,8 @@ export function ProductOrderList({ locked, onDone }: { locked: boolean; onDone: 
   const [order, setOrder] = useState<Product[] | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const reorder = useMutation(reorderProductsMutation);
-  const items = order ?? data ?? [];
+  // Con «los más vendidos primero» manda la base: lo movido a mano antes no cuenta
+  const items = (locked ? null : order) ?? data ?? [];
 
   function move(index: number, delta: number) {
     const next = [...items];
@@ -29,7 +30,7 @@ export function ProductOrderList({ locked, onDone }: { locked: boolean; onDone: 
   }
 
   async function done() {
-    if (!order) return onDone();
+    if (!order || locked) return onDone();
     try {
       await reorder.mutateAsync(order.map((product) => product.id));
       onDone();

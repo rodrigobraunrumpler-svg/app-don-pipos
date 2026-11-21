@@ -21,8 +21,9 @@ export async function saveProduct(input: ProductInput): Promise<Product> {
     p_cost_cents: orNull(input.costCents),
     p_min_stock: input.minStock,
     p_show_on_web: input.showOnWeb,
-    p_description: input.description ?? undefined,
-    p_allergens: input.allergens ?? [],
+    // Sin descripción ni alérgenos no se mandan: la base los deja como están. Vacíos a propósito, se borran
+    p_description: input.description === undefined ? undefined : (input.description ?? ""),
+    p_allergens: input.allergens,
   });
   if (error) throw toAppError(error);
   const parsed = productSchema.safeParse(data);

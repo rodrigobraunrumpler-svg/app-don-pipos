@@ -156,3 +156,17 @@ test("al publicar uno nuevo, la lista sigue la copia y, cuando ya está en la we
   expect(screen.queryByText("Coqueta ya está en la web.")).toBeNull();
   expect(screen.queryByText("Coqueta se publicó en la web.")).toBeNull();
 });
+
+test("si después de mover prendes «Los más vendidos primero», «Listo» no guarda el orden a mano", async () => {
+  await open();
+  await fireEvent.press(await screen.findByRole("button", { name: "Ordenar" }));
+  await fireEvent.press(await screen.findByRole("button", { name: "Bajar Coqueta" }));
+  await fireEvent(await screen.findByRole("switch", { name: "Los más vendidos primero" }), "valueChange", true);
+  await waitFor(() => expect(mockSettings).toHaveBeenCalled());
+  // Bloqueado, vuelve el orden de la base: Coqueta arriba, sin flechas
+  await waitFor(() => expect(screen.getByRole("button", { name: "Subir Coqueta" })).toBeDisabled());
+  expect(screen.getByRole("button", { name: "Bajar Coqueta" })).toBeDisabled();
+  await fireEvent.press(screen.getByRole("button", { name: "Listo" }));
+  await waitFor(() => expect(screen).toHavePathname("/settings/products"));
+  expect(mockReorder).not.toHaveBeenCalled();
+});
