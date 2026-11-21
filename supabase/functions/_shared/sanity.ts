@@ -9,10 +9,11 @@ export type WebState = {
   sortOrder: number;
   isNew: boolean;
 };
+// Sin nombre ni alérgenos: es uno que nació en el panel, y esos quedan como están allá
 export type WebContent = {
-  name: string;
+  name?: string;
   description?: string;
-  allergens: string[];
+  allergens?: string[];
   photoPath?: string;
   photoChanged: boolean;
   alt: string;
@@ -56,9 +57,9 @@ export function webFields(item: WebSyncItem, imageAssetId?: string): Fields {
   else unset.push("badge");
   const content = item.content;
   if (content) {
-    set.name = content.name;
+    if (content.name) set.name = content.name;
     if (content.description) set.description = content.description;
-    set.allergens = content.allergens;
+    if (content.allergens) set.allergens = content.allergens;
     if (imageAssetId)
       set.image = {
         _type: "image",

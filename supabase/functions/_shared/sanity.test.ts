@@ -84,6 +84,13 @@ test("con contenido, también el nombre, la descripción, los alérgenos y la fo
   assert.equal("image" in webFields(item({ content: CONTENT })).set, false, "sin foto subida, la foto no se toca");
 });
 
+test("de uno que nació en el panel, sin nombre ni alérgenos en el contenido, no se tocan los suyos", () => {
+  const panel = { photoChanged: false, alt: "Alfajor de Manteadita de Don Pipos" };
+  const { set } = webFields(item({ content: panel }));
+  assert.equal("name" in set, false);
+  assert.equal("allergens" in set, false);
+});
+
 test("el cambio va al documento y, si alguien lo tiene abierto en Studio, a su borrador", () => {
   const fields = { set: { priceMinor: 1300 }, unset: ["badge"] };
   assert.deepEqual(patchMutations("product-don-pipos-alfajor-tropi", fields), [

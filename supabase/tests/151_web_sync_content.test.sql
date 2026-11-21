@@ -27,8 +27,8 @@ select pg_temp.queue('00000000-0000-4000-8000-0000000151c1', 'state');
 select is(pg_temp.item('00000000-0000-4000-8000-0000000151c1') -> 'content', 'null'::jsonb, 'un cambio de precio no manda el contenido');
 select pg_temp.queue('00000000-0000-4000-8000-0000000151c1', 'content');
 select is(pg_temp.item('00000000-0000-4000-8000-0000000151c1') -> 'content',
-  '{"name": "Alfajor Coqueta", "allergens": [], "photoChanged": false, "alt": "Alfajor Coqueta de Don Pipos"}'::jsonb,
-  'uno de contenido sí: el nombre para la web; sin descripción en la app, la del panel no se pisa');
+  '{"photoChanged": false, "alt": "Alfajor Coqueta de Don Pipos"}'::jsonb,
+  'uno de contenido sí; de uno que nació en el panel no se pisan el nombre, ni la descripción o los alérgenos que la app no tiene');
 select is((pg_temp.item('00000000-0000-4000-8000-0000000151c1') -> 'payload' ->> 'sortOrder')::integer, 10, 'el orden de la web es el de la app por 10');
 
 -- 2. Uno que todavía no está en la web, completo y visible: se crea, con su foto

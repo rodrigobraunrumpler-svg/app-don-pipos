@@ -51,7 +51,7 @@ async function syncOne(item: WebSyncItem, linked: Linked): Promise<Outcome> {
     const result: Record<string, string> = { productId: item.productId };
     let assetId: string | undefined;
     if (item.content?.photoChanged && item.content.photoPath) {
-      const name = `${slugFor(item.content.name)}.jpg`;
+      const name = `${item.slug ?? slugFor(item.content.name ?? "alfajor")}.jpg`;
       const asset = await uploadImage(fetch, config, await photo(item.content.photoPath), name);
       assetId = asset.id;
       result.imageUrl = asset.url;
@@ -61,7 +61,7 @@ async function syncOne(item: WebSyncItem, linked: Linked): Promise<Outcome> {
       const error = await sendMutations(fetch, config, patchMutations(item.sanityId, webFields(item, assetId)));
       return { error, result: error ? null : result };
     }
-    if (!item.content) return { error: "Sin contenido para crearlo en la web", result: null };
+    if (!item.content?.name) return { error: "Sin contenido para crearlo en la web", result: null };
     if (!categoryId) return { error: "Falta SANITY_DON_PIPOS_CATEGORY (pnpm web connect)", result: null };
     const base = item.slug ?? slugFor(item.content.name);
     const { slug, existingId } = await findSlug(fetch, config, base, item.content.name, linked);

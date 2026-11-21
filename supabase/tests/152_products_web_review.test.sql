@@ -1,7 +1,7 @@
 -- Fase 9, después de la revisión final: lo que cambia mientras se crea la página de un alfajor llega igual a la web, la
 -- copia no se traba si un documento ya es de otro alfajor, dos alfajores no comparten nombre en la web y la foto que sube
 -- la app no causa conflictos (docs/plan/fase-9-alfajores-web.md, «Después de la revisión final»)
-select plan(12);
+select plan(16);
 
 select tests.make_user('00000000-0000-4000-8000-0000000152a1');
 insert into public.businesses (id, owner_id, name) values
@@ -76,3 +76,11 @@ select is((select p.version from public.products p where p.id = '00000000-0000-4
 select lives_ok($$select public.save_product('00000000-0000-4000-8000-0000000152c1', 1, 'Coqueta', 1250, null, 0, true, null, null)$$,
   'y guardar con la versión de antes de la foto funciona');
 select tests.logout();
+
+-- 6. Uno que nació en el panel (enlazado por el equipo) conserva su nombre de allá y sus alérgenos si la app no tiene;
+-- los que creó la app, y los que todavía no están en la web, llevan el nombre de la app
+select is(private.web_content('00000000-0000-4000-8000-0000000152c1') ? 'name', false, 'el nombre del panel no se pisa');
+select is(private.web_content('00000000-0000-4000-8000-0000000152c1') ? 'allergens', false, 'ni sus alérgenos, si la app no tiene');
+update public.products set allergens = '{gluten}' where id = '00000000-0000-4000-8000-0000000152c1';
+select is(private.web_content('00000000-0000-4000-8000-0000000152c1') -> 'allergens', '["gluten"]'::jsonb, 'los que pone la app sí van');
+select is(private.web_content('00000000-0000-4000-8000-0000000152c2') ->> 'name', 'Alfajor Tropi', 'uno que creó la app lleva el nombre de la app');
