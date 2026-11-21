@@ -1,8 +1,13 @@
 import type { ExpoConfig } from "expo/config";
 
+// El proyecto en Expo (EAS): lo creó `eas init`. No es un secreto: va dentro de la APK
+const EAS_PROJECT_ID = "b29dca10-383e-4a1c-be5f-f6fdf09c6832";
+
 const config: ExpoConfig = {
   name: "Don Pipos",
   slug: "varmar-app",
+  // La organización de Expo donde vive el proyecto (EAS)
+  owner: "javierfullstacks-team",
   scheme: "donpipos",
   version: "0.1.0",
   orientation: "portrait",
@@ -40,6 +45,11 @@ const config: ExpoConfig = {
     ["expo-notifications", { icon: "./assets/notification-icon.png", color: "#354b2e" }],
   ],
   experiments: { typedRoutes: true, reactCompiler: true },
+  extra: { eas: { projectId: EAS_PROJECT_ID } },
+  // Las correcciones llegan sin reinstalar la APK (expo-updates), a las que tienen esta misma versión. Cuando cambie
+  // algo nativo (una librería nueva), sube `version` y se compila otra APK
+  updates: { url: `https://u.expo.dev/${EAS_PROJECT_ID}` },
+  runtimeVersion: { policy: "appVersion" },
 };
 
 export default config;

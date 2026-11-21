@@ -47,3 +47,22 @@ test("eas.json arma la APK de prueba y la de producción, cada una con su canal 
   assert.deepEqual(eas.build.production.android, { buildType: "apk" });
   assert.equal(eas.build.production.channel, "produccion");
 });
+
+test("la APK sabe de qué proyecto de Expo es y recibe actualizaciones para su misma versión", () => {
+  assert.equal(config.owner, "javierfullstacks-team");
+  const projectId = config.extra?.eas?.projectId ?? "";
+  assert.match(projectId, /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/);
+  assert.equal(config.updates?.url, `https://u.expo.dev/${projectId}`);
+  assert.deepEqual(config.runtimeVersion, { policy: "appVersion" });
+});
+
+test("cada perfil compila con el Node y el pnpm del proyecto, y toma sus variables de Expo", () => {
+  const eas = JSON.parse(readFileSync(join(ROOT, "eas.json"), "utf8"));
+  const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
+  assert.match(eas.build.base.node, /^24\./);
+  assert.equal(`pnpm@${eas.build.base.pnpm}`, pkg.packageManager);
+  for (const profile of ["preview", "production"]) {
+    assert.equal(eas.build[profile].extends, "base");
+    assert.equal(eas.build[profile].environment, profile);
+  }
+});
