@@ -93,14 +93,13 @@ test("con un PIN equivocado dice cuántos intentos quedan y vacía los puntos", 
   expect(screen.getByLabelText("0 de 6 números")).toBeOnTheScreen();
 });
 
-test("con la espera, muestra la hora de Lima", async () => {
+test("con la espera, muestra hasta qué hora de Lima", async () => {
+  jest.useFakeTimers({ now: new Date("2026-11-19T16:40:00.000Z"), advanceTimers: true });
   mockSignIn.mockResolvedValueOnce({ status: "locked", retryAt: new Date("2026-11-19T16:55:00.000Z") });
   await setup();
   await type("000001");
-  expect(await screen.findByText("Espera 15 minutos")).toBeOnTheScreen();
-  expect(
-    screen.getByText("Hubo 5 intentos con un PIN equivocado. Por seguridad, podrás intentarlo otra vez a las 11:55."),
-  ).toBeOnTheScreen();
+  expect(await screen.findByText("Espera hasta las 11:55")).toBeOnTheScreen();
+  jest.useRealTimers();
 });
 
 test("con la cuenta bloqueada lo dice, y «Volver» regresa al formulario (por si el número estaba mal)", async () => {

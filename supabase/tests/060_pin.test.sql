@@ -1,6 +1,6 @@
 -- El PIN y los intentos (docs/spec/auth.md §2 y §3). El dueño …000a tiene el número +51900000901; el +51900000999 no tiene PIN.
 -- Las pruebas usan números 900 000 9xx: los 1xx son de los datos DEMO del proyecto de desarrollo.
-select plan(44);
+select plan(49);
 
 select tests.make_user('00000000-0000-4000-8000-00000000000a');
 
@@ -30,16 +30,32 @@ select ok(
 -- 5. Durante la espera
 select is(private.check_pin('+51900000901', '197346') ->> 'status', 'locked', 'durante la espera ni el PIN correcto entra');
 
--- 6. Vencida la espera, cuatro errores más y el décimo bloquea la cuenta
+-- 6. Vencida la espera, cuatro errores más y el décimo da una hora de espera (la decisión I3: ningún error bloquea)
 update private.sign_in_attempts set locked_until = now() - interval '1 second' where phone = '+51900000901';
-select is(private.check_pin('+51900000901', '000001'), '{"status": "wrong_pin", "attemptsLeft": 4}'::jsonb, 'después de la espera: quedan 4 hasta el bloqueo');
+select is(private.check_pin('+51900000901', '000001'), '{"status": "wrong_pin", "attemptsLeft": 4}'::jsonb, 'después de la espera: quedan 4 hasta la siguiente');
 select is(private.check_pin('+51900000901', '000001'), '{"status": "wrong_pin", "attemptsLeft": 3}'::jsonb, 'quedan 3');
 select is(private.check_pin('+51900000901', '000001'), '{"status": "wrong_pin", "attemptsLeft": 2}'::jsonb, 'quedan 2');
 select is(private.check_pin('+51900000901', '000001'), '{"status": "wrong_pin", "attemptsLeft": 1}'::jsonb, 'queda 1');
-select is(private.check_pin('+51900000901', '000001'), '{"status": "hard_locked"}'::jsonb, 'el décimo error bloquea la cuenta');
+select ok(
+  (private.check_pin('+51900000901', '000001') ->> 'retryAt')::timestamptz between now() + interval '59 minutes' and now() + interval '61 minutes',
+  'el décimo error da una hora de espera');
 
--- 7. Con la cuenta bloqueada
-select is(private.check_pin('+51900000901', '197346'), '{"status": "hard_locked"}'::jsonb, 'bloqueada, ni el PIN correcto entra');
+-- 7. El error 15, y de ahí cada 5, dan 24 horas
+update private.sign_in_attempts set locked_until = now() - interval '1 second' where phone = '+51900000901';
+select is((select count(*) from generate_series(1, 4) where private.check_pin('+51900000901', '000001') ->> 'status' = 'wrong_pin'), 4::bigint, 'cuatro errores más');
+select ok(
+  (private.check_pin('+51900000901', '000001') ->> 'retryAt')::timestamptz between now() + interval '23 hours 59 minutes' and now() + interval '24 hours 1 minute',
+  'el error 15 da 24 horas de espera');
+update private.sign_in_attempts set locked_until = now() - interval '1 second' where phone = '+51900000901';
+select is((select count(*) from generate_series(1, 4) where private.check_pin('+51900000901', '000001') ->> 'status' = 'wrong_pin'), 4::bigint, 'y otros cuatro');
+select ok(
+  (private.check_pin('+51900000901', '000001') ->> 'retryAt')::timestamptz between now() + interval '23 hours 59 minutes' and now() + interval '24 hours 1 minute',
+  'el error 20 también da 24 horas');
+select ok((select hard_locked_at is null from private.sign_in_attempts where phone = '+51900000901'), 'ningún error bloquea la cuenta');
+
+-- 7b. El bloqueo que pone el equipo a mano sigue bloqueando
+update private.sign_in_attempts set locked_until = null, hard_locked_at = now() where phone = '+51900000901';
+select is(private.check_pin('+51900000901', '197346'), '{"status": "hard_locked"}'::jsonb, 'bloqueada por el equipo, ni el PIN correcto entra');
 
 -- 8. El equipo pone el PIN otra vez y la cuenta se desbloquea
 select lives_ok($$select private.set_pin('00000000-0000-4000-8000-00000000000a', '+51900000901', '197346')$$, 'el equipo pone el PIN otra vez');

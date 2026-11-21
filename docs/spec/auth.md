@@ -33,8 +33,8 @@ Los intentos se cuentan por número, en su propia tabla (decidido al planear la 
 |---|---|---|
 | `phone` | `phone_pe` | Llave primaria |
 | `failed_attempts` | int ≥ 0 | Errores seguidos |
-| `locked_until` | timestamptz, puede ir vacío | La espera de 15 minutos |
-| `hard_locked_at` | timestamptz, puede ir vacío | Bloqueada hasta que el equipo la revise |
+| `locked_until` | timestamptz, puede ir vacío | La espera: 15 minutos, 1 hora o 24 horas |
+| `hard_locked_at` | timestamptz, puede ir vacío | Bloqueada a mano por el equipo (ningún error la pone, fase 8) |
 | `updated_at` | timestamptz | |
 
 Son números que alguien escribió: las filas sin cambios hace más de 30 días se borran cada noche, salvo las bloqueadas de un número que sí tiene PIN (Ley 29733).
@@ -52,7 +52,7 @@ Son números que alguien escribió: las filas sin cambios hace más de 30 días 
 
 - **Edge Function `sign-in-with-pin`** (`{ phone, pin }`):
   1. Normaliza el número.
-  2. Llama a `private.check_pin(phone, pin)`, que solo puede usar el servidor. En una sola operación revisa los bloqueos, compara el PIN y suma o reinicia los errores: con 5 seguidos, 15 minutos de espera; con 10, la cuenta queda bloqueada.
+  2. Llama a `private.check_pin(phone, pin)`, que solo puede usar el servidor. En una sola operación revisa los bloqueos, compara el PIN y suma o reinicia los errores: cada 5 seguidos, una espera más larga: 15 minutos con 5, 1 hora con 10 y 24 horas con 15 o más. Ningún error bloquea la cuenta (decisión I3, fase 8): con el número del dueño, que es público, cualquiera podría dejarlo sin entrar.
   3. Si el PIN es correcto, abre la sesión con el correo interno y la contraseña calculada, y devuelve los tokens.
   4. Puede responder:
      - `ok`, con la sesión;
@@ -104,8 +104,8 @@ Son números que alguien escribió: las filas sin cambios hace más de 30 días 
   - el número con +51;
   - el campo del PIN con 6 puntos y un teclado propio. Al sexto número se comprueba solo («Comprobando…»);
   - «PIN incorrecto» con los intentos que quedan;
-  - «Espera 15 minutos», con la hora, y «Pedir un PIN nuevo al equipo» (un enlace al WhatsApp de la agencia);
-  - «Tu cuenta está bloqueada», con «Pedir un PIN nuevo al equipo» y «Volver» (por si el número estaba mal);
+  - «Espera hasta las 10:55» (o «hasta mañana a las…»), que cada vez es más larga, y «Pedir un PIN nuevo al equipo» (un enlace al WhatsApp de la agencia);
+  - «Tu cuenta está bloqueada» (solo si el equipo la bloqueó a mano), con «Pedir un PIN nuevo al equipo» y «Volver» (por si el número estaba mal);
   - sin internet, el teclado se apaga;
   - después de ingresar, ofrece usar la huella.
 - **Entrar:**
@@ -132,7 +132,7 @@ El teclado y los puntos son genéricos y viven en `components/ui`.
 ## 8. Pruebas que deben pasar
 
 **Servidor:**
-- Con 5 errores, espera de 15 minutos; con 10, la cuenta bloqueada. Un acierto reinicia el contador.
+- Con 5 errores, espera de 15 minutos; con 10, de 1 hora; con 15 y 20, de 24 horas. Ningún error bloquea la cuenta; el bloqueo del equipo sí. Un acierto reinicia el contador.
 - Un número que no existe responde igual que un PIN incorrecto.
 - La sesión devuelta sirve para leer los datos del negocio.
 - El hash nunca sale en ninguna respuesta.
