@@ -27,3 +27,9 @@ test("a la una dice «a la 01:20», no «a las»", async () => {
   await renderWithProviders(<WaitNotice retryAt={new Date("2026-11-20T06:20:00.000Z")} onBack={jest.fn()} />);
   expect(screen.getByText("Espera hasta mañana a la 01:20")).toBeOnTheScreen();
 });
+
+test("a las 18:30 de Lima ya es mañana en UTC: una espera hasta las 19:30 sigue siendo de hoy", async () => {
+  jest.setSystemTime(new Date("2026-11-19T23:30:00.000Z"));
+  await renderWithProviders(<WaitNotice retryAt={new Date("2026-11-20T00:30:00.000Z")} onBack={jest.fn()} />);
+  expect(screen.getByText("Espera hasta las 19:30")).toBeOnTheScreen();
+});

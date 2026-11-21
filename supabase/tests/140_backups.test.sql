@@ -31,3 +31,5 @@ select throws_ok($$select count(*) from private.backup_runs$$, '42501', null, 'l
 select throws_ok($$select private.record_backup(now(), now(), true, 1, null)$$, '42501', null, 'la app no anota copias');
 select tests.login_as_anon();
 select throws_ok($$select public.backup_status()$$, '42501', null, 'sin sesión no ve el estado');
+
+select * from finish();

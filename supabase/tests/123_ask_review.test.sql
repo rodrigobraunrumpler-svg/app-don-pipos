@@ -16,3 +16,5 @@ select is((select (e ->> 'isDefault')::boolean from jsonb_array_elements(public.
   'sale en la lista de mensajes, con el texto original');
 select lives_ok($$select public.update_template('ask_review', 1, 'Hola {nombre}, ¿nos dejas tu opinión? {enlace}')$$, 'se puede cambiar con su nombre y su enlace');
 select throws_ok($$select public.update_template('ask_review', 2, 'Hola {nombre}, tu pedido {numero}')$$, 'P0001', 'invalid', 'pero no con marcadores que no son suyos');
+
+select * from finish();

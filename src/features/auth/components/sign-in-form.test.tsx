@@ -68,6 +68,8 @@ beforeEach(() => {
   mockSupportWhatsapp = "51900000999";
   onlineManager.setOnline(true);
 });
+// Una prueba que prende los relojes falsos no los deja prendidos para las demás, aunque falle a la mitad
+afterEach(() => jest.useRealTimers());
 
 test("al sexto número ingresa una sola vez y muestra «Comprobando…»", async () => {
   let finish: (value: unknown) => void = () => undefined;
@@ -99,7 +101,6 @@ test("con la espera, muestra hasta qué hora de Lima", async () => {
   await setup();
   await type("000001");
   expect(await screen.findByText("Espera hasta las 11:55")).toBeOnTheScreen();
-  jest.useRealTimers();
 });
 
 test("con la cuenta bloqueada lo dice, y «Volver» regresa al formulario (por si el número estaba mal)", async () => {

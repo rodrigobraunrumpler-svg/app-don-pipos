@@ -84,3 +84,5 @@ select is(private.web_content('00000000-0000-4000-8000-0000000152c1') ? 'allerge
 update public.products set allergens = '{gluten}' where id = '00000000-0000-4000-8000-0000000152c1';
 select is(private.web_content('00000000-0000-4000-8000-0000000152c1') -> 'allergens', '["gluten"]'::jsonb, 'los que pone la app sí van');
 select is(private.web_content('00000000-0000-4000-8000-0000000152c2') ->> 'name', 'Alfajor Tropi', 'uno que creó la app lleva el nombre de la app');
+
+select * from finish();

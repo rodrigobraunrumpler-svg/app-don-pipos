@@ -71,3 +71,5 @@ update public.products set web_published_at = now() - interval '10 days' where i
 select is(private.expire_new_badges(), 1, 'la que cumplió 30 días manda su estado sin «Nuevo»');
 select is((select count(*)::integer from private.web_sync_outbox o where o.product_id = '00000000-0000-4000-8000-0000000073c1' and o.sent_at is null), 1, 'una fila para la web');
 select is((select count(*)::integer from cron.job j where j.jobname = 'expire-new-badges' and j.schedule = '45 8 * * *'), 1, 'se revisa cada día');
+
+select * from finish();

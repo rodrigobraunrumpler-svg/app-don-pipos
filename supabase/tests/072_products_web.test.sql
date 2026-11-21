@@ -103,3 +103,5 @@ select throws_ok(format('update public.products set photo_path = null where id =
 select tests.login_as('00000000-0000-4000-8000-0000000072a2');
 select throws_ok(format('select public.set_product_photo(%L, %L)', current_setting('t.p'), '00000000-0000-4000-8000-0000000072b2/' || current_setting('t.p') || '/' || gen_random_uuid() || '.jpg'),
   'P0001', 'not_found', 'el dueño de otro negocio no le pone foto');
+
+select * from finish();

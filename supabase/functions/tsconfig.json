@@ -11,6 +11,6 @@
     "noEmit": true,
     "skipLibCheck": true
   },
-  "include": ["_shared/**/*.ts"],
+  "include": ["deno.d.ts", "_shared/**/*.ts", "*/index.ts"],
   "exclude": ["_shared/**/*.test.ts"]
 }

@@ -57,3 +57,5 @@ select is((select w.pending from private.web_sync_pending('00000000-0000-4000-80
 select set_config('request.jwt.claims', '', true);
 select is((select w.pending from private.web_sync_pending('00000000-0000-4000-8000-0000000153b2', '00000000-0000-4000-8000-0000000153c9') w),
   true, 'el servidor (sin usuario) sí');
+
+select * from finish();

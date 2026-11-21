@@ -100,3 +100,5 @@ select lives_ok($$insert into private.web_sync_outbox (business_id, product_id, 
 select is((select j.schedule from cron.job j where j.jobname = 'web-sync-retry'), '* * * * *', 'la copia se reintenta cada minuto');
 select is((select j.schedule from cron.job j where j.jobname = 'purge-cron-history'), '40 8 * * *', 'el historial del cron se limpia cada día');
 select ok(private.purge_cron_history() >= 0, 'y la limpieza corre');
+
+select * from finish();

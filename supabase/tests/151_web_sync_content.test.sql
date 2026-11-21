@@ -62,3 +62,5 @@ select is((pg_temp.item('00000000-0000-4000-8000-0000000151c2') -> 'content' ->>
 select private.finish_web_sync((select array_agg(o.id) from private.web_sync_outbox o where o.product_id = '00000000-0000-4000-8000-0000000151c1'), 'HTTP 500: caída', jsonb_build_object('productId', '00000000-0000-4000-8000-0000000151c1', 'slug', 'otra'));
 select is((select p.web_slug from public.products p where p.id = '00000000-0000-4000-8000-0000000151c1'), null, 'con error, el resultado no se guarda');
 select is((select count(*)::integer from private.web_sync_outbox o where o.product_id = '00000000-0000-4000-8000-0000000151c1' and o.sent_at is not null and o.attempts > 0), 0, 'y lo ya enviado no suma intentos');
+
+select * from finish();

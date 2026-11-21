@@ -151,6 +151,14 @@ test("cuándo pasó algo, en una fila: hoy y ayer con la hora, la semana con el 
   expect(formatWhen(new Date("2026-11-21T15:00:00.000Z"), now)).toBe("21 nov");
 });
 
+test("hoy y ayer salen del día de Lima, también de noche, cuando en UTC ya es el día siguiente", () => {
+  // Jueves 19 de noviembre, 21:00 en Lima: en UTC ya es viernes 20
+  const now = new Date("2026-11-20T02:00:00.000Z");
+  expect(formatWhen(new Date("2026-11-20T01:10:00.000Z"), now)).toBe("Hoy, 20:10");
+  // Las 23:30 del miércoles en Lima son las 04:30 del jueves en UTC
+  expect(formatWhen(new Date("2026-11-19T04:30:00.000Z"), now)).toBe("Ayer, 23:30");
+});
+
 test("el nombre del mes de Lima", () => {
   expect(formatMonth(new Date("2026-12-01T04:30:00.000Z"))).toBe("noviembre");
 });
