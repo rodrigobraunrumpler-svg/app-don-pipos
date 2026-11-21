@@ -5,8 +5,10 @@ import { Pressable, RefreshControl, ScrollView, Text, View } from "react-native"
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { LoadError } from "@/components/ui/load-error";
+import { MenuSection } from "@/components/ui/menu-section";
 import { Notice } from "@/components/ui/notice";
 import { SkeletonRows } from "@/components/ui/skeleton";
+import { ProductsRow } from "@/features/products";
 import { formatTime } from "@/lib/dates";
 import { useOnline } from "@/lib/use-online";
 import { useTheme } from "@/theme";
@@ -110,6 +112,12 @@ export function StockOverview({ onOpenProduct, onRegisterProduction, onGoToProdu
           {online ? null : (
             <Notice>{`Sin conexión. Ves el stock de las ${updatedAt}; para registrar, espera la señal.`}</Notice>
           )}
+          {/* Fase 7c: Productos y precios, también desde aquí (cambiar un precio no obliga a ir a Ajustes) */}
+          <View className="mt-1">
+            <MenuSection>
+              <ProductsRow onPress={onGoToProducts} />
+            </MenuSection>
+          </View>
           <SuggestionBanner onOpen={onRegisterProduction} />
           <View className="mt-3 overflow-hidden rounded-md border border-border bg-surface">
             {data.map((item) => (

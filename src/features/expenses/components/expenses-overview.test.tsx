@@ -152,3 +152,9 @@ test("una foto que no se subió queda avisada en Gastos, con «Reintentar», aun
   await waitFor(() => expect(mockAttach).toHaveBeenCalledWith({ expenseId: "e1", receiptPath: `${BUSINESS}/e1.jpg` }));
   await waitFor(() => expect(screen.queryByText("La foto de 1 gasto no se subió.")).toBeNull());
 });
+
+test("arriba de los gastos, «Tipos de gasto» abre su hoja", async () => {
+  await open();
+  await fireEvent.press(await screen.findByRole("button", { name: "Tipos de gasto, 2 tipos" }));
+  expect(await screen.findByText("Los que eliges al anotar un gasto.")).toBeOnTheScreen();
+});

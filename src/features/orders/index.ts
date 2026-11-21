@@ -47,7 +47,6 @@ export { OrderList } from "./components/order-list";
 export { OrderRow } from "./components/order-row";
 export { CustomerOrders } from "./components/customer-orders";
 export { Receivables } from "./components/receivables";
-export { ReceivablesRow } from "./components/receivables-row";
 export { NewMenu } from "./components/new-menu";
 export { OrderDraftProvider } from "./components/order-draft-provider";
 export { DraftItemsStep } from "./components/draft-items-step";

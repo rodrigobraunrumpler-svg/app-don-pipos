@@ -1,11 +1,13 @@
-// Stock con las rutas de verdad: tocar un alfajor abre su pantalla
+// Stock con las rutas de verdad: tocar un alfajor abre su pantalla, y «Productos y precios» (fase 7c) abre la lista
 import { QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { router } from "expo-router";
 import { renderRouter } from "expo-router/testing-library";
 import type { ReactNode } from "react";
 
 import ProductStockScreen from "@/app/(main)/stock/[productId]";
 import Stock from "@/app/(main)/(tabs)/stock";
+import Products from "@/app/(main)/settings/products";
 import { createQueryClient } from "@/lib/query";
 import { ThemeProvider } from "@/theme";
 
@@ -81,4 +83,12 @@ test("contar el stock desde Stock", async () => {
   expect(mockCount.mock.calls[0][0].counts).toEqual([
     { productId: "00000000-0000-4000-8000-000000000a01", counted: 12 },
   ]);
+});
+
+test("Stock → Productos y precios abre la lista, y «Volver» regresa a Stock", async () => {
+  await renderRouter({ stock: Stock, "settings/products": Products }, { initialUrl: "/stock", wrapper: Providers });
+  await fireEvent.press(await screen.findByRole("button", { name: /^Productos y precios/ }));
+  expect(screen).toHavePathname("/settings/products");
+  await act(() => router.back());
+  expect(screen).toHavePathname("/stock");
 });

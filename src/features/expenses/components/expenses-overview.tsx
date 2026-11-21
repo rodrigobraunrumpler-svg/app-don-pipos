@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { FormHeader } from "@/components/ui/form-header";
 import { Icon } from "@/components/ui/icon";
 import { LoadError } from "@/components/ui/load-error";
+import { MenuSection } from "@/components/ui/menu-section";
 import { Notice } from "@/components/ui/notice";
 import { SkeletonRows } from "@/components/ui/skeleton";
 import { Toast } from "@/components/ui/toast";
@@ -20,6 +21,7 @@ import { expensesQuery, expensesSummaryQuery } from "../queries/expenses";
 import { monthRange } from "../rules/expense";
 import type { Expense } from "../schema/expense";
 import { CategoryBars } from "./category-bars";
+import { ExpenseCategoriesRow } from "./expense-categories-row";
 import { ExpenseRow } from "./expense-row";
 import { ExpenseSheet, type ExpenseDone } from "./expense-sheet";
 import { FailedPhotos } from "./failed-photos";
@@ -68,6 +70,12 @@ export function ExpensesOverview({ onBack, onNew }: Props) {
         <Notice>{`Sin conexión. Ves los gastos de las ${formatTime(new Date(list.dataUpdatedAt))}.`}</Notice>
       )}
       <FailedPhotos />
+      {/* Fase 7c: los tipos de gasto, también desde aquí */}
+      <View className="mt-3">
+        <MenuSection>
+          <ExpenseCategoriesRow />
+        </MenuSection>
+      </View>
       <View className="mt-3 rounded-md border border-border bg-surface px-4 py-4">
         <Text className="text-sm text-text-secondary">{`Gastado en ${month.label}`}</Text>
         <Text className="font-extrabold text-3xl text-text">{formatCents(summary?.totalCents ?? 0)}</Text>

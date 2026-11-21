@@ -5,4 +5,3 @@ export { cashKeys } from "./queries/keys";
 export { cashExpectedQuery, latestCashCountQuery } from "./queries/cash";
 export { useCloseCashDay } from "./hooks/use-close-cash-day";
 export { CashCountView } from "./components/cash-count-view";
-export { CashRow } from "./components/cash-row";
