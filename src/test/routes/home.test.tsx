@@ -1,12 +1,14 @@
-// Inicio → «por entregar» → Pedidos con el filtro puesto, con las rutas de verdad
+// Inicio → «por entregar» → Pedidos con el filtro puesto, e Inicio → ⚙ → Ajustes → atrás, con las rutas de verdad
 import { QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen } from "@testing-library/react-native";
+import { router } from "expo-router";
 import { renderRouter } from "expo-router/testing-library";
 import type { ReactNode } from "react";
 
 import MainLayout from "@/app/(main)/_layout";
 import Home from "@/app/(main)/(tabs)/home";
 import Orders from "@/app/(main)/(tabs)/orders";
+import Settings from "@/app/(main)/settings/index";
 import { formatLongDate } from "@/lib/dates";
 import { createTestQueryClient } from "@/test/render";
 import { ThemeProvider } from "@/theme";
@@ -45,6 +47,21 @@ jest.mock("@/features/businesses/api/business", () => ({
   }),
 }));
 jest.mock("@/features/messages/api/templates", () => ({ listTemplates: async () => [] }));
+// Ajustes: la cuenta necesita la sesión del celular; aquí no hace falta
+jest.mock("@/features/auth", () => ({ AccountSection: () => null }));
+jest.mock("@/features/products/api/products", () => ({ listProducts: async () => [] }));
+jest.mock("@/features/expenses/api/expenses", () => ({ listExpenseCategories: async () => [] }));
+jest.mock("@/features/loyalty/api/loyalty", () => ({
+  getLoyaltySettings: async () => ({
+    isActive: false,
+    stampUnit: "order",
+    goal: 10,
+    rewardKind: "free_item",
+    rewardAmountCents: null,
+    rewardText: null,
+    version: 1,
+  }),
+}));
 
 function Providers({ children }: { children: ReactNode }) {
   return (
@@ -60,4 +77,16 @@ test("Inicio muestra la fecha de hoy, y tocar «por entregar» abre Pedidos con 
   await fireEvent.press(await screen.findByRole("button", { name: "1 por entregar" }));
   expect(screen).toHavePathname("/orders");
   expect(await screen.findByRole("button", { name: "Por entregar", selected: true })).toBeOnTheScreen();
+});
+
+test("el ⚙ de Inicio abre Ajustes, y «Volver» regresa a Inicio", async () => {
+  await renderRouter(
+    { _layout: MainLayout, home: Home, "settings/index": Settings },
+    { initialUrl: "/home", wrapper: Providers },
+  );
+  await fireEvent.press(await screen.findByRole("button", { name: "Ajustes" }));
+  expect(screen).toHavePathname("/settings");
+  expect(await screen.findByRole("header", { name: "Tu negocio" })).toBeOnTheScreen();
+  await act(() => router.back());
+  expect(screen).toHavePathname("/home");
 });

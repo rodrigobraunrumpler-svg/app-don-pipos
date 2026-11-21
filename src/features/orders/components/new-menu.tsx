@@ -10,10 +10,11 @@ type Props = {
   onCounterSale: () => void;
   onProduction: () => void;
   onExpense: () => void;
+  onIncome: () => void;
 };
 
 // El botón + de las pestañas (hojaNuevo de la maqueta)
-export function NewMenu({ visible, onClose, onOrder, onCounterSale, onProduction, onExpense }: Props) {
+export function NewMenu({ visible, onClose, onOrder, onCounterSale, onProduction, onExpense, onIncome }: Props) {
   const options: { icon: IconName; title: string; text: string; onPress: () => void }[] = [
     {
       icon: "clipboard-list-outline",
@@ -34,6 +35,8 @@ export function NewMenu({ visible, onClose, onOrder, onCounterSale, onProduction
       text: "El monto, el tipo y la foto de la boleta",
       onPress: onExpense,
     },
+    // Fase 7c: Ingresos salió de Más; anotar uno queda aquí, junto a los demás
+    { icon: "cash-plus", title: "Un ingreso", text: "Plata que entra sin un pedido", onPress: onIncome },
   ];
   return (
     <Sheet visible={visible} title="¿Qué quieres anotar?" onClose={onClose}>
