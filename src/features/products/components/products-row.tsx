@@ -4,7 +4,7 @@ import { MenuRow } from "@/components/ui/menu-row";
 
 import { productsQuery } from "../queries/products";
 
-// Más → Ajustes: la fila «Productos y precios», con cuántos alfajores hay
+// Ajustes y Stock: la fila «Productos y precios», con cuántos alfajores hay
 export function ProductsRow({ onPress }: { onPress: () => void }) {
   const count = useQuery(productsQuery).data?.length;
   return (

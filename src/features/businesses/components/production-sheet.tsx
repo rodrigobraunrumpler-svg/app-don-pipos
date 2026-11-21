@@ -14,7 +14,7 @@ import { useSaveSettings } from "../hooks/use-save-settings";
 import { businessQuery } from "../queries/business";
 import { productionLabel, productionNote } from "../rules/settings-labels";
 
-// Más → Producción: cada cuántos días produce (de 1 a 14). Inicio y Stock sugieren para ese periodo
+// Ajustes → Producción: cada cuántos días produce (de 1 a 14). Inicio y Stock sugieren para ese periodo
 export function ProductionSheet({ onClose }: { onClose: () => void }) {
   const online = useOnline();
   const settings = useQuery(businessQuery).data?.settings;

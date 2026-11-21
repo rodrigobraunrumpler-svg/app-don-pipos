@@ -22,7 +22,7 @@ export type Debt = {
   remind: boolean;
 };
 
-// Los interruptores de Más → Recordatorios (business_settings.reminders)
+// Los interruptores de Ajustes → Recordatorios (business_settings.reminders)
 export type ReminderSwitches = { scheduled: boolean; stock: boolean; balances: boolean };
 
 export type ReminderData = {

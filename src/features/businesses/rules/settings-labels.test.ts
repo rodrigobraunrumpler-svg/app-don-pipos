@@ -7,7 +7,7 @@ import {
   remindersLabel,
 } from "./settings-labels";
 
-test("las filas de Más dicen cada ajuste en pocas palabras (docs/spec/businesses.md §5)", () => {
+test("las filas de Ajustes dicen cada ajuste en pocas palabras (docs/spec/businesses.md §5)", () => {
   expect(productionLabel(1)).toBe("Cada día");
   expect(productionLabel(7)).toBe("Cada 7 días");
   expect(deliveryLabel(500)).toBe("S/ 5.00");

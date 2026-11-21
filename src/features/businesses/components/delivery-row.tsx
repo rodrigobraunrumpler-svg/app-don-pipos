@@ -7,7 +7,7 @@ import { businessQuery } from "../queries/business";
 import { deliveryLabel } from "../rules/settings-labels";
 import { DeliverySheet } from "./delivery-sheet";
 
-// Más → Ajustes: Delivery, con lo que se cobra; se abre su hoja ahí mismo
+// Ajustes: Delivery, con lo que se cobra; se abre su hoja ahí mismo
 export function DeliveryRow() {
   const settings = useQuery(businessQuery).data?.settings;
   const [open, setOpen] = useState(false);

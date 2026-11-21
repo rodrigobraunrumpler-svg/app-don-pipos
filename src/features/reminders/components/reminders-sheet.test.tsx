@@ -53,7 +53,7 @@ test("si nunca se pidió, «Permitir avisos» lo pide", async () => {
   await act(async () => undefined);
 });
 
-test("la fila de Más dice cuántos están encendidos", async () => {
+test("la fila de Ajustes dice cuántos están encendidos", async () => {
   mockBusiness = {
     ...TEST_BUSINESS,
     settings: { ...TEST_BUSINESS.settings, reminders: { scheduled: false, stock: true, balances: true } },

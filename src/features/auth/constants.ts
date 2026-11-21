@@ -1,4 +1,4 @@
-// Cuándo pedir huella o PIN al volver a la app, con los textos de la maqueta (Más → Cuenta)
+// Cuándo pedir huella o PIN al volver a la app, con los textos de la maqueta (Ajustes → Tu cuenta y este celular)
 export const AUTO_LOCK_CHOICES = [0, 1, 5, 15] as const;
 export type AutoLockMinutes = (typeof AUTO_LOCK_CHOICES)[number];
 export const DEFAULT_AUTO_LOCK: AutoLockMinutes = 5;

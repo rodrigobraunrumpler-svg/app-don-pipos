@@ -37,8 +37,8 @@ const mockUpload = jest.fn();
 const mockAttach = jest.fn();
 jest.mock("../api/expenses", () => ({
   listExpenses: async () => ({
-    items: [mockItems.chocolate, mockItems.cajas],
-    meta: { limit: 20, total: 2, hasMore: false, nextCursor: null },
+    items: mockItems.none ? [] : [mockItems.chocolate, mockItems.cajas],
+    meta: { limit: 20, total: mockItems.none ? 0 : 2, hasMore: false, nextCursor: null },
   }),
   getExpensesSummary: async () => ({
     totalCents: 13100,
@@ -58,7 +58,11 @@ jest.mock("../api/expenses", () => ({
   attachReceipt: (input: unknown) => mockAttach(input),
   receiptUrl: async () => "https://firmado/boleta.jpg",
 }));
-const mockItems: { chocolate: unknown; cajas: unknown } = { chocolate: CHOCOLATE, cajas: CAJAS };
+const mockItems: { chocolate: unknown; cajas: unknown; none: boolean } = {
+  chocolate: CHOCOLATE,
+  cajas: CAJAS,
+  none: false,
+};
 jest.mock("@/features/businesses/api/business", () => ({
   getBusiness: async () => ({
     id: "00000000-0000-4000-8000-0000000000b1",
@@ -76,6 +80,7 @@ jest.mock("expo-image-picker", () => ({
 jest.mock("@/lib/images", () => ({ shrinkPhoto: async () => "QUJD" }));
 
 beforeEach(() => {
+  mockItems.none = false;
   mockCorrect.mockReset().mockResolvedValue({ ...CHOCOLATE, id: "e3", amountCents: 9000, previousAmountCents: 8600 });
   mockVoid.mockReset().mockResolvedValue({ ...CHOCOLATE, voidedAt: now.toISOString() });
   mockRevert.mockReset().mockResolvedValue(CHOCOLATE);
@@ -157,4 +162,11 @@ test("arriba de los gastos, «Tipos de gasto» abre su hoja", async () => {
   await open();
   await fireEvent.press(await screen.findByRole("button", { name: "Tipos de gasto, 2 tipos" }));
   expect(await screen.findByText("Los que eliges al anotar un gasto.")).toBeOnTheScreen();
+});
+
+test("sin ningún gasto todavía, «Tipos de gasto» igual está arriba", async () => {
+  mockItems.none = true;
+  await open();
+  expect(await screen.findByText("Todavía no hay gastos este mes")).toBeOnTheScreen();
+  expect(screen.getByRole("button", { name: "Tipos de gasto, 2 tipos" })).toBeOnTheScreen();
 });

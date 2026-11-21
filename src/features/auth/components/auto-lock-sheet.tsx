@@ -11,7 +11,7 @@ type Props = {
   onClose: () => void;
 };
 
-// La hoja «Pedir huella o PIN» de Más → Cuenta
+// La hoja «Pedir huella o PIN» de Ajustes → Tu cuenta y este celular
 export function AutoLockSheet({ visible, value, onChoose, onClose }: Props) {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>

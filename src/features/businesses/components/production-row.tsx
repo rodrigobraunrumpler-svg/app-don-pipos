@@ -7,7 +7,7 @@ import { businessQuery } from "../queries/business";
 import { productionLabel } from "../rules/settings-labels";
 import { ProductionSheet } from "./production-sheet";
 
-// Más → Ajustes: Producción, cada cuántos días; se abre su hoja ahí mismo
+// Ajustes: Producción, cada cuántos días; se abre su hoja ahí mismo
 export function ProductionRow() {
   const settings = useQuery(businessQuery).data?.settings;
   const [open, setOpen] = useState(false);

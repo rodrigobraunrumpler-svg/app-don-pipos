@@ -11,7 +11,7 @@ import { iconFor } from "../rules/category";
 import type { ExpenseCategory } from "../schema/expense";
 import { CategoryForm } from "./category-form";
 
-// Más → Tipos de gasto (la hoja de la maqueta): cada tipo con su ícono; tocarlo lo edita o lo apaga, y se agregan otros.
+// Ajustes o Gastos → Tipos de gasto (la hoja de la maqueta): cada tipo con su ícono; tocarlo lo edita o lo apaga, y se agregan otros.
 // Un tipo apagado no sale al anotar un gasto; nada se borra
 export function ExpenseCategoriesSheet({ onClose }: { onClose: () => void }) {
   const { data } = useQuery(expenseCategoriesQuery);

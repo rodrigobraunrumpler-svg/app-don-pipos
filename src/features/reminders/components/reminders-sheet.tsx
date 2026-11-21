@@ -12,7 +12,7 @@ import { useOnline } from "@/lib/use-online";
 import { REMINDER_ROWS } from "../constants";
 import { useNotificationPermission } from "../hooks/use-notification-permission";
 
-// Más → Recordatorios (la hoja de la maqueta): tres interruptores. Si el celular no dio permiso de avisos, lo dice: si
+// Ajustes → Recordatorios (la hoja de la maqueta): tres interruptores. Si el celular no dio permiso de avisos, lo dice: si
 // nunca se pidió, lo pide; si lo negó, abre los ajustes del sistema
 export function RemindersSheet({ onClose }: { onClose: () => void }) {
   const online = useOnline();

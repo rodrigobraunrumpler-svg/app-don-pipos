@@ -31,16 +31,15 @@ export function CollectedToday({ onCash, onOrders, onReceivables }: Props) {
     <View className="mt-4 rounded-lg bg-brand px-5 pb-4 pt-5">
       <View className="flex-row items-center justify-between">
         <Text className="font-semibold text-sm text-on-primary opacity-80">Cobrado hoy</Text>
-        {empty ? null : (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={cashLabel}
-            onPress={onCash}
-            className="min-h-11 justify-center"
-          >
-            <Text className="font-bold text-sm text-on-primary">{`${cashLabel} ›`}</Text>
-          </Pressable>
-        )}
+        {/* Siempre: un día sin ventas igual puede tener gastos en efectivo, y Inicio es la única entrada al cuadre */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={cashLabel}
+          onPress={onCash}
+          className="min-h-11 justify-center"
+        >
+          <Text className="font-bold text-sm text-on-primary">{`${cashLabel} ›`}</Text>
+        </Pressable>
       </View>
       <Text className="font-extrabold text-[40px] leading-[44px] text-on-primary">
         {formatCents(data.collectedTodayCents)}

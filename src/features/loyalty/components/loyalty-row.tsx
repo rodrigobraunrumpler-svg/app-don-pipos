@@ -4,7 +4,7 @@ import { MenuRow } from "@/components/ui/menu-row";
 
 import { loyaltySettingsQuery } from "../queries/loyalty";
 
-// Más → Ajustes: «Fidelidad», con su meta o «Apagada»
+// Ajustes y Pedidos › Clientes: «Fidelidad», con su meta o «Apagada»
 export function LoyaltyRow({ onPress }: { onPress: () => void }) {
   const settings = useQuery(loyaltySettingsQuery).data;
   const value = settings === undefined ? null : settings.isActive ? `${settings.goal} sellos` : "Apagada";

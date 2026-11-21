@@ -8,4 +8,3 @@ export { HomeScreen } from "./components/home-screen";
 export { FirstTip } from "./components/first-tip";
 export { ReportsScreen } from "./components/reports-screen";
 export { RankingScreen } from "./components/ranking-screen";
-export { ExportRow } from "./components/export-row";

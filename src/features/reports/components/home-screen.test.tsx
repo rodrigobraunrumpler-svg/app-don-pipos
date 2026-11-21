@@ -200,7 +200,7 @@ test("tu stock, qué producir y los pedidos por entregar y próximos", async () 
   expect(screen.getByRole("header", { name: "Próximos" })).toBeOnTheScreen();
 });
 
-test("un día sin pedidos invita a anotar uno", async () => {
+test("un día sin pedidos invita a anotar uno, y la caja igual se puede cuadrar", async () => {
   mockSummary.mockResolvedValue(EMPTY);
   mockList.mockResolvedValue(page([]));
   const on = handlers();
@@ -208,7 +208,7 @@ test("un día sin pedidos invita a anotar uno", async () => {
   expect(
     await screen.findByText("Todavía no hay pedidos hoy. Lo cobrado aparece aquí, separado por medio de pago."),
   ).toBeOnTheScreen();
-  expect(screen.queryByRole("button", { name: "Cuadrar caja" })).toBeNull();
+  expect(screen.getByRole("button", { name: "Cuadrar caja" })).toBeOnTheScreen();
   await fireEvent.press(await screen.findByRole("button", { name: "Anotar un pedido" }));
   expect(on.onNewOrder).toHaveBeenCalled();
 });

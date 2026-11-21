@@ -18,7 +18,7 @@ import { NewProductSheet } from "./new-product-sheet";
 import { ProductRow } from "./product-row";
 import { ProductSheet } from "./product-sheet";
 
-// Más → Productos y precios: la lista, la hoja de cada uno y «Agregar producto»
+// Productos y precios (desde Ajustes o Stock): la lista, la hoja de cada uno y «Agregar producto»
 export function ProductList({ onBack }: { onBack: () => void }) {
   const online = useOnline();
   const { colors } = useTheme();

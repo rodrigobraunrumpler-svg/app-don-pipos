@@ -13,7 +13,7 @@ import { useSaveSettings } from "../hooks/use-save-settings";
 import { businessQuery } from "../queries/business";
 import { lapsedLabel } from "../rules/settings-labels";
 
-// Más → Clientes que no vuelven: a partir de cuántos días sin pedir (de 7 a 120) un cliente sale en «No vuelven»
+// Clientes que no vuelven (Ajustes y Pedidos › Clientes): a partir de cuántos días sin pedir (de 7 a 120) un cliente sale en «No vuelven»
 export function LapsedSheet({ onClose }: { onClose: () => void }) {
   const online = useOnline();
   const settings = useQuery(businessQuery).data?.settings;

@@ -1,4 +1,4 @@
-// Más → Ingresos → un pago abre su pedido, y la flecha vuelve paso a paso, con las rutas de verdad
+// Reportes → Ingresos → un pago abre su pedido, y la flecha vuelve paso a paso, con las rutas de verdad
 import { QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";

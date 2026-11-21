@@ -11,7 +11,7 @@ import { useSaveSettings } from "../hooks/use-save-settings";
 import { businessQuery } from "../queries/business";
 import { PAYMENT_METHOD_LABELS, PAYMENT_METHODS } from "../schema/payment-method";
 
-// Más → Medios de pago (la hoja de la maqueta): un interruptor por medio. El último encendido no se apaga: sin medios
+// Ajustes → Medios de pago (la hoja de la maqueta): un interruptor por medio. El último encendido no se apaga: sin medios
 // no se podría anotar un pago
 export function PaymentMethodsSheet({ onClose }: { onClose: () => void }) {
   const online = useOnline();

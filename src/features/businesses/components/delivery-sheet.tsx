@@ -14,7 +14,7 @@ import { useSaveSettings } from "../hooks/use-save-settings";
 import { businessQuery } from "../queries/business";
 import { deliveryLabel } from "../rules/settings-labels";
 
-// Más → Delivery: lo que se cobra por llevar un pedido. La zona de reparto no se pide hasta que algo la use (fase 7b)
+// Ajustes → Delivery: lo que se cobra por llevar un pedido. La zona de reparto no se pide hasta que algo la use (fase 7b)
 export function DeliverySheet({ onClose }: { onClose: () => void }) {
   const online = useOnline();
   const settings = useQuery(businessQuery).data?.settings;

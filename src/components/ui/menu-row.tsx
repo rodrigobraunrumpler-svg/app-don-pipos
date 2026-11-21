@@ -4,7 +4,7 @@ import { Icon, type IconName } from "./icon";
 
 type Props = { icon: IconName; label: string; value?: string | null; onPress: () => void };
 
-// Una fila de Más: su ícono, su nombre y, a la derecha, lo que vale ahora (cuánto, cuántos o «Hoy»). El valor nunca se
+// Una fila de menú (Ajustes y los atajos de Stock, Gastos y Clientes): su ícono, su nombre y, a la derecha, lo que vale ahora (cuánto, cuántos o «Hoy»). El valor nunca se
 // corta; el nombre sí, con «…»
 export function MenuRow({ icon, label, value, onPress }: Props) {
   return (

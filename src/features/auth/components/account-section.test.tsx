@@ -1,4 +1,5 @@
 import { fireEvent, screen } from "@testing-library/react-native";
+import { Text } from "react-native";
 
 import { renderWithProviders } from "@/test/render";
 
@@ -69,4 +70,16 @@ test("«Cambiar PIN» y «Cerrar sesión en este celular»", async () => {
   expect(onChangePin).toHaveBeenCalledTimes(1);
   await fireEvent.press(screen.getByRole("button", { name: "Cerrar sesión en este celular" }));
   expect(value.signOutHere).toHaveBeenCalledTimes(1);
+});
+
+test("se titula «Tu cuenta y este celular» y pone lo que le pasan antes de «Cambiar PIN»", async () => {
+  await renderWithProviders(
+    <UnlockContext.Provider value={access()}>
+      <AccountSection onChangePin={jest.fn()} extra={<Text>Recordatorios (DEMO)</Text>} />
+    </UnlockContext.Provider>,
+  );
+  expect(screen.getByRole("header", { name: "Tu cuenta y este celular" })).toBeOnTheScreen();
+  const tree = JSON.stringify(screen.toJSON());
+  expect(tree.indexOf("Recordatorios (DEMO)")).toBeGreaterThan(-1);
+  expect(tree.indexOf("Recordatorios (DEMO)")).toBeLessThan(tree.indexOf("Cambiar PIN"));
 });

@@ -22,7 +22,7 @@ jest.mock("../api/products", () => ({
   saveProduct: jest.fn(),
 }));
 
-test("la fila de Más dice cuántos alfajores hay y lleva a la lista", async () => {
+test("la fila dice cuántos alfajores hay y lleva a la lista", async () => {
   const onPress = jest.fn();
   await renderWithProviders(<ProductsRow onPress={onPress} />);
   expect(await screen.findByText("5 alfajores")).toBeOnTheScreen();

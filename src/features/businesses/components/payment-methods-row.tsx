@@ -7,7 +7,7 @@ import { businessQuery } from "../queries/business";
 import { methodsLabel } from "../rules/settings-labels";
 import { PaymentMethodsSheet } from "./payment-methods-sheet";
 
-// Más → Ajustes: Medios de pago, con cuántos están encendidos; se abre su hoja ahí mismo
+// Ajustes: Medios de pago, con cuántos están encendidos; se abre su hoja ahí mismo
 export function PaymentMethodsRow() {
   const settings = useQuery(businessQuery).data?.settings;
   const [open, setOpen] = useState(false);

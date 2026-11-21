@@ -3,7 +3,7 @@ import { formatCents } from "@/lib/money";
 import type { PaymentMethod } from "../schema/payment-method";
 import type { ReminderSettings } from "../schema/business";
 
-// Los textos de las filas de Ajustes en Más (docs/spec/businesses.md §5)
+// Los textos de las filas de Ajustes (docs/spec/businesses.md §5)
 export const methodsLabel = (methods: readonly PaymentMethod[]): string => `${methods.length}`;
 
 export const deliveryLabel = (cents: number): string => (cents === 0 ? "Sin costo" : formatCents(cents));

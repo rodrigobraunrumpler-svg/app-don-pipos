@@ -64,18 +64,22 @@ export function ExpensesOverview({ onBack, onNew }: Props) {
     setMessage({ text: result.text, onUndo: undoId ? () => undo(undoId) : undefined });
   }
 
+  // Fase 7c: los tipos de gasto, también desde aquí, con o sin gastos
+  const categories = (
+    <View className="mt-3">
+      <MenuSection>
+        <ExpenseCategoriesRow />
+      </MenuSection>
+    </View>
+  );
+
   const header = (
     <View className="pb-2">
       {online ? null : (
         <Notice>{`Sin conexión. Ves los gastos de las ${formatTime(new Date(list.dataUpdatedAt))}.`}</Notice>
       )}
       <FailedPhotos />
-      {/* Fase 7c: los tipos de gasto, también desde aquí */}
-      <View className="mt-3">
-        <MenuSection>
-          <ExpenseCategoriesRow />
-        </MenuSection>
-      </View>
+      {categories}
       <View className="mt-3 rounded-md border border-border bg-surface px-4 py-4">
         <Text className="text-sm text-text-secondary">{`Gastado en ${month.label}`}</Text>
         <Text className="font-extrabold text-3xl text-text">{formatCents(summary?.totalCents ?? 0)}</Text>
@@ -129,7 +133,9 @@ export function ExpensesOverview({ onBack, onNew }: Props) {
           <SkeletonRows rows={5} />
         </View>
       ) : items.length === 0 ? (
-        <View className="items-center px-5 pt-10">
+        <View className="items-center px-5">
+          <View className="w-full">{categories}</View>
+          <View className="h-7" />
           <Icon name="receipt-text-outline" size={42} tone="textMuted" />
           <Text className="mt-4 text-center font-extrabold text-xl text-text">Todavía no hay gastos este mes</Text>
           <Text className="mt-1.5 text-center text-base text-text-secondary">

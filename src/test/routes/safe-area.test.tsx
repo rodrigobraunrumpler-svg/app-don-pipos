@@ -8,6 +8,8 @@ import { StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import Orders from "@/app/(main)/(tabs)/orders";
+import Reports from "@/app/(main)/(tabs)/reports";
+import Settings from "@/app/(main)/settings/index";
 import ChangePin from "@/app/(main)/settings/change-pin";
 import Products from "@/app/(main)/settings/products";
 import OrderScreen from "@/app/(main)/orders/[id]";
@@ -21,6 +23,7 @@ import { ThemeProvider } from "@/theme";
 
 // Aquí solo importa el fondo de la pantalla: el contenido de Cambiar PIN pide la sesión, que esta prueba no necesita
 jest.mock("@/features/auth/components/change-pin-flow", () => ({ ChangePinFlow: () => null }));
+jest.mock("@/features/auth/components/account-section", () => ({ AccountSection: () => null }));
 
 function Providers({ children }: { children: ReactNode }) {
   return (
@@ -43,6 +46,7 @@ test.each<[string, Record<string, ComponentType>]>([
   ["/orders/00000000-0000-4000-8000-0000000000f1", { "orders/[id]": OrderScreen }],
   ["/stock/production", { "stock/production": Production }],
   ["/stock/00000000-0000-4000-8000-000000000a01", { "stock/[productId]": ProductStockScreen }],
+  ["/settings", { "settings/index": Settings }],
   ["/settings/products", { "settings/products": Products }],
   ["/settings/change-pin", { "settings/change-pin": ChangePin }],
 ])("%s deja abajo el espacio de la barra del sistema", async (url, routes) => {
@@ -50,7 +54,10 @@ test.each<[string, Record<string, ComponentType>]>([
   expect(padding()).toMatchObject({ paddingTop: 24, paddingBottom: 48 });
 });
 
-test("una pestaña no lo deja: su barra de pestañas ya está abajo", async () => {
-  await renderRouter({ orders: Orders }, { initialUrl: "/orders", wrapper: Providers });
+test.each<[string, ComponentType]>([
+  ["orders", Orders],
+  ["reports", Reports],
+])("la pestaña %s no lo deja: su barra de pestañas ya está abajo", async (name, Tab) => {
+  await renderRouter({ [name]: Tab }, { initialUrl: `/${name}`, wrapper: Providers });
   expect(padding()).toMatchObject({ paddingTop: 24, paddingBottom: 0 });
 });

@@ -4,7 +4,7 @@ import { MenuRow } from "@/components/ui/menu-row";
 
 import { ExportSheet } from "./export-sheet";
 
-// Más → Ayuda: «Exportar a Excel», que abre su hoja
+// Reportes, debajo del periodo: «Exportar a Excel», que abre su hoja
 export function ExportRow() {
   const [open, setOpen] = useState(false);
   return (

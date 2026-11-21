@@ -22,7 +22,7 @@ import { VoidIncomeSheet } from "./void-income-sheet";
 
 type Props = { onBack: () => void; onNew: () => void; onOpenOrder: (orderId: string) => void };
 
-// Ingresos (en Más; no está en la maqueta, tiene la forma de Gastos): lo cobrado en el mes por medio, «Anotar ingreso»
+// Ingresos (desde la tarjeta de Reportes; tiene la forma de Gastos): lo cobrado en el mes por medio, «Anotar ingreso»
 // y la lista de 20 en 20. Un pago abre su pedido; un ingreso a mano, su hoja para anularlo
 export function IncomeOverview({ onBack, onNew, onOpenOrder }: Props) {
   const online = useOnline();

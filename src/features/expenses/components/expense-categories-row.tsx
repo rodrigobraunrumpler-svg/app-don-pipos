@@ -6,7 +6,7 @@ import { MenuRow } from "@/components/ui/menu-row";
 import { expenseCategoriesQuery } from "../queries/expenses";
 import { ExpenseCategoriesSheet } from "./expense-categories-sheet";
 
-// Más → Ajustes: «Tipos de gasto», con cuántos hay; se abre su hoja ahí mismo
+// Ajustes y Gastos: «Tipos de gasto», con cuántos hay; se abre su hoja ahí mismo
 export function ExpenseCategoriesRow() {
   const count = useQuery(expenseCategoriesQuery).data?.length;
   const [open, setOpen] = useState(false);
