@@ -78,7 +78,8 @@ export const draftFrom = (product: Product): ProductDraft => ({
   costText: toText(product.costCents),
   minStock: product.minStock,
   description: product.description ?? "",
-  allergens: product.allergens,
+  // Una lista que guardó una versión anterior de la app puede llegar sin alérgenos
+  allergens: product.allergens ?? [],
   showOnWeb: product.showOnWeb,
   wasOnWeb: product.showOnWeb && product.isActive,
   photo: null,
@@ -94,7 +95,8 @@ export const draftMissing = (draft: ProductDraft): string | null =>
     description: draft.description,
   });
 
-// Lo que se guarda, o por qué todavía no. «Se ve en la web» solo si no le falta nada
+// Lo que se guarda, o por qué todavía no. Prender «Se ve en la web» pide que no le falte nada; uno que ya se veía sigue
+// viéndose aunque su foto todavía esté subiendo (la copia la espera)
 export function inputFrom(draft: ProductDraft, showOnWeb: boolean): { input: ProductInput } | { problem: string } {
   const name = draft.name.trim();
   if (name.length === 0 || name.length > 40) return { problem: "Escribe el nombre del alfajor (hasta 40 letras)." };
@@ -113,7 +115,7 @@ export function inputFrom(draft: ProductDraft, showOnWeb: boolean): { input: Pro
       priceCents,
       costCents,
       minStock: draft.minStock,
-      showOnWeb: showOnWeb && draftMissing(draft) === null,
+      showOnWeb: showOnWeb && (draft.wasOnWeb || draftMissing(draft) === null),
       description: description || null,
       allergens: draft.allergens,
     },

@@ -8,14 +8,17 @@ import { ProductAvatar } from "./product-avatar";
 import { WebStateChip } from "./web-state-chip";
 
 // Un alfajor en Productos y precios: su precio, su mínimo, su costo y cómo va en la web («Subiendo a la web…», «En la
-// web», «Nuevo», la foto que espera la señal). Tocarlo abre Editar
+// web», «Nuevo», la foto que espera la señal). Mientras su foto sube, va «Subiendo a la web…», aunque la copia todavía
+// no la tenga. Tocarlo abre Editar
 export function ProductRow({
   product,
   photoWaiting,
+  photoUploading = false,
   onPress,
 }: {
   product: Product;
   photoWaiting: boolean;
+  photoUploading?: boolean;
   onPress: () => void;
 }) {
   const cost = product.costCents === null ? "sin definir" : formatCents(product.costCents);
@@ -36,7 +39,11 @@ export function ProductRow({
           numberOfLines={1}
           className="text-[13px] text-text-secondary"
         >{`Mínimo ${product.minStock}, cuesta ${cost}`}</Text>
-        <WebStateChip state={product.webState} isNew={product.isNew} photoWaiting={photoWaiting} />
+        <WebStateChip
+          state={photoUploading && product.showOnWeb ? "pending" : product.webState}
+          isNew={product.isNew}
+          photoWaiting={photoWaiting}
+        />
       </View>
       <Icon name="chevron-right" size={22} tone="textMuted" />
     </Pressable>

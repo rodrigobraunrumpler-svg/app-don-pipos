@@ -85,6 +85,7 @@ export function ProductList({ onBack, onOpen, onNew, onOrder }: Props) {
                 key={product.id}
                 product={product}
                 photoWaiting={photos.waiting.has(product.id)}
+                photoUploading={photos.uploading.has(product.id)}
                 onPress={() => onOpen(product)}
               />
             ))}

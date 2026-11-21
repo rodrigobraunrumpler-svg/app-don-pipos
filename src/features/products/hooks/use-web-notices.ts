@@ -42,7 +42,11 @@ export function useWebNotices(products: Product[] | undefined): Toast | null {
       action: url
         ? { label: "Compartir", run: () => void Share.share({ message: shareText(live.name, url) }) }
         : undefined,
-      hide: () => setPublished(null),
+      // Con este aviso termina lo de publicar: no vuelve el de «se publicó» con «Deshacer»
+      hide: () => {
+        setPublished(null);
+        setNotice(null);
+      },
     };
   } else if (notice?.kind === "published") {
     const { product } = notice;

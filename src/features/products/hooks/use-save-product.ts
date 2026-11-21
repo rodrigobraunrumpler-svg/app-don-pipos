@@ -1,6 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { randomUUID } from "expo-crypto";
 
+import { errorMessage, toAppError } from "@/lib/errors";
 import { shrinkPhoto } from "@/lib/images";
 
 import { productPhotoMutation, saveProductMutation } from "../queries/mutations";
@@ -26,4 +27,12 @@ export function useSaveProduct(): {
     return saved;
   }
   return { save, saving: product.isPending };
+}
+
+// Por qué no se guardó. Un conflicto al crear es un nombre repetido; al cambiar, otro cambio que llegó antes
+export function saveProblem(error: unknown, isNew: boolean, name: string): string {
+  if (toAppError(error).kind !== "conflict") return errorMessage(error);
+  return isNew
+    ? "Ya tienes un alfajor con ese nombre."
+    : `${name} ya tenía otro cambio guardado: vuelve a abrirlo y guarda otra vez.`;
 }

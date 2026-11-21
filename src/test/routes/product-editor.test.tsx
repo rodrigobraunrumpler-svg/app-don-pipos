@@ -1,6 +1,6 @@
 // Nuevo alfajor y Editar (fase 9), con las rutas de verdad: la foto con su recorte, la descripción, los alérgenos, la
 // vista previa de la web, publicar con «Deshacer», y la foto que espera la señal
-import { QueryClientProvider } from "@tanstack/react-query";
+import { onlineManager, QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { renderRouter } from "expo-router/testing-library";
@@ -68,6 +68,7 @@ beforeEach(() => {
   mockUpload.mockReset().mockResolvedValue(undefined);
   mockSetPhoto.mockReset().mockResolvedValue(saved({ hasPhoto: true, version: 2 }));
 });
+afterEach(() => onlineManager.setOnline(true));
 
 function Providers({ children }: { children: ReactNode }) {
   return (
@@ -83,6 +84,21 @@ const ROUTES = {
   "settings/products/[id]": EditProduct,
   "settings/products/preview": PreviewProduct,
 };
+
+// Un alfajor nuevo, «Tropi», con foto y descripción, que la base guarda y la lista muestra como `over` diga
+function savesAs(over: object) {
+  mockSave.mockImplementation(async (input: { showOnWeb: boolean }) => {
+    const product = saved({ name: "Tropi", showOnWeb: input.showOnWeb, version: 1, ...over });
+    mockState.list = [COQUETA, product];
+    return product;
+  });
+}
+async function fillTropi() {
+  await fireEvent.press(screen.getByRole("button", { name: "De la galería" }));
+  await fireEvent.changeText(await screen.findByLabelText("Nombre"), "Tropi");
+  await fireEvent.changeText(screen.getByLabelText("Precio"), "13");
+  await fireEvent.changeText(screen.getByLabelText("Descripción"), "Frutas tropicales");
+}
 
 async function fillNew() {
   await renderRouter(ROUTES, { initialUrl: "/settings/products", wrapper: Providers });
@@ -182,4 +198,60 @@ test("si la foto no sube (sin señal), el alfajor queda guardado y la lista dice
   await fireEvent.press(screen.getByRole("button", { name: "Guardar" }));
   await waitFor(() => expect(screen).toHavePathname("/settings/products"));
   expect(await screen.findByText("La foto espera la señal")).toBeOnTheScreen();
+});
+
+test("si la señal se va justo después de guardar, la foto espera y se sube sola cuando vuelve", async () => {
+  savesAs({});
+  const save = mockSave.getMockImplementation()!;
+  mockSave.mockImplementation(async (input: unknown) => {
+    const product = await save(input);
+    onlineManager.setOnline(false);
+    return product;
+  });
+  await fillNew();
+  await fillTropi();
+  await fireEvent.press(screen.getByRole("button", { name: "Guardar" }));
+  await waitFor(() => expect(screen).toHavePathname("/settings/products"));
+  await act(() => jest.advanceTimersByTimeAsync(10_000));
+  expect(mockUpload).not.toHaveBeenCalled();
+  await act(async () => onlineManager.setOnline(true));
+  await waitFor(() => expect(mockUpload).toHaveBeenCalledTimes(1));
+  await waitFor(() => expect(mockSetPhoto).toHaveBeenCalledWith(NEW_ID, expect.stringMatching(/\.jpg$/)));
+});
+
+test("mientras la foto sube, la fila dice «Subiendo a la web…», no que le falta la foto", async () => {
+  let landed: () => void = () => undefined;
+  mockUpload.mockImplementation(() => new Promise<void>((resolve) => (landed = resolve)));
+  savesAs({ webState: "incomplete", hasPhoto: false });
+  await fillNew();
+  await fillTropi();
+  await fireEvent.press(screen.getByRole("button", { name: "Vista previa" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Publicar" }));
+  await waitFor(() => expect(screen).toHavePathname("/settings/products"));
+  await waitFor(() => expect(mockUpload).toHaveBeenCalled());
+  expect(await screen.findByText("Subiendo a la web…")).toBeOnTheScreen();
+  expect(screen.queryByText("Le falta foto o descripción")).toBeNull();
+  await act(async () => landed());
+});
+
+test("publicar uno con un nombre que ya tienes lo dice así", async () => {
+  mockSave.mockRejectedValue(new (jest.requireActual("@/lib/errors").AppError)("conflict"));
+  await fillNew();
+  await fillTropi();
+  await fireEvent.press(screen.getByRole("button", { name: "Vista previa" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Publicar" }));
+  expect(await screen.findByText("Ya tienes un alfajor con ese nombre.")).toBeOnTheScreen();
+});
+
+test("reabrir uno recién publicado mientras su foto sube y guardarlo no lo saca de la web", async () => {
+  mockState.list = [
+    COQUETA,
+    saved({ name: "Tropi", showOnWeb: true, hasPhoto: false, imageUrl: null, webState: "incomplete" }),
+  ];
+  await renderRouter(ROUTES, { initialUrl: "/settings/products", wrapper: Providers });
+  await fireEvent.press(await screen.findByRole("button", { name: /^Tropi/ }));
+  expect(screen.getByRole("switch", { name: "Se ve en la web" })).toBeEnabled();
+  await fireEvent.changeText(screen.getByLabelText("Precio"), "14");
+  await fireEvent.press(screen.getByRole("button", { name: "Guardar" }));
+  await waitFor(() => expect(mockSave).toHaveBeenCalledWith(expect.objectContaining({ id: NEW_ID, showOnWeb: true })));
 });

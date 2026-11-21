@@ -3,11 +3,10 @@ import { ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/button";
 import { FormHeader } from "@/components/ui/form-header";
-import { errorMessage } from "@/lib/errors";
 import { useOnline } from "@/lib/use-online";
 
 import { inputFrom, useProductDraft } from "../hooks/product-draft";
-import { useSaveProduct } from "../hooks/use-save-product";
+import { saveProblem, useSaveProduct } from "../hooks/use-save-product";
 import { parsePrice } from "../rules/price";
 import type { Product } from "../schema/product";
 import { WebPreviewCard } from "./web-preview-card";
@@ -32,7 +31,7 @@ export function ProductPreview({ onBack, onSaved }: Props) {
     try {
       onSaved(await save(result.input, draft.photo), !draft.wasOnWeb);
     } catch (error) {
-      setProblem(errorMessage(error));
+      setProblem(saveProblem(error, draft.id === null, draft.name.trim()));
     }
   }
 

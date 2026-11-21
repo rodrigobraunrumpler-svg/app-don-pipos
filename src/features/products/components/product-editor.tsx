@@ -9,12 +9,11 @@ import { Notice } from "@/components/ui/notice";
 import { Section } from "@/components/ui/section";
 import { Stepper } from "@/components/ui/stepper";
 import { SwitchRow } from "@/components/ui/switch-row";
-import { errorMessage, toAppError } from "@/lib/errors";
 import { useOnline } from "@/lib/use-online";
 import { useTheme } from "@/theme";
 
 import { draftMissing, inputFrom, useProductDraft } from "../hooks/product-draft";
-import { useSaveProduct } from "../hooks/use-save-product";
+import { saveProblem, useSaveProduct } from "../hooks/use-save-product";
 import { margin, marginLabel } from "../rules/margin";
 import { parsePrice } from "../rules/price";
 import { DESCRIPTION_MAX, webName } from "../rules/web";
@@ -38,6 +37,8 @@ export function ProductEditor({ title, onBack, onPreview, onSaved }: Props) {
   const { save, saving } = useSaveProduct();
   const [problem, setProblem] = useState<string | null>(null);
   const missing = draftMissing(draft);
+  // Prenderlo pide que no le falte nada; uno que ya se veía se puede dejar prendido mientras llega su foto
+  const canShow = missing === null || draft.wasOnWeb;
   const price = parsePrice(draft.priceText);
   const cost = parsePrice(draft.costText);
   const earns = price !== null && cost !== null ? margin(price, cost) : null;
@@ -125,10 +126,16 @@ export function ProductEditor({ title, onBack, onPreview, onSaved }: Props) {
           <SwitchRow
             label="Se ve en la web"
             description={
-              missing ?? (draft.linked ? "Si lo apagas, desaparece de la web." : "Con la etiqueta «Nuevo» por 30 días.")
+              missing === null
+                ? draft.linked
+                  ? "Si lo apagas, desaparece de la web."
+                  : "Con la etiqueta «Nuevo» por 30 días."
+                : canShow
+                  ? "Sale en la web cuando tenga foto y descripción."
+                  : missing
             }
-            value={draft.showOnWeb && missing === null}
-            disabled={missing !== null}
+            value={draft.showOnWeb && canShow}
+            disabled={!canShow}
             onChange={(showOnWeb) => change({ showOnWeb })}
           />
         </View>
@@ -148,12 +155,4 @@ export function ProductEditor({ title, onBack, onPreview, onSaved }: Props) {
       </View>
     </View>
   );
-}
-
-// Un conflicto al crear es un nombre repetido; al cambiar, otro cambio que llegó antes
-function saveProblem(error: unknown, isNew: boolean, name: string): string {
-  if (toAppError(error).kind !== "conflict") return errorMessage(error);
-  return isNew
-    ? "Ya tienes un alfajor con ese nombre."
-    : `${name} ya tenía otro cambio guardado: vuelve a abrirlo y guarda otra vez.`;
 }

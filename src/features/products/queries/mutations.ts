@@ -20,8 +20,11 @@ export const productPhotoMutation = mutationOptions({
     return setProductPhoto(input.productId, input.path);
   },
   meta: { invalidates: [productKeys.all] },
-  // Con mala señal se reintenta sola (y sin señal espera a que vuelva)
+  // Sin señal espera a que vuelva (sin gastar sus reintentos); con mala señal se reintenta sola
+  networkMode: "online",
   retry: 3,
+  // Una que falla queda un día en la caché (no 5 minutos): la lista la avisa con «Reintentar las fotos»
+  gcTime: 24 * 60 * 60_000,
 });
 
 // Los ↑↓ de Ordenar

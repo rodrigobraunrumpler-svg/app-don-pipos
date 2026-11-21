@@ -151,4 +151,8 @@ test("al publicar uno nuevo, la lista sigue la copia y, cuando ya está en la we
     message: "Nuevo en Don Pipos: Alfajor Coqueta https://varmar.pe/don-pipos/alfajor-coqueta",
   });
   share.mockRestore();
+  // Cuando ese aviso se va, no vuelve el de «se publicó» con «Deshacer»
+  await act(() => jest.advanceTimersByTimeAsync(7000));
+  expect(screen.queryByText("Coqueta ya está en la web.")).toBeNull();
+  expect(screen.queryByText("Coqueta se publicó en la web.")).toBeNull();
 });
