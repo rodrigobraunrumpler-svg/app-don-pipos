@@ -1,6 +1,6 @@
 import { FlashList } from "@shopify/flash-list";
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { RefreshControl, Text, TextInput, View } from "react-native";
 
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,8 @@ type Props = {
   onOpen: (orderId: string) => void;
   onNew: () => void;
   onReceivables: () => void;
+  // La cabecera que pone la pestaña (el título con «Pedidos | Clientes», fase 7c); sin ella, el título de siempre
+  header?: ReactNode;
 };
 type Row =
   | { type: "group"; key: string; title: string }
@@ -48,7 +50,7 @@ function groupToday(orders: OrderSummary[]): Row[] {
 }
 
 // La pestaña Pedidos (PANTALLAS.pedidos): la búsqueda, los filtros con su cantidad y la lista por páginas de 20
-export function OrderList({ requestedFilter, onOpen, onNew, onReceivables }: Props) {
+export function OrderList({ requestedFilter, onOpen, onNew, onReceivables, header }: Props) {
   const online = useOnline();
   const { colors } = useTheme();
   const queryClient = useQueryClient();
@@ -102,12 +104,14 @@ export function OrderList({ requestedFilter, onOpen, onNew, onReceivables }: Pro
 
   return (
     <View className="flex-1">
-      <View className="px-5 pb-3 pt-4">
-        <Text accessibilityRole="header" className="font-extrabold text-3xl text-text">
-          Pedidos
-        </Text>
-        <Text className="text-sm text-text-secondary">{formatLongDate(now)}</Text>
-      </View>
+      {header ?? (
+        <View className="px-5 pb-3 pt-4">
+          <Text accessibilityRole="header" className="font-extrabold text-3xl text-text">
+            Pedidos
+          </Text>
+          <Text className="text-sm text-text-secondary">{formatLongDate(now)}</Text>
+        </View>
+      )}
       {noOrdersYet ? null : (
         <View className="gap-3 pb-2">
           <View className="mx-5 min-h-[46px] flex-row items-center gap-2 rounded-full border-[1.5px] border-border-strong bg-surface px-4">

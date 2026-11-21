@@ -5,7 +5,6 @@ import { ScrollView, Text, TextInput, View } from "react-native";
 
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
-import { FormHeader } from "@/components/ui/form-header";
 import { Icon } from "@/components/ui/icon";
 import { LoadError } from "@/components/ui/load-error";
 import { Notice } from "@/components/ui/notice";
@@ -24,11 +23,19 @@ const FILTERS: [CustomerFilter, string][] = [
   ["lapsed", "No vuelven"],
 ];
 
-type Props = { onBack: () => void; onOpen: (customerId: string) => void; lapsedAction: (customer: Row) => ReactNode };
+// header: la cabecera de la pestaña Pedidos (con «Pedidos | Clientes»); shortcuts: lo que la pantalla pone arriba de la
+// lista (la fidelidad y «No vuelven», de otros módulos). customers no usa a nadie
+type Props = {
+  header: ReactNode;
+  shortcuts?: ReactNode;
+  onOpen: (customerId: string) => void;
+  lapsedAction: (customer: Row) => ReactNode;
+};
 
-// Clientes (PANTALLAS.clientes): buscar por nombre o teléfono, «Todos», «Los que más compran» y «No vuelven», de 20 en
-// 20. En «No vuelven», «Escribirle» lo pone quien llama (el mensaje es de messages): customers no usa a nadie
-export function CustomersScreen({ onBack, onOpen, lapsedAction }: Props) {
+// Clientes (PANTALLAS.clientes), dentro de la pestaña Pedidos desde la fase 7c: buscar por nombre o teléfono, «Todos»,
+// «Los que más compran» y «No vuelven», de 20 en 20. En «No vuelven», «Escribirle» lo pone quien llama (el mensaje es de
+// messages)
+export function CustomersScreen({ header, shortcuts, onOpen, lapsedAction }: Props) {
   const online = useOnline();
   const { colors } = useTheme();
   const [filter, setFilter] = useState<CustomerFilter>("all");
@@ -75,11 +82,7 @@ export function CustomersScreen({ onBack, onOpen, lapsedAction }: Props) {
 
   return (
     <View className="flex-1">
-      <FormHeader
-        title="Clientes"
-        subtitle={everyone && list.data ? `${total} ${total === 1 ? "cliente" : "clientes"}` : undefined}
-        onBack={onBack}
-      />
+      {header}
       {noneYet ? (
         <View className="items-center px-5 pt-10">
           <Icon name="account-group-outline" size={42} tone="textMuted" />
@@ -108,6 +111,10 @@ export function CustomersScreen({ onBack, onOpen, lapsedAction }: Props) {
                 <Chip key={key} label={label} selected={filter === key} onPress={() => setFilter(key)} />
               ))}
             </ScrollView>
+            {shortcuts ? <View className="px-5">{shortcuts}</View> : null}
+            {everyone && list.data ? (
+              <Text className="px-5 text-[13px] text-text-secondary">{`${total} ${total === 1 ? "cliente" : "clientes"}`}</Text>
+            ) : null}
             {online || !list.data ? null : (
               <View className="px-5">
                 <Notice>{`Sin conexión. Ves los clientes de las ${formatTime(new Date(list.dataUpdatedAt))}.`}</Notice>

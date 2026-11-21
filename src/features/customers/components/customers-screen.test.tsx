@@ -32,7 +32,7 @@ const ROWS = [
   row({ id: "c3", name: "Martín C. (DEMO)", ordersCount: 1, spentCents: 2400, acceptsPromotions: false }),
 ];
 const handlers = () => ({
-  onBack: jest.fn(),
+  header: null,
   onOpen: jest.fn(),
   lapsedAction: (customer: CustomerRow) => <Text>{`Escribirle a ${customer.name}`}</Text>,
 });

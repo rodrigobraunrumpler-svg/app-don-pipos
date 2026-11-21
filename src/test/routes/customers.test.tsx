@@ -1,4 +1,5 @@
-// Clientes → la ficha → atrás, y «Escribirle» en «No vuelven», con las rutas de verdad
+// Pedidos › Clientes → la ficha → uno de sus pedidos → atrás, los atajos de arriba, «Escribirle» en «No vuelven» y un
+// filtro que llega desde Inicio, con las rutas de verdad
 import { QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
@@ -8,7 +9,7 @@ import { Linking } from "react-native";
 
 import CustomerProfile from "@/app/(main)/customers/[id]";
 import OrderScreen from "@/app/(main)/orders/[id]";
-import Customers from "@/app/(main)/customers/index";
+import Orders from "@/app/(main)/(tabs)/orders";
 import { createTestQueryClient } from "@/test/render";
 import { ThemeProvider } from "@/theme";
 
@@ -34,14 +35,15 @@ jest.mock("@/features/orders/api/orders", () => {
       meta: { limit: 20, total: 1, hasMore: false, nextCursor: null },
     }),
     getOrder: async () => TEST_ORDER,
+    listOrders: async () => ({
+      items: [summaryOf(TEST_ORDER)],
+      meta: { limit: 20, total: 1, hasMore: false, nextCursor: null },
+    }),
+    getOrderCounts: async () => ({ today: 1, toDeliver: 1, upcoming: 0, toCollect: 1, all: 1 }),
   };
 });
 jest.mock("@/features/businesses/api/business", () => ({
-  getBusiness: async () => ({
-    id: "00000000-0000-4000-8000-0000000000b1",
-    name: "Don Pipos (DEMO)",
-    settings: { activePaymentMethods: ["cash", "yape"], deliveryFeeCents: 500, version: 1 },
-  }),
+  getBusiness: async () => jest.requireActual("@/test/business").TEST_BUSINESS,
 }));
 jest.mock("@/features/loyalty/api/loyalty", () => ({
   getLoyaltySettings: async () => ({
@@ -95,13 +97,18 @@ function Providers({ children }: { children: ReactNode }) {
   );
 }
 const ROUTES = {
-  "customers/index": Customers,
+  orders: Orders,
   "customers/[id]": CustomerProfile,
   "orders/[id]": OrderScreen,
 };
 
-test("Clientes → la ficha → uno de sus pedidos, y atrás vuelve paso a paso", async () => {
-  await renderRouter(ROUTES, { initialUrl: "/customers", wrapper: Providers });
+async function openCustomers() {
+  await renderRouter(ROUTES, { initialUrl: "/orders", wrapper: Providers });
+  await fireEvent.press(await screen.findByRole("radio", { name: "Clientes" }));
+}
+
+test("Pedidos › Clientes → la ficha → uno de sus pedidos, y atrás vuelve paso a paso hasta los clientes", async () => {
+  await openCustomers();
   await fireEvent.press(await screen.findByRole("button", { name: /^Rosa T\. \(DEMO\)/ }));
   expect(screen).toHavePathname("/customers/c2");
   expect(await screen.findByText("900 000 505")).toBeOnTheScreen();
@@ -111,12 +118,26 @@ test("Clientes → la ficha → uno de sus pedidos, y atrás vuelve paso a paso"
   await act(() => router.back());
   expect(screen).toHavePathname("/customers/c2");
   await act(() => router.back());
-  expect(screen).toHavePathname("/customers");
+  expect(screen).toHavePathname("/orders");
+  expect(screen.getByRole("radio", { name: "Clientes", checked: true })).toBeOnTheScreen();
+});
+
+test("arriba de los clientes: la fidelidad y desde cuándo un cliente no vuelve", async () => {
+  await openCustomers();
+  expect(await screen.findByRole("button", { name: "Fidelidad, Apagada" })).toBeOnTheScreen();
+  expect(await screen.findByRole("button", { name: "Clientes que no vuelven, 30 días" })).toBeOnTheScreen();
+});
+
+test("un filtro que llega desde Inicio muestra los pedidos, aunque se estuvieran mirando los clientes", async () => {
+  await openCustomers();
+  await act(() => router.navigate({ pathname: "/orders", params: { filter: "to_deliver" } }));
+  expect(await screen.findByRole("radio", { name: "Pedidos", checked: true })).toBeOnTheScreen();
+  expect(await screen.findByRole("button", { name: "Por entregar", selected: true })).toBeOnTheScreen();
 });
 
 test("en «No vuelven», «Escribirle» abre WhatsApp con el mensaje lleno", async () => {
   const open = jest.spyOn(Linking, "openURL").mockResolvedValue(undefined);
-  await renderRouter(ROUTES, { initialUrl: "/customers", wrapper: Providers });
+  await openCustomers();
   await fireEvent.press(await screen.findByRole("button", { name: "No vuelven" }));
   await fireEvent.press(await screen.findByRole("button", { name: "Escribirle" }));
   expect(open).toHaveBeenCalledWith(
