@@ -12,13 +12,15 @@ const config: ExpoConfig = {
     package: "pe.varmar.app",
     // La caché guardada tiene datos de los clientes: no va a la copia de seguridad de Google
     allowBackup: false,
-    adaptiveIcon: { foregroundImage: "./assets/icon.png", backgroundColor: "#354b2e" },
+    versionCode: 1,
+    // El logo redondo dentro del área segura, sobre el crema de la marca: así lo recorta bien cada lanzador
+    adaptiveIcon: { foregroundImage: "./assets/adaptive-icon.png", backgroundColor: "#FAF7E9" },
   },
   web: { bundler: "metro" },
   plugins: [
     "expo-router",
     "expo-font",
-    ["expo-splash-screen", { image: "./assets/icon.png", imageWidth: 180, backgroundColor: "#354b2e" }],
+    ["expo-splash-screen", { image: "./assets/splash-icon.png", imageWidth: 200, backgroundColor: "#354b2e" }],
     // La sesión cifrada (LargeSecureStore) y la huella; en Expo Go ya vienen, en la APK los agregan estos plugins
     "expo-secure-store",
     "expo-local-authentication",
@@ -33,9 +35,9 @@ const config: ExpoConfig = {
         microphonePermission: false,
       },
     ],
-    // Los recordatorios: avisos del propio celular. El ícono de Don Pipos para Android (blanco sobre transparente) llega
-    // con la APK (fase 8); en Expo Go salen con el de Expo Go
-    "expo-notifications",
+    // Los recordatorios: avisos del propio celular, con «DP» blanco sobre transparente, como pide Android (fase 8). En
+    // Expo Go salen con el ícono de Expo Go
+    ["expo-notifications", { icon: "./assets/notification-icon.png", color: "#354b2e" }],
   ],
   experiments: { typedRoutes: true, reactCompiler: true },
 };
