@@ -6,7 +6,7 @@ Al cerrar el día, saber si el efectivo cuadra: cuánto debería haber frente a 
 
 **Pantallas de la maqueta que cubre:**
 - Cuadre de caja, con sus vistas Cuadra, Falta dinero y Sin internet.
-- «Cuadrar caja» en Inicio y «Cuadre de caja» en Más.
+- «Cuadrar caja» en Inicio (desde la fase 7c ya no hay pestaña Más).
 
 ## 2. Datos
 
@@ -66,7 +66,7 @@ Los comunes: el dueño lee sus cierres y escribe solo con las funciones.
   - «Cerrar el día», fijo abajo. Se activa cuando ya hay un conteo.
 - **Día cerrado:** el resultado y «Volver a contar».
 - **Sin internet:** puede contar, pero el cierre espera a que vuelva la señal.
-- **Accesos:** «Cuadrar caja ›» en Inicio, y en Más «Cuadre de caja», con «Hoy» o «Cerrado».
+- **Acceso:** «Cuadrar caja ›» en la tarjeta de lo cobrado hoy, en Inicio. Dice «Caja cerrada» cuando ya se cuadró.
 
 ## 7. Con otros módulos
 

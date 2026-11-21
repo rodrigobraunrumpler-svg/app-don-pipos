@@ -10,7 +10,7 @@ El dueño entra con su número y un PIN de 6 números que crea el equipo, sin co
 **Pantallas de la maqueta que cubre:**
 - Ingresar en un celular.
 - Entrar, con huella o PIN.
-- Más → Cuenta.
+- Ajustes (el ⚙ de Inicio) → Tu cuenta y este celular.
 
 ## 2. Datos
 
@@ -113,7 +113,7 @@ Son números que alguien escribió: las filas sin cambios hace más de 30 días 
   - el PIN, con una tecla de huella;
   - «PIN incorrecto» con los intentos que quedan;
   - «Cerramos la sesión», con «Ingresar de nuevo».
-- **Más → Cuenta:** tu número, entrar con huella (interruptor), cuándo pedir huella o PIN (hoja), cambiar PIN y cerrar sesión en este celular.
+- **Ajustes → Tu cuenta y este celular** (el ⚙ de Inicio; desde la fase 7c ya no hay pestaña Más): tu número, entrar con huella (interruptor), cuándo pedir huella o PIN (hoja), Recordatorios (`reminders.md`), cambiar PIN y cerrar sesión en este celular.
 - **Recién ingresado,** si el celular tiene huella: «¿Entrar con tu huella?» (`/biometrics`), antes de Inicio.
 - **El layout raíz:** sin sesión manda a Ingresar; con sesión y bloqueo, a Entrar; recién ingresado, a la huella; si no, a las pestañas. Lo hace con `Stack.Protected`, y la entrada `/` (sin protección) lleva a donde corresponde. Mientras se sabe si hay sesión, solo el fondo.
 - **Sin variables de entorno válidas:** «Falta configurar la app», con lo que falta.

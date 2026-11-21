@@ -12,7 +12,7 @@
 
 **Pantallas de la maqueta que cubre:**
 - Puesta en marcha (3 pasos).
-- En Más: las filas «Medios de pago», «Delivery» y «Producción», con sus hojas.
+- Ajustes (el ⚙ de Inicio, fase 7c): las filas «Medios de pago», «Delivery», «Producción» y «Clientes que no vuelven», con sus hojas.
 - El consejo de la primera vez en Inicio.
 
 ## 2. Datos
@@ -100,7 +100,7 @@ La anota el script de copia del VPS. No lleva `business_id` porque la copia es d
 
 ## 5. Cuentas en el celular (`rules/`)
 
-- **`settings-labels.ts`:** los textos de las filas de Más.
+- **`settings-labels.ts`:** los textos de las filas de Ajustes.
   - `production_interval_days` 1 → «Cada día»; 7 → «Cada 7 días».
   - Delivery 500 → «S/ 5.00»; 0 → «Sin costo».
   - Medios activos `cash`, `yape`, `plin` → «3».
@@ -120,12 +120,18 @@ La anota el script de copia del VPS. No lleva `business_id` porque la copia es d
   - Paso 3, «Tus tipos de gasto»: chips con los cinco de la maqueta (Insumos, Empaques, Delivery, Servicios, Otros), los cuatro primeros marcados. Son sugerencias de pantalla: nada se crea sin «Terminar».
   - «Terminar» muestra «Todo listo» y lleva a Inicio con el consejo de la primera vez («Toca + abajo…», «Entendido»). El consejo sale una sola vez: una marca en el celular que «Entendido» borra.
   - Cada paso es una pantalla de la pila: se puede volver atrás sin perder lo puesto.
-- **Más, hojas de ajustes:**
+- **Ajustes** (fase 7c: la pestaña Más ya no existe) se abre con el ⚙ de Inicio, como una pantalla de la pila con «Volver». Tiene tres grupos:
+  - *Tu negocio:* Productos y precios, Medios de pago, Delivery, Producción y Tipos de gasto.
+  - *Tus clientes:* Fidelidad, Mensajes de WhatsApp y Clientes que no vuelven.
+  - *Tu cuenta y este celular:* tu número, la huella, cuándo pedir huella o PIN, Recordatorios, cambiar PIN y cerrar sesión (`auth.md`).
+
+  Algunos se abren también donde se usan: Productos y precios desde Stock, Tipos de gasto desde Gastos, Fidelidad y Clientes que no vuelven desde Pedidos › Clientes, Recordatorios desde la campana de Inicio.
+- **Ajustes, sus hojas:**
   - «Medios de pago»: interruptores. Los apagados dejan de aparecer al anotar pedidos y gastos.
   - «Delivery»: el costo. La zona de reparto no se muestra ni se pide hasta que algo la use (la web, en su fase 2).
   - «Producción»: cada cuántos días produce. Inicio y Stock sugieren para ese periodo.
   - «Clientes que no vuelven»: a partir de cuántos días sin pedir un cliente sale en «No vuelven» (decidido en la fase 7b; la maqueta no tiene la fila).
-- **Más, arriba:** «Tus datos están respaldados. Última copia de seguridad: hoy, 03:00». Si está atrasada, en ámbar: «La copia de seguridad está atrasada. El equipo ya está avisado».
+- **Ajustes, arriba:** «Tus datos están respaldados. Última copia de seguridad: hoy, 03:00». Si está atrasada, en ámbar: «La copia de seguridad está atrasada. El equipo ya está avisado».
 - **Vistas:** «Guardando…». Sin internet, las hojas dicen «Sin conexión. Los cambios esperan a que vuelva la señal» y no dejan guardar hasta que vuelva (los guardados de la app salen al momento y avisan si no hay señal). Un cambio que llegó antes responde «Otro cambio llegó antes: revisa los ajustes y vuelve a guardar», sin perder lo escrito, y la hoja muestra «Lo guardado ahora: …». El delivery llega hasta S/ 10,000 (la hoja lo dice antes de guardar).
 
 ## 7. Con otros módulos
@@ -156,4 +162,4 @@ La anota el script de copia del VPS. No lleva `business_id` porque la copia es d
 ## 9. Fuera de esta versión
 
 - Varios usuarios por negocio (cajeros) y roles.
-- Cambiar de negocio dentro de la app. Cuando entre VarMar, será un selector en Más.
+- Cambiar de negocio dentro de la app. Cuando entre VarMar, será un selector en Ajustes.

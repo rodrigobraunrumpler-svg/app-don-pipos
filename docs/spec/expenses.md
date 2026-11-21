@@ -8,7 +8,7 @@
 **Pantallas de la maqueta que cubre:**
 - Gastos y Anotar gasto.
 - Las hojas Corregir y Anular.
-- Más → Tipos de gasto.
+- Tipos de gasto: en Ajustes (el ⚙ de Inicio) y arriba de Gastos. Gastos se abre desde la tarjeta «Gastos» de Reportes (fase 7c).
 
 ## 2. Datos
 
@@ -88,7 +88,7 @@ Los comunes, más las políticas de Storage de §2.
 
   La foto sube después de guardar el gasto, con su propio corte de 60 s. Si falla, el aviso ofrece reintentar, y la hoja del gasto deja agregarla después: el gasto nunca se pierde.
   Sin señal, «Guardar» se apaga y lo dice: no queda un borrador guardado (son tres datos).
-- **Tipos de gasto:** una hoja en Más.
+- **Tipos de gasto:** una hoja, que se abre desde Ajustes y desde arriba de Gastos.
 
 ## 7. Con otros módulos
 

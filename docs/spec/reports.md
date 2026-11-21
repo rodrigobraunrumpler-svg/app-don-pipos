@@ -11,7 +11,8 @@ Saber cómo va el día y el negocio sin sacar cuentas. Todo se calcula en la bas
 **Pantallas de la maqueta que cubre:**
 - Inicio, en todas sus vistas, incluida «Primera vez».
 - Reportes y Más vendidos.
-- Exportar a Excel, en Más.
+- Exportar a Excel, dentro de Reportes, debajo del periodo.
+- Desde la fase 7c, Reportes es una pestaña (la última de la barra de abajo, en el lugar de Más), sin «Volver». Sus tarjetas «Ingresos» y «Gastos» abren su lista (`income.md`, `expenses.md`).
 
 ## 2. Datos
 

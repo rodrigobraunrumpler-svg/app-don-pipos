@@ -119,3 +119,38 @@
 - [ ] Las especificaciones donde decían «Más», el README del plan, «Resultado» y «Lo que falta» de este plan.
 - [ ] Verificar: `pnpm test`, `pnpm lint`, `pnpm typecheck` y `prettier --check`.
 - [ ] **Commit** — `docs: record the navigation without Más`.
+
+## Resultado (2026-11-20)
+
+La fase 7c quedó construida en la rama `fase-7c`, con un commit por tarea. Pasan 761 pruebas, lint, tipos y formato. No hubo cambios en la base ni librerías nuevas.
+
+### Lo que falta: probar en el celular
+
+```bash
+cd /home/javier/var-mar/app && pnpm start --tunnel
+```
+
+1. **La barra de abajo** dice Inicio, Pedidos, +, Stock y Reportes. Más ya no está.
+2. **Inicio → ⚙** (arriba a la derecha, al lado de la campana) abre **Ajustes**, con tres grupos:
+   - Tu negocio;
+   - Tus clientes;
+   - Tu cuenta y este celular, con Recordatorios y cerrar sesión.
+
+   Abre una hoja y una pantalla (Productos y precios); la flecha vuelve.
+3. **Pedidos:** arriba, «Pedidos | Clientes».
+   - En Clientes, arriba están Fidelidad y Clientes que no vuelven.
+   - Abre un cliente y vuelve: sigues en Clientes.
+   - Toca «por entregar» en Inicio: Pedidos se abre en la lista de pedidos.
+4. **Reportes** (la pestaña):
+   - «Exportar a Excel» está debajo del periodo.
+   - La tarjeta «Gastos» abre la lista de gastos, con Tipos de gasto arriba, y la flecha vuelve.
+   - La tarjeta «Ingresos» abre los ingresos.
+5. **Stock:** arriba, «Productos y precios».
+6. **El +:** la última opción es «Un ingreso».
+7. **Las transiciones:** las pestañas cambian con su desliz corto, y Ajustes, Gastos, Ingresos y la ficha del cliente entran desde la derecha.
+
+### Lo que cambió respecto de este plan
+
+- **Todo lo de Reportes se hizo en la tarea 1:** el título sin «Volver», «Exportar a Excel» y las tarjetas que abren su lista. Era la misma pantalla y las mismas pruebas.
+- **«Pedidos | Clientes» se guarda en la ruta** (`?ver=clientes`): sigue elegido al volver de la ficha de un cliente, aunque la pantalla se vuelva a armar.
+- **Clientes muestra «N clientes» encima de la lista,** ya que el título de la pestaña es Pedidos.

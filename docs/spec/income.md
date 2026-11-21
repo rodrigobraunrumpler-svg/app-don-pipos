@@ -9,7 +9,7 @@ Lo que entra al negocio. Cuenta por fecha de pago (D11) y tiene dos partes:
 **Pantallas que cubre:**
 - «Cobrado hoy» en Inicio.
 - Los ingresos en Reportes.
-- **Ingresos y Anotar ingreso. No están en la maqueta:** se arman con la misma forma que Gastos y Anotar gasto, y se abren desde una fila nueva en Más («Ingresos»).
+- **Ingresos y Anotar ingreso. No están en la maqueta:** se arman con la misma forma que Gastos y Anotar gasto, y se abren desde la tarjeta «Ingresos» de Reportes; «Un ingreso» se anota con el + (fase 7c: antes era una fila de Más).
 
 ## 2. Datos
 
@@ -54,7 +54,7 @@ No tiene cuentas propias: los montos se muestran con `lib/money`.
 ## 6. Pantallas y estados
 
 - **Inicio:** «Cobrado hoy», con la barra por medio de pago y solo los medios que tienen monto.
-- **Ingresos (en Más):**
+- **Ingresos (Reportes › tarjeta Ingresos):**
   - el total del mes;
   - la lista: los pagos con su pedido y los ingresos a mano con su descripción;
   - «Anotar ingreso».

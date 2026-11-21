@@ -8,7 +8,7 @@ Una tarjeta de sellos digital (D15):
 - Queda apagada hasta que el dueño defina la meta y el premio.
 
 **Pantallas de la maqueta que cubre:**
-- Fidelidad, en Más.
+- Fidelidad, en Ajustes (el ⚙ de Inicio) y arriba de Pedidos › Clientes (fase 7c).
 - La tarjeta de sellos en la ficha del cliente.
 - «Sofía tiene su premio listo → Aplicar», en el paso 2 del pedido.
 - Los sellos en el mensaje de entregado.

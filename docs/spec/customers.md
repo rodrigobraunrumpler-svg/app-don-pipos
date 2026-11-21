@@ -68,7 +68,7 @@ Los comunes: el dueño lee sus clientes y escribe solo con las funciones. Otro n
 
 ## 6. Pantallas y estados
 
-- **Clientes:**
+- **Clientes** (desde la fase 7c, dentro de la pestaña Pedidos: «Pedidos | Clientes» arriba; arriba de la lista, Fidelidad y Clientes que no vuelven):
   - búsqueda por nombre o teléfono;
   - filtros Todos, Los más compran y No vuelven;
   - cada fila con sus iniciales, el nombre, sus pedidos, el último y lo gastado;

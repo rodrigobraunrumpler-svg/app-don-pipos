@@ -11,7 +11,7 @@ En esta versión no hay un servidor de notificaciones.
 
 **Pantallas de la maqueta que cubre:**
 - El celular con avisos, en «Detalles que se sienten».
-- Más → Recordatorios.
+- Ajustes → Tu cuenta y este celular → Recordatorios.
 
 ## 2. Datos
 
@@ -45,7 +45,7 @@ Los interruptores siguen los permisos comunes de `business_settings`. Además, l
 
 ## 6. Pantallas y estados
 
-- **Más → Recordatorios:** tres interruptores, cada uno con su descripción («Cuando llegan al mínimo o quedan para un día», en el de los alfajores: fase 7b). Si el celular no dio permiso de avisos, lo dice: si nunca se pidió, «Permitir avisos» lo pide; si se negó, «Abrir ajustes del celular» abre los del sistema. Con el permiso dado (desde la hoja o desde los ajustes del celular), los avisos se programan al volver a la app.
+- **Ajustes → Recordatorios** (en «Tu cuenta y este celular»): tres interruptores, cada uno con su descripción («Cuando llegan al mínimo o quedan para un día», en el de los alfajores: fase 7b). Si el celular no dio permiso de avisos, lo dice: si nunca se pidió, «Permitir avisos» lo pide; si se negó, «Abrir ajustes del celular» abre los del sistema. Con el permiso dado (desde la hoja o desde los ajustes del celular), los avisos se programan al volver a la app.
 - **Los avisos** llevan el logo de Don Pipos. En Expo Go llevan el de Expo Go: el de Don Pipos (blanco sobre transparente, como pide Android) entra con la app de verdad (fase 8).
 - **La campana de Inicio** abre «Avisos», cada uno con su pantalla, y lleva un punto si hay alguno. Los dice a hoy (`listReminders`): el pedido de mañana (aunque ya pasaron las 18:00), cada alfajor bajo (aunque ya avisó) y quién debe, contado desde hoy. Sigue los interruptores.
 
