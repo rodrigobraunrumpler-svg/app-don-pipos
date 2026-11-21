@@ -16,7 +16,7 @@
 
 | Columna | Tipo | Regla |
 |---|---|---|
-| `name` | text | De 1 a 40 letras. Único en el negocio, sin importar mayúsculas. En la web va como «Alfajor X» |
+| `name` | text | De 1 a 40 letras. Único en el negocio, sin importar mayúsculas, y también su nombre en la web: «Coqueta» y «Alfajor Coqueta» serían la misma página. En la web va como «Alfajor X» |
 | `price_cents` | int > 0 | Hasta S/ 10,000 |
 | `cost_cents` | int > 0, puede ir vacío | Para la ganancia por alfajor |
 | `min_stock` | int ≥ 0 | 0 hasta que el dueño lo ponga |
@@ -56,6 +56,7 @@ Privado, de hasta 4 MB y solo JPEG. El dueño sube y lee solo en la carpeta de s
 | Tabla | Índice | Sirve para |
 |---|---|---|
 | `products` | único `(business_id, lower(name))` | Que no se repitan los nombres |
+| `products` | único `(business_id, lower(private.web_name(name)))` | Que no se repitan en la web |
 | `products` | parcial `(business_id, sort_order)`, si está activo | La lista de la app |
 | `products` | único parcial `(sanity_id)`, si tiene | El enlace con la web |
 | `private.web_sync_outbox` | parcial `(created_at)`, si falta enviar | Lo pendiente, del más viejo al más nuevo |
@@ -76,8 +77,8 @@ Privado, de hasta 4 MB y solo JPEG. El dueño sube y lee solo en la carpeta de s
 - **`save_product(id, expected_version, name, price_cents, cost_cents, min_stock, show_on_web, description, allergens)`:** crea o cambia un producto.
   - Anota `content` si cambia el nombre, la descripción o los alérgenos, o si uno que todavía no está en la web prende «Se ve». Si no, anota `state` cuando cambia el precio o si se ve. El cambio queda en el registro (`private.audit_log`): «¿cuándo subí el precio?».
   - No exige la descripción para «Se ve»: la copia espera (`incomplete`) y la app no deja prenderlo sin ella.
-  - Un nombre repetido responde `conflict`, igual que otra versión.
-- **`set_product_photo(id, path)`:** guarda la foto que la app acaba de subir y anota `content`. La ruta tiene que ser de su negocio y de ese alfajor; si no, `invalid`.
+  - Un nombre repetido (también en la web) responde `conflict`, igual que otra versión.
+- **`set_product_photo(id, path)`:** guarda la foto que la app acaba de subir y anota `content`. La ruta tiene que ser de su negocio y de ese alfajor; si no, `invalid`. No cambia la versión: la sube la app sola, y no debe chocar con guardar justo después ni con «Deshacer».
 - **`reorder_products(ids)`:** los alfajores en ese orden (los ↑↓ de la app) y la lista como queda. Uno de otro negocio responde `not_found`; uno repetido, `invalid`. Anota el estado de todos los enlazados, y no cambia la versión de nadie: el orden no se edita en el formulario, así que no debe causar conflictos.
 - **«Los más vendidos primero»** (el ajuste `products_by_sales`, `businesses.md`): `private.order_products_by_sales` ordena por lo vendido en los últimos 30 días, en pedidos entregados. Corre al prender el ajuste y el día 1 de cada mes (cron `order-products-by-sales`, 03:30 de Lima).
 - **«Nuevo» vence:** cada día (cron `expire-new-badges`, 03:45 de Lima), `private.expire_new_badges` manda el estado sin la etiqueta de los que cumplieron 30 días.
@@ -89,15 +90,18 @@ Privado, de hasta 4 MB y solo JPEG. El dueño sube y lee solo en la carpeta de s
   - **Solo se copia el negocio enlazado a la web** (`web_sync_business_id` en Vault). El proyecto de Supabase es uno solo, y los datos DEMO conviven con los reales hasta limpiarlos: lo de otro negocio se cierra con `not_live_business` y no se puede enlazar. Sin ese valor no se toca nada.
   - La función toma lo pendiente con `private.claim_web_sync`, una corrida a la vez (un candado de la transacción; la otra vuelve sin nada). Saca uno por producto:
     - `payload`, su estado de ahora (`private.web_state`): `priceMinor`, `isAvailable`, `isVisible`, `sortOrder` e `isNew`;
-    - `content`, si alguna fila es de contenido o si todavía no está en la web (`private.web_content`): el nombre «Alfajor X», la descripción (solo si la app tiene una), los alérgenos, la foto, si cambió, y su texto alternativo «Alfajor X de Don Pipos».
+    - `content`, si alguna fila es de contenido o si todavía no está en la web (`private.web_content`): el nombre «Alfajor X», la descripción (solo si la app tiene una), los alérgenos, la foto, si cambió, y su texto alternativo «Alfajor X de Don Pipos». De uno que nació en el panel (lo enlazó el equipo: sin `web_published_at`) no van el nombre ni, si la app no tiene, los alérgenos: «Alfajor de Manteadita» conserva su nombre de allá.
   - Uno que todavía no está en la web y no se ve, o al que le falta la foto o la descripción, cierra sus filas (`not_on_web`, `incomplete`): **nunca se crea una página vacía.** La foto que llega después lo vuelve a anotar.
   - **Si la foto cambió,** la función la baja de Storage y la sube a Sanity, con su texto y `rightsConfirmed: true` (la sube el dueño). Cambiar el precio no la vuelve a subir.
   - **Si el alfajor ya está en la web,** el cambio va al documento y, si alguien lo tiene abierto en Studio, también a su borrador: así publicarlo no devuelve el precio viejo.
-  - **Si no está,** busca su dirección (`alfajor-coqueta`): libre, la usa; ocupada por uno con el mismo nombre, es el mismo alfajor y lo enlaza (también después de un corte a medias); ocupada por otro, prueba `-2`, `-3`… Crea el documento `product-don-pipos-<slug>` en la categoría de Don Pipos (`SANITY_DON_PIPOS_CATEGORY`), con «Nuevo».
+  - **Si no está,** busca su dirección (`alfajor-coqueta`): libre, la usa; ocupada por uno con el mismo nombre, es el mismo alfajor y lo enlaza (también después de un corte a medias), salvo que esa página ya sea de otro alfajor de la app; ocupada por otro, prueba `-2`, `-3`… Crea el documento `product-don-pipos-<slug>` en la categoría de Don Pipos (`SANITY_DON_PIPOS_CATEGORY`), con «Nuevo».
   - Lo que alguien edite en el panel (más fotos, ingredientes) no se pisa: la app manda solo sus campos.
   - Si llamar a la función falla (pg_net o Vault), el cambio del dueño se guarda igual; el cron lo vuelve a intentar.
   - Manda los pedidos a Sanity con su token (`SANITY_WRITE_TOKEN`, un secreto de Supabase que nunca está en la app). Si un alfajor falla, los demás igual se copian. El proyecto y el dataset salen de `SANITY_PROJECT_ID` y `SANITY_DATASET`: en desarrollo, `development` (los datos DEMO nunca van a `production`).
-  - Después, `private.finish_web_sync(ids, error, result)` marca `sent_at`, o suma un intento y guarda el error. Con un resultado, el alfajor guarda su documento, su dirección, la foto del CDN, la foto subida y, si recién se creó, `web_published_at`. Con 10 intentos fallidos lo escribe en los registros de la función; el aviso al equipo por Sentry llega con la APK.
+  - Después, `private.finish_web_sync(ids, error, result)` marca `sent_at`, o suma un intento y guarda el error. Con 10 intentos fallidos lo escribe en los registros de la función; el aviso al equipo por Sentry llega con la APK. Con un resultado, el alfajor guarda su documento, su dirección, la foto del CDN, la foto subida y, si recién se creó, `web_published_at`:
+    - recién enlazado, vuelve a anotar su estado: lo que cambió mientras se creaba («Deshacer», un precio, el stock) sale con el estado de ahora;
+    - si ese documento ya es de otro alfajor, no lo enlaza: sus filas vuelven como fallidas y la corrida sigue con los demás;
+    - un cambio de estado de uno enlazado no toca su fila: la copia no la bloquea mientras sube las fotos de otros.
   - Sin los secretos de Sanity, la función responde `not_configured` y no toca el outbox.
   - **Enlazar un producto:** el equipo corre `private.link_product(id, sanity_id, image_url, slug)`, solo para el negocio de la web, y anota su estado completo.
   - **Para el equipo:** `pnpm web connect --dataset <production|development> --business <id>` guarda los secretos de la función y los de Vault, la categoría de Don Pipos, y enlaza cada alfajor con su documento por el nombre (sin «Alfajor», «de» ni tildes), con su foto y su dirección. Los que no están en la web y ya están completos quedan anotados para crearse. Se puede repetir: cambia el secreto. `pnpm web status` muestra lo pendiente, los errores y las últimas respuestas de la función.
@@ -129,14 +133,14 @@ Nuevo alfajor, Editar, Vista previa y Ordenar son pantallas de la pila de Produc
 - **Productos y precios** (se abre desde Ajustes y desde Stock, fase 7c):
   - cada alfajor con su foto o sus iniciales, el precio, «Mínimo 6, cuesta S/ 5.10» y cómo va en la web: «En la web», «Oculto», «Subiendo a la web…», «Le falta foto o descripción», «Todavía no está en la web» o «No se pudo subir», y «Nuevo» los primeros 30 días;
   - si alguno falla 3 veces: «La web no se está actualizando. Tus cambios están guardados en la app.», con «Avisar al equipo» (WhatsApp del equipo);
-  - una foto que no subió dice «La foto espera la señal». Se reintenta sola 3 veces y espera la señal; después, «Reintentar las fotos», como en Gastos. Una foto que no subió antes de cerrar la app se pierde, y el alfajor dice que le falta;
+  - mientras su foto sube, «Subiendo a la web…»; sin señal, «La foto espera la señal», y sube sola cuando vuelve. Con mala señal se reintenta sola 3 veces; después, «Reintentar las fotos», como en Gastos (una que falló queda un día). Una foto que no subió antes de cerrar la app se pierde, y el alfajor dice que le falta;
   - «Agregar producto» abre Nuevo alfajor, y «Ordenar», Ordenar.
 - **Nuevo alfajor y Editar:**
   - la foto: «Tomar foto» o «De la galería», recortada en cuadrado con el recortador del celular y achicada a 1600 px. Una foto chica avisa «Esta foto es chica: en la web se vería borrosa. Tómala de más cerca o con más luz.», con «Usar igual»;
   - el nombre, con «En la web: «Alfajor Coqueta»», el precio, la descripción (con la cuenta hasta 400) y los alérgenos (opcionales);
   - el costo (con la ganancia) y el stock mínimo;
-  - «Se ve en la web»: apagado mientras falte algo, y lo dice. En uno nuevo, «Con la etiqueta «Nuevo» por 30 días»; en uno que ya está, «Si lo apagas, desaparece de la web.»;
-  - «Vista previa» y «Guardar». Un nombre repetido dice «Ya tienes un alfajor con ese nombre.»; otro cambio que llegó antes, que lo vuelva a abrir.
+  - «Se ve en la web»: no se prende mientras falte algo, y lo dice. En uno nuevo, «Con la etiqueta «Nuevo» por 30 días»; en uno que ya está, «Si lo apagas, desaparece de la web.». Uno que ya se veía sigue viéndose aunque su foto todavía esté subiendo («Sale en la web cuando tenga foto y descripción.»);
+  - «Vista previa» y «Guardar». Un nombre repetido dice «Ya tienes un alfajor con ese nombre.» (también al publicar); otro cambio que llegó antes, que lo vuelva a abrir.
 - **Vista previa:** la tarjeta como se verá en la web, y «Publicar».
 - **Al publicar** vuelve a la lista con «Coqueta se publicó en la web.» y «Deshacer» (lo oculta otra vez). La lista sigue la copia cada 3 segundos, hasta un minuto. Cuando ya está en la web: «Coqueta ya está en la web.», con «Compartir» (sin dirección de la web, no sale).
 - **Al guardar** sin publicar: «Coqueta guardado.».
@@ -164,6 +168,7 @@ Nuevo alfajor, Editar, Vista previa y Ordenar son pantallas de la pila de Produc
 - Un producto desactivado no aparece en la lista ni en los pedidos nuevos, pero sí en los viejos.
 - La copia a la web: sale uno por producto con su estado de ahora; un alfajor sin foto o sin descripción no se crea; lo enviado se cierra y un error suma un intento; con un resultado, el alfajor guarda su documento, su dirección y su foto; enlazar anota el estado completo; la base llama solo con sus secretos, una vez por transacción, y con 10 intentos solo a la hora en punto.
 - Ordenar a mano y por lo vendido; «Nuevo» vence a los 30 días.
+- Después de la revisión (`152`): «Deshacer» mientras se crea la página llega a la web; un documento de otro alfajor no corta la corrida; dos alfajores no comparten nombre en la web; la foto no cambia la versión; los alfajores del panel conservan su nombre.
 
 **La función (node:test, `_shared/sanity.test.ts`):** las mutaciones (estado, contenido, crear con «Nuevo»), la dirección libre, la del mismo alfajor y la `-2`, la subida de la foto, un 2xx, un error con su código y uno de red.
 

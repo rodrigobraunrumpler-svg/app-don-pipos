@@ -294,3 +294,49 @@ cd /home/javier/var-mar/app && pnpm start --tunnel
 - **La vista previa usa la letra de la app (Manrope):** Cormorant necesitaría una librería nueva.
 - **El borrador empieza al tocar un alfajor en la lista,** no en un efecto de la pantalla (lo pide el lint del compilador de React).
 - **La foto se reintenta sola 3 veces** y espera la señal; después, «Reintentar las fotos». Una foto que no subió antes de cerrar la app se pierde (las mutaciones no se guardan en el celular).
+
+## Después de la revisión final (2026-11-21)
+
+Un revisor aparte leyó toda la fase, en la app y en la web. **La web pasó sin observaciones.** En la app encontró un problema grave y cuatro importantes. Cuatro de sus detalles «menores» se notaban en cada publicación o tocaban el catálogo real, así que también se arreglaron. Todo está en la rama `fase-9-review`, cada cosa con una prueba que primero falló. Pasan:
+- 811 pruebas de Jest;
+- 67 de los scripts y las funciones;
+- 902 de la base, en 45 archivos, y los casos de velocidad;
+- los consejos de Supabase, lint, tipos y formato.
+
+**Arreglado**
+- **«Deshacer» mientras se creaba la página se perdía:** la web seguía mostrando el alfajor y la app decía «Oculto». Lo mismo pasaba con un precio o el stock cambiados en esos segundos. Ahora, al enlazar un alfajor recién creado, se vuelve a mandar su estado de ahora.
+- **La foto sin señal no esperaba:** gastaba sus 3 reintentos en unos 7 segundos y, si fallaba, desaparecía a los 5 minutos. Ahora espera la señal, y una que falla queda un día para «Reintentar las fotos».
+- **Editar podía cerrar la app** la primera vez después de una actualización: la lista guardada en el celular no traía alérgenos. Ahora la caché vieja se descarta (`CACHE_SCHEMA` 6) y un alfajor sin alérgenos se abre igual.
+- **Dos alfajores con el mismo nombre en la web trababan la copia** («Coqueta» y «Alfajor Coqueta»): la página del primero mostraba al segundo, y la copia fallaba cada minuto sin avisar.
+  - Ahora la base no deja dos alfajores con el mismo nombre en la web: «Ya tienes un alfajor con ese nombre.», también al publicar desde la vista previa.
+  - Si la página que encuentra la copia ya es de otro alfajor, la copia sigue con la dirección siguiente (`-2`).
+  - Y si igual llegara a pasar, ese alfajor queda como fallido y la copia sigue con los demás.
+- **La foto que sube la app chocaba con el dueño:** cambiaba la versión del alfajor, así que «Deshacer» o guardar justo después decían que otro cambio llegó antes. Ahora la foto no cambia la versión.
+- **El aviso «se publicó» con «Deshacer» volvía** después de «ya está en la web». Ahora no vuelve.
+- **Mientras la foto subía, la fila decía «Le falta foto o descripción».** Ahora dice «Subiendo a la web…».
+- **Guardar uno recién publicado mientras su foto subía lo sacaba de la web,** sin avisar. Ahora sigue viéndose: la copia espera la foto.
+- **Un cambio de precio ya no toca la fila del alfajor en la base:** la copia no la bloquea mientras sube las fotos de otros.
+- **Los alfajores que nacieron en el panel conservan su nombre:** cambiarles la foto o la descripción desde la app ya no convierte «Alfajor de Manteadita» en «Alfajor Manteadita». Sus alérgenos del panel tampoco se borran si la app no tiene ninguno. Los que creó la app siguen tomando el nombre de la app.
+
+**Quedó para después** (detalles menores, en orden de lo que más se notaría)
+1. En Editar, cambiar el nombre a uno que ya existe dice «ya tenía otro cambio guardado», no «nombre repetido»: la base responde lo mismo para los dos casos.
+2. Los alfajores de la puesta en marcha empiezan con «Se ve» prendido: al ponerles foto y descripción se publican sin el aviso «se publicó». Y la hoja de la puesta en marcha todavía dice que la foto y la descripción se ponen en el panel.
+3. En Ordenar, mover alfajores y después prender «Los más vendidos primero» guarda el orden a mano.
+4. Al guardar:
+   - el botón se vuelve a prender mientras se achica la foto;
+   - si achicarla falla, la pantalla dice error aunque el alfajor ya se guardó;
+   - sin negocio, la foto se pierde sin avisar;
+   - dos fotos seguidas pueden llegar en desorden.
+5. Un alfajor que se enlaza a una página que ya existía con su nombre lleva «Nuevo» 30 días.
+6. Una página con el mismo nombre que solo existe como borrador en Studio no se puede enlazar: la copia falla (y lo avisa) hasta que alguien la publique o la borre.
+7. `pnpm web connect` ya no se detiene si ningún alfajor coincide con la web, y su mensaje «no se copian» quedó viejo.
+8. El registro de cambios no anota `products_by_sales` ni `review_url`.
+9. `web_sync_pending` revisa el negocio con `current_user`, que dentro de la función siempre es el dueño de la base. No se llega a ella desde la API.
+10. `saveProduct` borraría la descripción y los alérgenos si alguien lo llamara sin ellos. Ningún llamado lo hace hoy.
+
+**Decidido sin arreglar** (lo que el revisor dejó fuera)
+- **Las fotos viejas quedan en Storage:** son 5 a 10 alfajores; no vale la pena borrarlas todavía.
+- **Un cambio hecho durante una corrida espera hasta un minuto** (el cron): es el diseño de la fase 8.
+- **Una dirección cambiada después en Studio** deja vieja la de la app: es una acción del equipo, y el modelo de contenido de la web ya lo advierte.
+- **Mientras no se reinicie la base,** los alfajores del negocio que no se copia dicen «Subiendo a la web…».
+- **Los avatares cargan la foto completa de Sanity,** como desde la fase 8.
