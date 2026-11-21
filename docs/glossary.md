@@ -37,7 +37,7 @@ Un concepto nuevo se agrega aquí antes de usarlo en el código.
 | Costo | `costCents` | `cost_cents` | Opcional, para la ganancia por alfajor |
 | Agotado en la web | `isAvailable` | — | Sale del stock: se copia a Sanity como `isAvailable` |
 | Se ve en la web, Oculto | `showOnWeb` | `show_on_web` | Se copia a Sanity como `isVisible` |
-| Pendiente de copiar a la web | `webSyncOutbox` | `web_sync_outbox` | Se envía con reintentos (`products.md`) |
+| Pendiente de copiar a la web | `webSyncOutbox` | `web_sync_outbox` | Se envía con reintentos (`products.md`). `kind`: `state` (precio, stock, si se ve, orden, «Nuevo») o `content` (nombre, descripción, alérgenos, foto) |
 | Stock libre | `onHand` | `stock_levels.on_hand` | Lo que se puede vender: la suma de los movimientos, guardada en la misma operación que cada uno |
 | Apartado | `reserved` | — | Los alfajores de pedidos sin entregar ni anular |
 | En la nevera | `physical` | — | Libre + apartado: lo que se cuenta al contar el stock |
@@ -51,7 +51,14 @@ Un concepto nuevo se agrega aquí antes de usarlo en el código.
 | Motivo de merma | `wasteReason` | `stock_movements.reason` | `broken` (Rota), `expired` (Vencida), `gift` (Regalo), `other` (Otro) |
 | Motivo de ajuste | — | `stock_movements.reason` | `count` (conteo), `initial` (stock inicial), `undo` (deshacer) |
 | Deshacer | `revertStockChange` | función `revert_stock_change` | Un registro entero (producción, merma o conteo), hasta 10 minutos después |
-| Enlazado a la web | `linkedToWeb` | `products.sanity_id` con valor | Solo lo enlazado se copia a la web |
+| Enlazado a la web | `linkedToWeb` | `products.sanity_id` con valor | Tiene su página en la web. Uno sin enlazar se crea allá cuando se ve y tiene foto y descripción (fase 9) |
+| Descripción | `description` | `description` | Hasta 400 letras; la lee el cliente en la web |
+| Alérgenos | `allergens` | `allergens` | Los 13 de la web (`products.md`) |
+| Foto del alfajor | `photo`, `hasPhoto` | `photo_path` | En Storage (`product-photos`); la copia la sube a Sanity cuando cambia |
+| Cómo va en la web | `webState` | — | `none`, `incomplete` (le falta foto o descripción), `waiting`, `pending` (subiendo), `failing` (no se pudo subir), `sent` (en la web) o `hidden` (oculto) |
+| Nuevo (en la web) | `isNew` | `web_published_at` | Los primeros 30 días desde que la copia creó su página |
+| Su página en la web | `webSlug`, `pageUrl` | `web_slug` | `/don-pipos/<slug>`; «Compartir» la usa con `EXPO_PUBLIC_WEB_URL` |
+| Ordenar, los más vendidos primero | `reorderProducts`, `productsBySales` | `sort_order`, `products_by_sales` | El orden de la app es el de la web; por lo vendido en 30 días, cada mes |
 | Stock mínimo | `minStock` | `min_stock` | |
 | Sugerencia de producción | `productionSuggestion` | función `production_suggestion` | D16 |
 | Venta esperada | `expectedSales` | función `private.expected_sales` | Lo que se vende cada día de la semana: el promedio de hasta 4 semanas, sin anulados ni pedidos para otro día. Con menos de 7 días de historia no hay |
@@ -145,7 +152,8 @@ Un concepto nuevo se agrega aquí antes de usarlo en el código.
 | Sello por pedido o por alfajor | `stampUnit` | `stamp_unit` | `order` o `item`; lo elige el dueño |
 | Canjear | `redeem` | `redeemReward` (borrador) | Se aplica como descuento con motivo «Fidelidad»; lo calcula la base |
 | Sellos de un pedido | `orderStamps` | `private.sync_order_stamps` | Los deja justos al entregar, deshacer, anular o corregir |
-| Mensaje de WhatsApp | `messageTemplate` | `message_templates` | Confirmación, en camino, listo, entregado, recordatorio de saldo, «te extrañamos» |
+| Mensaje de WhatsApp | `messageTemplate` | `message_templates` | Confirmación, en camino, listo, entregado, recordatorio de saldo, «te extrañamos» y «Pedir reseña» |
+| Pedir reseña, Reseñas de Google | `ask_review`, `reviewUrl` | `ask_review`, `review_url` | En un pedido entregado con teléfono, si el negocio guardó su enlace de reseñas (fase 9) |
 | Recordatorio | `reminder` | — | Aviso del celular |
 | Avisos (la campana de Inicio) | `reminderList` | — | Los recordatorios de ahora, con su pantalla; la misma lista que se programa en el celular |
 
@@ -165,7 +173,7 @@ Un concepto nuevo se agrega aquí antes de usarlo en el código.
 | Ganancia | `profit` | — | Ingresos menos gastos |
 | Más vendidos | `ranking` | función `report_ranking` | En unidades y en soles |
 | Periodo | `period` | — | `week`, `month`, `custom` |
-| Copia a la web | `webSync` | función `sync-to-web` | Precio, «Agotado» y si se ve, a Sanity (D13). La llama la base con pg_net y su secreto de Vault |
+| Copia a la web | `webSync` | función `sync-to-web` | Precio, «Agotado», si se ve, orden y «Nuevo» a Sanity (D13); desde la fase 9 también crea la página con su foto. La llama la base con pg_net y su secreto de Vault |
 | Espera del PIN | `locked` | `sign_in_attempts.locked_until` | Cada 5 PIN equivocados: 15 minutos, 1 hora y después 24 horas. Ningún error bloquea la cuenta |
 
 ## Generales

@@ -7,6 +7,7 @@ Los textos que la app arma para avisar al cliente por WhatsApp (D17). El dueño 
 **Pantallas de la maqueta que cubre:**
 - Mensajes de WhatsApp.
 - Los avisos en Pedido guardado, Un pedido, Por cobrar y Clientes.
+- «Pedir reseña», en un pedido entregado (fase 9).
 
 ## 2. Datos
 
@@ -14,15 +15,17 @@ Los textos que la app arma para avisar al cliente por WhatsApp (D17). El dueño 
 
 | Columna | Tipo | Regla |
 |---|---|---|
-| `business_id`, `key` | | Llave primaria. `key` es uno de estos: `confirmation`, `on_the_way`, `ready`, `delivered`, `balance_reminder`, `we_miss_you` |
-| `body` | text | El texto, con marcadores: `{nombre}`, `{numero}`, `{detalle}`, `{total}`, `{adelanto}`, `{entrega}`, `{pago}`, `{falta}`, `{sellos}` |
+| `business_id`, `key` | | Llave primaria. `key` es uno de estos: `confirmation`, `on_the_way`, `ready`, `delivered`, `balance_reminder`, `we_miss_you`, `ask_review` |
+| `body` | text | El texto, con marcadores: `{nombre}`, `{numero}`, `{detalle}`, `{total}`, `{adelanto}`, `{entrega}`, `{pago}`, `{falta}`, `{sellos}`, `{enlace}` |
 | `version` | int | Para detectar dos ediciones a la vez |
 
 Al crear el negocio se cargan los textos por defecto, los mismos de la maqueta (`private.default_templates`). `{sellos}` queda vacío hasta la fidelidad (fase 7).
 
+`ask_review` (fase 9) vale solo `{nombre}` y `{enlace}` (el enlace de reseñas de Google, `businesses.md`): «Hola {nombre}, gracias por tu pedido de Don Pipos. ¿Nos dejas tu opinión en Google? Nos ayuda mucho: {enlace}». Los negocios que ya existían lo recibieron con la migración.
+
 ### Índices
 
-La llave primaria basta: son 6 filas por negocio.
+La llave primaria basta: son 7 filas por negocio.
 
 ## 3. Funciones de la base
 
@@ -50,6 +53,7 @@ Los comunes: el dueño lee sus textos y los cambia solo con las funciones.
   - la vista previa en una burbuja, con datos de ejemplo;
   - «Volver al texto original».
 - **Los avisos:** la burbuja con el texto ya lleno y «Enviar por WhatsApp», que abre WhatsApp con ese texto.
+- **«Pedir reseña»** sale en un pedido entregado que tiene teléfono, si el negocio guardó su enlace de reseñas. Sin enlace no sale.
 
 ## 7. Con otros módulos
 
@@ -64,7 +68,7 @@ Los comunes: el dueño lee sus textos y los cambia solo con las funciones.
 
 **Base (pgTAP):**
 - Un negocio nuevo tiene sus textos por defecto.
-- Un marcador desconocido se rechaza.
+- Un marcador desconocido se rechaza, también `{enlace}` fuera de `ask_review`.
 - `reset_template` vuelve al texto original.
 
 **Cuentas (Jest):**

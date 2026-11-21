@@ -248,3 +248,49 @@
   - `pnpm test`, `pnpm lint`, `pnpm typecheck` y `prettier --check`;
   - `pnpm lint:rules`, `pnpm test:scripts`, `pnpm test:db` y `pnpm db:check`.
 - [ ] **Commit** — `docs: record phase 9, the alfajores from the app to the web`.
+
+## Resultado (2026-11-21)
+
+La fase quedó construida en la rama `fase-9`, con un commit por tarea (la 4 y la 5 juntas: comparten el borrador, los hooks y las pantallas). Pasan:
+- 802 pruebas de Jest;
+- 65 de los scripts y las funciones;
+- 886 de la base, en 44 archivos, y los casos de velocidad;
+- los consejos de Supabase, lint, tipos y formato.
+
+En el proyecto de Supabase (que también es el de producción) ya están las cuatro migraciones y la función `sync-to-web` nueva. La copia sigue conectada al dataset `development` y al negocio DEMO: la web de verdad no cambia hasta el día de la entrega.
+
+**La prueba de punta a punta en `development`** encontró dos errores que las pruebas no podían ver (`index.ts` no tiene pruebas propias), ya arreglados:
+- el resultado de la función llegaba a la base como texto, no como objeto, así que el alfajor no guardaba su documento;
+- una página recién creada no tenía «Nuevo» hasta el cambio siguiente.
+
+Después pasó entera: el alfajor creado en la app salió en Sanity con su dirección, su foto (con su texto y sus derechos), su categoría y «Nuevo»; la app guardó la dirección, la foto del CDN y la fecha; cambiarle el precio no volvió a subir la foto. Todo lo de la prueba se borró (el documento, la foto en Sanity, el alfajor y su foto en Storage).
+
+**La web** (otro asistente, en el proyecto de la web, D110–D112): cada alfajor tiene su página, `/don-pipos/<slug>`, con su foto grande, el precio, «Disponible hoy» o «Agotado por hoy», «Pedir por WhatsApp» y «Otros alfajores». «La colección» enlaza a cada una con «Ver detalle», el sitemap las lista y Google recibe su ficha de producto, su miga de pan y su imagen para compartir. Los títulos llevan la ciudad («… en Huamanga»).
+
+### Lo que falta: probar en el celular
+
+```bash
+cd /home/javier/var-mar/app && pnpm start --tunnel
+```
+
+1. **Un alfajor nuevo:** Ajustes › Productos y precios › «Agregar producto». Toma una foto (el celular te deja recortarla en cuadrado), ponle de nombre «Prueba DEMO», un precio y una descripción. «Se ve en la web» se prende recién con la foto y la descripción.
+2. **Vista previa y Publicar:** vuelve a la lista con «Prueba DEMO se publicó en la web.» y «Deshacer». La fila dice «Subiendo a la web…» y, en unos segundos, «En la web» con «Nuevo».
+3. **Verlo en la web de prueba:** en el proyecto de la web, `pnpm dev` y abre `http://localhost:3000/don-pipos/alfajor-prueba-demo` (si no sale, reinicia `pnpm dev`: en tu PC no llega el aviso de Sanity). Al terminar, apaga «Se ve en la web» y desaparece.
+4. **Ordenar:** sube o baja un alfajor y toca «Listo». «La colección» de la web sigue ese orden.
+5. **Pedir reseña:** Ajustes › «Reseñas de Google», pega un enlace que empiece con `https://`. Abre un pedido entregado que tenga teléfono: «Pedir reseña» abre WhatsApp con el mensaje.
+6. **Sin señal** (opcional): guarda un alfajor con foto y pon el modo avión enseguida. La fila dice «La foto espera la señal»; al volver la señal, se sube sola.
+
+«Compartir» no sale todavía: espera el dominio (`EXPO_PUBLIC_WEB_URL`).
+
+### Lo que cambió respecto de este plan
+
+- **`webState` tiene siete estados, no cuatro:** la app distingue «le falta algo» (`incomplete`) de «espera la copia» (`waiting`) y de «oculto» (`hidden`).
+- **Uno que todavía no está en la web anota solo su contenido:** sus cambios de precio o de stock no tienen nada que actualizar allá.
+- **`save_product` no rechaza «Se ve» sin descripción:** la copia espera (`incomplete`) y la app no deja prenderlo.
+- **Una dirección ocupada por un documento con el mismo nombre se enlaza, no se duplica:** cubre la página hecha en el panel y un reintento después de un corte a medias.
+- **La descripción va solo si la app tiene una,** y la foto solo si cambió: el texto del panel de los alfajores que nacieron allá no se pisa.
+- **Ordenar anota el estado de todos los enlazados** (un orden coherente en la web) y no cambia la versión de nadie (el orden no se edita en el formulario).
+- **La foto se achica a 1600 px, no a 2048:** reutiliza `shrinkPhoto` de las boletas; la web la muestra hasta unos 1000 px.
+- **La vista previa usa la letra de la app (Manrope):** Cormorant necesitaría una librería nueva.
+- **El borrador empieza al tocar un alfajor en la lista,** no en un efecto de la pantalla (lo pide el lint del compilador de React).
+- **La foto se reintenta sola 3 veces** y espera la señal; después, «Reintentar las fotos». Una foto que no subió antes de cerrar la app se pierde (las mutaciones no se guardan en el celular).

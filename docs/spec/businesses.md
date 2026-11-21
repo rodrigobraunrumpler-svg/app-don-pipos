@@ -37,6 +37,8 @@
 | `production_interval_days` | int, de 1 a 14 | 7 por defecto |
 | `lapsed_after_days` | int, de 7 a 120 | 30 por defecto |
 | `reminders` | jsonb | `{ scheduled, stock, balances }`, todos activos (`reminders.md`) |
+| `products_by_sales` | bool | «Los más vendidos primero» en la web; no por defecto (fase 9, `products.md`) |
+| `review_url` | text, puede ir vacío | El enlace de reseñas de Google: `https://`, hasta 300 letras. Con él, cada pedido entregado tiene «Pedir reseña» (fase 9) |
 | `version` | int | Para detectar dos ediciones a la vez |
 
 ### `private.business_counters` (una fila por negocio)
@@ -71,10 +73,11 @@ La anota el script de copia del VPS. No lleva `business_id` porque la copia es d
   - Es `security definer` y `stable`, y vive en el esquema `private`, que la API no expone.
   - La usan todas las reglas de acceso.
 - **`private.current_business_id()`:** el negocio con el que trabaja el usuario; sin negocio responde `not_found`. La usan las funciones que escriben. Hoy cada dueño tiene uno; cuando haya varios, aquí se elige el activo.
-- **`get_business()`:** el negocio activo con sus ajustes y si falta la puesta en marcha. Lee con las reglas de acceso. Devuelve `{ id, name, modules, setupDone, settings }`, y `settings` trae `activePaymentMethods`, `deliveryFeeCents`, `deliveryZone`, `productionIntervalDays`, `lapsedAfterDays`, `reminders` y `version`.
+- **`get_business()`:** el negocio activo con sus ajustes y si falta la puesta en marcha. Lee con las reglas de acceso. Devuelve `{ id, name, modules, setupDone, settings }`, y `settings` trae `activePaymentMethods`, `deliveryFeeCents`, `deliveryZone`, `productionIntervalDays`, `lapsedAfterDays`, `reminders`, `productsBySales`, `reviewUrl` y `version`.
 - **`update_settings(p_expected_version, p_patch)`:** cambia uno o varios ajustes y devuelve el objeto `settings` nuevo. Cada cambio queda en el registro de cambios (`private.audit_log`).
   - `p_patch` trae una o más de las claves de `settings` (menos `version`), y ninguna otra.
-  - Valida todo antes de guardar: de 1 a 4 medios de pago válidos y sin repetir; el delivery, un entero de 0 a 1,000,000 céntimos; producir cada 1 a 14 días; «no vuelve» de 7 a 120 días; la zona, un texto de hasta 120 caracteres (vacío se guarda como `null`); los recordatorios, con sus tres claves.
+  - Valida todo antes de guardar: de 1 a 4 medios de pago válidos y sin repetir; el delivery, un entero de 0 a 1,000,000 céntimos; producir cada 1 a 14 días; «no vuelve» de 7 a 120 días; la zona, un texto de hasta 120 caracteres (vacío se guarda como `null`); los recordatorios, con sus tres claves; los más vendidos, sí o no; el enlace de reseñas, `https://` y hasta 300 letras (o `null` para borrarlo).
+  - Prender «los más vendidos primero» ordena los alfajores en el momento (`products.md`).
   - Cualquier otra forma responde `invalid` y no guarda nada. Con otra versión responde `conflict`.
 - **`complete_setup(p_request_id, p_stock, p_categories)`:** en una sola operación (decidido en la fase 7b):
   - carga el stock de hoy de cada producto. `p_stock` trae todos los alfajores como `[{ productId, counted }]`. Como en un conteo, el ajuste es lo contado menos lo que debería haber en la nevera (libre + apartado): un movimiento `adjustment` con motivo `initial` («Stock inicial»), y sin diferencia no hay movimiento;
@@ -122,7 +125,7 @@ La anota el script de copia del VPS. No lleva `business_id` porque la copia es d
   - Cada paso es una pantalla de la pila: se puede volver atrás sin perder lo puesto.
 - **Ajustes** (fase 7c: la pestaña Más ya no existe) se abre con el ⚙ de Inicio, como una pantalla de la pila con «Volver». Tiene tres grupos:
   - *Tu negocio:* Productos y precios, Medios de pago, Delivery, Producción y Tipos de gasto.
-  - *Tus clientes:* Fidelidad, Mensajes de WhatsApp y Clientes que no vuelven.
+  - *Tus clientes:* Fidelidad, Mensajes de WhatsApp, Clientes que no vuelven y Reseñas de Google (fase 9).
   - *Tu cuenta y este celular:* tu número, la huella, cuándo pedir huella o PIN, Recordatorios, cambiar PIN y cerrar sesión (`auth.md`).
 
   Algunos se abren también donde se usan: Productos y precios desde Stock, Tipos de gasto desde Gastos, Fidelidad y Clientes que no vuelven desde Pedidos › Clientes. La campana de Inicio muestra los avisos, no los interruptores de Recordatorios.
@@ -131,12 +134,14 @@ La anota el script de copia del VPS. No lleva `business_id` porque la copia es d
   - «Delivery»: el costo. La zona de reparto no se muestra ni se pide hasta que algo la use (la web, en su fase 2).
   - «Producción»: cada cuántos días produce. Inicio y Stock sugieren para ese periodo.
   - «Clientes que no vuelven»: a partir de cuántos días sin pedir un cliente sale en «No vuelven» (decidido en la fase 7b; la maqueta no tiene la fila).
+  - «Reseñas de Google» («Con enlace» o «Sin enlace»): el enlace que da «Pedir reseñas» en el Perfil de Empresa de Google. Sin `https://`: «Pega el enlace completo, que empieza con https://». Vacío lo borra.
+  - «Los más vendidos primero» no está en Ajustes: es un interruptor de Ordenar, en Productos y precios («Se ordena sola cada mes, con lo que vendiste.»).
 - **Ajustes, arriba:** «Tus datos están respaldados. Última copia de seguridad: hoy, 03:00» (con los días de Lima). Si está atrasada, en ámbar: «La copia de seguridad está atrasada. El equipo ya está avisado». Sin ninguna copia todavía, sin alarma: «Todavía no hay copias de seguridad de tus datos.» (este proyecto también es el de producción, y el plan gratis no hace copias). Cargando o con error, no sale nada.
 - **Vistas:** «Guardando…». Sin internet, las hojas dicen «Sin conexión. Los cambios esperan a que vuelva la señal» y no dejan guardar hasta que vuelva (los guardados de la app salen al momento y avisan si no hay señal). Un cambio que llegó antes responde «Otro cambio llegó antes: revisa los ajustes y vuelve a guardar», sin perder lo escrito, y la hoja muestra «Lo guardado ahora: …». El delivery llega hasta S/ 10,000 (la hoja lo dice antes de guardar).
 
 ## 7. Con otros módulos
 
-**Usa:** `products`, para la lista del paso 1. El stock inicial y los tipos de gasto los crea `complete_setup` en la base.
+**Usa:** `products`, para la lista del paso 1. Expone `ProductsBySalesRow` y `ReviewUrlRow`; la primera la pone la pantalla Ordenar. El stock inicial y los tipos de gasto los crea `complete_setup` en la base.
 
 **Expone:**
 - Consultas: `businessQuery` y `settingsQuery`.
@@ -148,7 +153,7 @@ La anota el script de copia del VPS. No lleva `business_id` porque la copia es d
 
 **Base (pgTAP):**
 - `owned_business_ids` devuelve solo los negocios del usuario; otro usuario no ve el negocio.
-- `update_settings` rechaza los rangos fuera de límite y dejar el negocio sin medios de pago.
+- `update_settings` rechaza los rangos fuera de límite, dejar el negocio sin medios de pago y un enlace de reseñas sin `https://`.
 - `complete_setup` crea los movimientos y los tipos de gasto, y marca la fecha. La segunda vez responde `conflict`.
 - El contador de un negocio nuevo empieza en 1.
 - `backup_status` dice «atrasada» con más de 26 horas sin una copia buena, y no deja ver nada más de `private.backup_runs`.
